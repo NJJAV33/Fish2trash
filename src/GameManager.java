@@ -9,7 +9,7 @@ import java.util.Random;
  *
  * It contains no drawing and no keyboard code - GamePanel handles those.
  */
-public class GameManager {
+public final class GameManager {
 
     public enum State { PLAYING, WON, LOST }
 

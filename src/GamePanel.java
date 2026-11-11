@@ -22,7 +22,10 @@ import javax.swing.Timer;
  * Updating and painting are kept apart: the timer calls manager.update()
  * to change the game, and paintComponent() only reads the game to draw it.
  */
-public class GamePanel extends JPanel {
+// Swing panels are Serializable by inheritance, but this game never saves one,
+// so the "field is not serializable" warning does not apply here.
+@SuppressWarnings("serial")
+public final class GamePanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
