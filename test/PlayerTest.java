@@ -1,3 +1,5 @@
+import model.Player;
+
 /**
  * Checks that Player protects its own rules (encapsulation):
  * points only go up, and health never drops below zero.

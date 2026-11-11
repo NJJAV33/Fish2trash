@@ -1,3 +1,5 @@
+package ui;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -15,6 +17,11 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
+import game.GameManager;
+import model.Boat;
+import model.Hook;
+import model.OceanObject;
+import model.Player;
 
 /**
  * The game screen: draws everything and turns key presses into game actions.

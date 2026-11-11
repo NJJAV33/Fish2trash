@@ -1,7 +1,15 @@
+package game;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import model.Boat;
+import model.Fish;
+import model.Hook;
+import model.OceanObject;
+import model.OceanTrash;
+import model.Player;
 
 /**
  * The rules of the game: what is in the ocean, what the hook touches, the
