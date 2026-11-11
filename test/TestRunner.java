@@ -14,6 +14,7 @@ public final class TestRunner {
     public static void main(String[] args) {
         run("MathxTest", MathxTest::run);
         run("PlayerTest", PlayerTest::run);
+        run("RenderTest", RenderTest::run);
 
         System.out.println();
         System.out.println(Check.getChecks() + " checks, " + Check.getFailures() + " failed");

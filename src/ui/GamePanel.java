@@ -1,11 +1,9 @@
 package ui;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -18,14 +16,12 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 import game.GameManager;
-import model.Boat;
-import model.Hook;
-import model.OceanObject;
 import model.Player;
+import ui.render.SceneRenderer;
 import util.GameConstants;
 
 /**
- * The game screen: draws everything and turns key presses into game actions.
+ * The game screen: shows the scene and HUD and turns key presses into game actions.
  *
  * Updating and painting are kept apart: the timer calls manager.update()
  * to change the game, and paintComponent() only reads the game to draw it.
@@ -41,6 +37,7 @@ public final class GamePanel extends JPanel {
     private static final double MAX_STEP_SECONDS = 0.05;
 
     private final GameManager manager = new GameManager();
+    private final SceneRenderer renderer = new SceneRenderer();
     private final Timer timer;
     private long lastTickNanos;
 
@@ -105,74 +102,12 @@ public final class GamePanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        drawBackground(g2);
-        drawBoat(g2);
-        for (OceanObject object : manager.getObjects()) {
-            object.draw(g2);   // POLYMORPHISM: each object draws itself its own way
-        }
-        drawHook(g2);
+        renderer.paint(g2, manager);
         drawHud(g2);
 
         if (!manager.isPlaying()) {
             drawEndScreen(g2);
         }
-    }
-
-    private void drawBackground(Graphics2D g) {
-        int w = GameConstants.WORLD_WIDTH;
-        int h = GameConstants.WORLD_HEIGHT;
-        int waterY = GameConstants.WATER_Y;
-
-        g.setPaint(new GradientPaint(0, 0, new Color(150, 205, 245), 0, waterY, new Color(205, 235, 255)));
-        g.fillRect(0, 0, w, waterY);
-
-        g.setColor(new Color(255, 220, 90));       // sun
-        g.fillOval(w - 110, 20, 60, 60);
-
-        g.setPaint(new GradientPaint(0, waterY, new Color(35, 125, 195), 0, h, new Color(10, 40, 90)));
-        g.fillRect(0, waterY, w, h - waterY);
-
-        g.setColor(new Color(194, 170, 120));      // sea floor
-        g.fillRect(0, h - 14, w, 14);
-    }
-
-    private void drawBoat(Graphics2D g) {
-        Boat boat = manager.getBoat();
-        int cx = (int) boat.getX();
-        int waterline = (int) boat.getY();
-        int half = GameConstants.BOAT_WIDTH / 2;
-
-        // Cabin
-        g.setColor(new Color(240, 240, 235));
-        g.fillRect(cx - 25, waterline - GameConstants.BOAT_HEIGHT - 22, 40, 24);
-        g.setColor(new Color(110, 170, 210));
-        g.fillRect(cx - 18, waterline - GameConstants.BOAT_HEIGHT - 16, 12, 10);
-
-        // Hull: a trapezoid that sits slightly in the water
-        int[] hullX = {cx - half, cx + half, cx + half - 18, cx - half + 18};
-        int[] hullY = {waterline - GameConstants.BOAT_HEIGHT, waterline - GameConstants.BOAT_HEIGHT, waterline + 4, waterline + 4};
-        g.setColor(new Color(170, 60, 45));
-        g.fillPolygon(hullX, hullY, 4);
-        g.setColor(new Color(110, 35, 25));
-        g.drawPolygon(hullX, hullY, 4);
-    }
-
-    private void drawHook(Graphics2D g) {
-        Hook hook = manager.getBoat().getHook();
-        int ax = (int) hook.getAnchorX();
-        int ay = (int) hook.getAnchorY();
-        int tx = (int) hook.getTipX();
-        int ty = (int) hook.getTipY();
-
-        g.setColor(new Color(40, 40, 40));
-        g.setStroke(new BasicStroke(2));
-        g.drawLine(ax, ay, tx, ty);                // rope
-
-        g.setColor(new Color(200, 200, 205));
-        g.setStroke(new BasicStroke(3));
-        g.drawArc(tx - 7, ty - 3, 14, 14, 180, 200);  // hook curve
-        g.fillOval(tx - 3, ty - 3, 6, 6);
-        g.setStroke(new BasicStroke(1));
     }
 
     private void drawHud(Graphics2D g) {
