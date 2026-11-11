@@ -36,6 +36,7 @@ public final class GameManager {
     private Player player;
     private Boat boat;
     private double timeLeft;
+    private int boatDirection;
     private State state;
     private String endMessage;
 
@@ -57,14 +58,30 @@ public final class GameManager {
         }
 
         timeLeft = GameConstants.TIME_CH1_S;
+        boatDirection = 0;
         state = State.PLAYING;
         endMessage = "";
     }
 
-    public void launchHook() {
-        if (state == State.PLAYING) {
-            boat.getHook().launch();
+    /**
+     * The Space key: drops the hook if it is swinging, or pulls it back early
+     * if it is still on its way out.
+     */
+    public void spaceAction() {
+        if (state != State.PLAYING) {
+            return;
         }
+        Hook hook = boat.getHook();
+        if (hook.isSwinging()) {
+            hook.launch();
+        } else {
+            hook.recall();
+        }
+    }
+
+    /** Which way the player is steering: -1 left, 0 not at all, 1 right. */
+    public void setBoatDirection(int direction) {
+        boatDirection = direction;
     }
 
     /** Advances the game by dt seconds. Does nothing once the game is over. */
@@ -80,6 +97,7 @@ public final class GameManager {
             return;
         }
 
+        boat.moveBy(boatDirection, dt);
         Hook hook = boat.getHook();
         hook.update(dt);
         for (OceanObject object : objects) {

@@ -16,7 +16,7 @@ public class Hook {
 
     private static final double MAX_ANGLE = Math.toRadians(GameConstants.SWING_MAX_DEG);
 
-    private final double anchorX;
+    private double anchorX;       // moves with the boat
     private final double anchorY;
 
     private State state;
@@ -50,6 +50,15 @@ public class Hook {
         if (state == State.EXTENDING) {
             state = State.RETRACTING;
         }
+    }
+
+    /** The player pulls the hook back early. Only works while it is still going out. */
+    public void recall() {
+        beginRetractEmpty();
+    }
+
+    public void setAnchorX(double anchorX) {
+        this.anchorX = anchorX;
     }
 
     /** Moves the hook forward by dt seconds of game time. */
@@ -114,6 +123,23 @@ public class Hook {
 
     public boolean isExtending() {
         return state == State.EXTENDING;
+    }
+
+    public boolean isRetracting() {
+        return state == State.RETRACTING;
+    }
+
+    /** True while the hook is away from the boat (going out or coming back). */
+    public boolean isLineOut() {
+        return state != State.SWINGING;
+    }
+
+    public double getAngle() {
+        return angle;
+    }
+
+    public double getLength() {
+        return length;
     }
 
     public OceanObject getCaughtObject() {

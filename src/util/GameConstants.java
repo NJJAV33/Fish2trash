@@ -18,9 +18,12 @@ public final class GameConstants {
     public static final int WORLD_HEIGHT = 600;
     public static final int WATER_Y = 130;           // y position of the sea surface
 
-    // ---- Boat (pixels) ----
+    // ---- Boat ----
     public static final int BOAT_WIDTH = 120;
     public static final int BOAT_HEIGHT = 28;
+    public static final double BOAT_SPEED = 200;     // pixels per second
+    public static final double BOAT_MIN_X = 60;      // how far left the boat may go
+    public static final double BOAT_MAX_X = 740;     // how far right
 
     // ---- Hook (pixels and pixels per second) ----
     public static final double HOOK_REST = 40;       // rope length while swinging

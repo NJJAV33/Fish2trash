@@ -8,9 +8,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
@@ -38,6 +37,7 @@ public final class GamePanel extends JPanel {
 
     private final GameManager manager = new GameManager();
     private final SceneRenderer renderer = new SceneRenderer();
+    private final InputState input = new InputState();
     private final Timer timer;
     private long lastTickNanos;
 
@@ -61,6 +61,7 @@ public final class GamePanel extends JPanel {
         lastTickNanos = now;
         dt = Math.min(dt, MAX_STEP_SECONDS);   // avoid a huge jump after a pause
 
+        manager.setBoatDirection(input.getDirection());
         manager.update(dt);   // ignored by the manager once the game is over
         repaint();
     }
@@ -70,26 +71,29 @@ public final class GamePanel extends JPanel {
      * which needs this exact panel to have keyboard focus.
      */
     private void setupKeyBindings() {
-        InputMap inputs = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actions = getActionMap();
+        bindKey(KeyEvent.VK_SPACE, false, manager::spaceAction);
+        bindKey(KeyEvent.VK_R, false, manager::restart);
 
-        inputs.put(KeyStroke.getKeyStroke("SPACE"), "launchHook");
-        actions.put("launchHook", new AbstractAction() {
-            private static final long serialVersionUID = 1L;
+        // Movement keys are tracked on press AND release, so holding works.
+        bindKey(KeyEvent.VK_A, false, () -> input.setLeftHeld(true));
+        bindKey(KeyEvent.VK_A, true, () -> input.setLeftHeld(false));
+        bindKey(KeyEvent.VK_LEFT, false, () -> input.setLeftHeld(true));
+        bindKey(KeyEvent.VK_LEFT, true, () -> input.setLeftHeld(false));
+        bindKey(KeyEvent.VK_D, false, () -> input.setRightHeld(true));
+        bindKey(KeyEvent.VK_D, true, () -> input.setRightHeld(false));
+        bindKey(KeyEvent.VK_RIGHT, false, () -> input.setRightHeld(true));
+        bindKey(KeyEvent.VK_RIGHT, true, () -> input.setRightHeld(false));
+    }
 
+    /** Runs the action when the key is pressed (or released, if onRelease is true). */
+    private void bindKey(int keyCode, boolean onRelease, Runnable action) {
+        String name = (onRelease ? "released " : "pressed ") + keyCode;
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), name);
+        getActionMap().put(name, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                manager.launchHook();
-            }
-        });
-
-        inputs.put(KeyStroke.getKeyStroke("R"), "restart");
-        actions.put("restart", new AbstractAction() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                manager.restart();
+                action.run();
             }
         });
     }
@@ -124,7 +128,7 @@ public final class GamePanel extends JPanel {
         g.drawString("Time: " + secondsLeft + "s", 22, 88);
 
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        g.drawString("SPACE: launch hook    R: restart", 12, GameConstants.WORLD_HEIGHT - 22);
+        g.drawString("A / D: move boat    SPACE: drop or recall hook    R: restart", 12, GameConstants.WORLD_HEIGHT - 22);
     }
 
     private void drawEndScreen(Graphics2D g) {

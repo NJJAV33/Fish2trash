@@ -12,6 +12,7 @@ public final class TestRunner {
     }
 
     public static void main(String[] args) {
+        run("BoatHookTest", BoatHookTest::run);
         run("MathxTest", MathxTest::run);
         run("ModelCatchTest", ModelCatchTest::run);
         run("PlayerTest", PlayerTest::run);
