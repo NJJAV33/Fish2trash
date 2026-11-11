@@ -1,7 +1,15 @@
+package game;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import model.Boat;
+import model.Fish;
+import model.Hook;
+import model.OceanObject;
+import model.OceanTrash;
+import model.Player;
 
 /**
  * The rules of the game: what is in the ocean, what the hook touches, the
@@ -9,7 +17,7 @@ import java.util.Random;
  *
  * It contains no drawing and no keyboard code - GamePanel handles those.
  */
-public class GameManager {
+public final class GameManager {
 
     public enum State { PLAYING, WON, LOST }
 

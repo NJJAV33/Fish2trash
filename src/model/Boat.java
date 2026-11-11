@@ -1,3 +1,5 @@
+package model;
+
 /**
  * The boat floating at the top of the ocean.
  *

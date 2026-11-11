@@ -1,3 +1,5 @@
+package model;
+
 /**
  * The player's health and score.
  *

@@ -1,3 +1,5 @@
+package ui;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -15,6 +17,11 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
+import game.GameManager;
+import model.Boat;
+import model.Hook;
+import model.OceanObject;
+import model.Player;
 
 /**
  * The game screen: draws everything and turns key presses into game actions.
@@ -22,7 +29,10 @@ import javax.swing.Timer;
  * Updating and painting are kept apart: the timer calls manager.update()
  * to change the game, and paintComponent() only reads the game to draw it.
  */
-public class GamePanel extends JPanel {
+// Swing panels are Serializable by inheritance, but this game never saves one,
+// so the "field is not serializable" warning does not apply here.
+@SuppressWarnings("serial")
+public final class GamePanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 

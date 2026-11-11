@@ -1,3 +1,5 @@
+package model;
+
 /**
  * The fishing hook hanging under the boat.
  *

@@ -2,18 +2,28 @@
 
 Clean the ocean: hook trash, avoid fish. Reach 50 points before time or health runs out.
 
+## Requirements
+
+JDK 17 or newer. Check yours with `java -version`. No libraries needed.
+
 ## Run
 
-From this folder (`FISH2TRASH/`):
+| | Linux / macOS | Windows |
+|---|---|---|
+| Play the game | `scripts/run.sh` | `scripts\run.bat` |
+| Only compile | `scripts/build.sh` | `scripts\build.bat` |
+| Run the tests | `scripts/test.sh` | `scripts\test.bat` |
+
+The scripts work from any folder. They look for a JDK 17+ in `JAVA_HOME` first,
+then on the `PATH`, and stop with "Need JDK 17+" if there isn't one.
+
+To build by hand instead, from the project folder:
 
 ```bash
 mkdir -p out
-javac -d out src/*.java
+javac --release 17 -d out $(find src -name '*.java')
 java -cp out Main
 ```
-
-Works with JDK 8 or newer. No libraries needed. (`mkdir` is needed because JDK 8's
-`javac` won't create the `out` folder on its own.)
 
 **Controls:** `Space` launch the hook · `R` restart
 
@@ -23,16 +33,25 @@ Works with JDK 8 or newer. No libraries needed. (`mkdir` is needed because JDK 8
 FISH2TRASH/
 ├── README.md
 ├── src/
-│   ├── Main.java          opens the window on the Swing thread
-│   ├── GamePanel.java     drawing + key bindings + frame timer
-│   ├── GameManager.java   rules: objects, collisions, countdown, win/lose
-│   ├── Player.java        private health and score
-│   ├── Boat.java          position, owns the Hook
-│   ├── Hook.java          swing → extend → retract
-│   ├── OceanObject.java   abstract base: position, movement, collision
-│   ├── OceanTrash.java    +10 points when caught
-│   └── Fish.java          −1 health when caught
-└── out/                   compiled .class files (created by javac)
+│   ├── Main.java              opens the window on the Swing thread
+│   ├── model/                 the things in the game
+│   │   ├── Player.java        private health and score
+│   │   ├── Boat.java          position, owns the Hook
+│   │   ├── Hook.java          swing → extend → retract
+│   │   ├── OceanObject.java   abstract base: position, movement, collision
+│   │   ├── OceanTrash.java    +10 points when caught
+│   │   └── Fish.java          −1 health when caught
+│   ├── game/
+│   │   └── GameManager.java   rules: objects, collisions, countdown, win/lose
+│   └── ui/
+│       └── GamePanel.java     drawing + key bindings + frame timer
+├── test/                      tests, run by scripts/test
+│   ├── TestRunner.java        runs every test, exits with 1 if one fails
+│   ├── Check.java             assertTrue / assertEquals helpers
+│   └── PlayerTest.java
+├── scripts/                   build, run and test (.sh and .bat)
+├── out/                       compiled game (created by the build, not in git)
+└── out-test/                  compiled tests (not in git)
 ```
 
 ## How the classes work together
@@ -88,3 +107,16 @@ FISH2TRASH/
 **Restarting**
 - [ ] R after a win or loss: score 0, health 3, time 60, fresh objects, hook swinging.
 - [ ] R in the middle of a game also resets everything, including a hook that was out.
+
+## Contributing
+
+- Work on a branch, not on `main`. Name it `<type>/<short-name>`, for example
+  `feat/boat-movement` or `fix/hook-collision`.
+- Run the tests before you commit (`scripts/test.sh` or `scripts\test.bat`).
+  The build must finish with no warnings.
+- Keep commits small, one change each. Start the message with a type and write
+  it as an instruction, in lowercase: `feat: add boat movement`,
+  `fix: stop hook passing through cans`. Types: `feat`, `fix`, `refactor`,
+  `test`, `docs`, `chore`, `build`.
+- Push your branch and open a pull request into `main`, then ask a teammate to
+  review it.

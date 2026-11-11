@@ -1,5 +1,6 @@
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import ui.GamePanel;
 
 /**
  * Entry point of FISH2TRASH. Its only job is to open the game window.
