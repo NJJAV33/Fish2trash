@@ -3,24 +3,30 @@ package model;
 import util.GameConstants;
 
 /**
- * A fish. Catching one hurts the ocean, so the player loses health.
+ * A fish. Hooking one hurts it, so the player loses health and the fish
+ * swims away again.
  *
  * INHERITANCE: Fish "is an" OceanObject, just like OceanTrash, but it
- * overrides onCaught() with its own behavior.
+ * overrides onCaught() with the opposite result. Concrete fish extend it.
  */
-public class Fish extends OceanObject {
+public abstract class Fish extends OceanObject {
 
-    public Fish(double x, double y, double speedX) {
-        super(x, y, GameConstants.RADIUS_SMALL_FISH, speedX);
+    private final int damage;
+
+    protected Fish(double x, double y, double radius, double speedX, int damage) {
+        super(x, y, radius, speedX);
+        this.damage = damage;
     }
 
     @Override
-    public ObjectKind getKind() {
-        return ObjectKind.SMALL_FISH;
+    public void onCaught(Player player, Hook hook) {
+        player.loseHealth(damage);
+        // The fish gets away, and cannot be hooked again for a moment.
+        release(GameConstants.FISH_RELEASE_IMMUNITY_S);
+        hook.beginRetractEmpty();
     }
 
-    @Override
-    public void onCaught(Player player) {
-        player.loseHealth(GameConstants.DAMAGE_FISH);
+    public int getDamage() {
+        return damage;
     }
 }

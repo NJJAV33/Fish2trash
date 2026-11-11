@@ -1,26 +1,31 @@
 package model;
 
-import util.GameConstants;
-
 /**
- * A piece of trash. Catching it cleans the ocean and earns points.
+ * A piece of trash. Catching it earns points and it rides the hook up to
+ * the boat.
  *
  * INHERITANCE: OceanTrash "is an" OceanObject, so it gets position, movement
- * and collision for free and only adds what makes trash different.
+ * and collision for free. It is still abstract: the concrete kinds of trash
+ * (PlasticBottle, Can, FishingNet) extend it and only say what they are and
+ * what they are worth.
  */
-public class OceanTrash extends OceanObject {
+public abstract class OceanTrash extends OceanObject {
 
-    public OceanTrash(double x, double y, double speedX) {
-        super(x, y, GameConstants.RADIUS_TRASH, speedX);
+    private final int points;
+
+    protected OceanTrash(double x, double y, double radius, double speedX, int points) {
+        super(x, y, radius, speedX);
+        this.points = points;
     }
 
     @Override
-    public ObjectKind getKind() {
-        return ObjectKind.CAN;
+    public void onCaught(Player player, Hook hook) {
+        markCaught();
+        player.addPoints(points);
+        hook.attach(this);
     }
 
-    @Override
-    public void onCaught(Player player) {
-        player.addPoints(GameConstants.POINTS_BOTTLE);
+    public int getPoints() {
+        return points;
     }
 }

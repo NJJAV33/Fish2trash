@@ -5,10 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import model.Boat;
-import model.Fish;
 import model.Hook;
+import model.ObjectKind;
 import model.OceanObject;
-import model.OceanTrash;
 import model.Player;
 import util.GameConstants;
 
@@ -22,10 +21,16 @@ public final class GameManager {
 
     public enum State { PLAYING, WON, LOST }
 
+    // Which trash appears: a kind listed more often is more common.
+    private static final ObjectKind[] TRASH_MIX = {
+        ObjectKind.PLASTIC_BOTTLE, ObjectKind.PLASTIC_BOTTLE, ObjectKind.PLASTIC_BOTTLE,
+        ObjectKind.CAN, ObjectKind.CAN, ObjectKind.FISHING_NET
+    };
+
     private final Random random = new Random();
 
-    // POLYMORPHISM: one list holds both OceanTrash and Fish, because both
-    // are OceanObjects. The manager never needs to know which is which.
+    // POLYMORPHISM: one list holds bottles, cans, nets and fish, because all
+    // of them are OceanObjects. The manager never needs to know which is which.
     private final List<OceanObject> objects = new ArrayList<>();
 
     private Player player;
@@ -92,16 +97,14 @@ public final class GameManager {
         }
 
         for (OceanObject object : objects) {
-            // Skipping caught objects means nothing can be collected twice.
-            if (!object.isCaught()
+            // isCatchable() is false for caught or just-released objects,
+            // so nothing can be collected twice.
+            if (object.isCatchable()
                     && object.collidesWith(hook.getTipX(), hook.getTipY(), GameConstants.RADIUS_HOOK)) {
-                object.markCaught();
-
                 // POLYMORPHISM: the same call does different things -
-                // OceanTrash adds points, Fish removes health.
-                object.onCaught(player);
-
-                hook.attach(object);
+                // trash adds points and rides the hook, a fish costs health
+                // and swims away.
+                object.onCaught(player, hook);
                 checkEndConditions();
                 return;   // one object per launch
             }
@@ -114,7 +117,7 @@ public final class GameManager {
         if (carried != null && hook.isSwinging()) {
             objects.remove(carried);
             hook.clearCaughtObject();
-            objects.add(createRandomObject());   // keep the ocean stocked
+            objects.add(createTrash());   // keep the ocean stocked
         }
     }
 
@@ -133,16 +136,15 @@ public final class GameManager {
 
     // ---- Spawning ----
 
-    private OceanObject createRandomObject() {
-        return (random.nextDouble() < GameConstants.SPAWN_TRASH_CHANCE) ? createTrash() : createFish();
+    private OceanObject createTrash() {
+        ObjectKind kind = TRASH_MIX[random.nextInt(TRASH_MIX.length)];
+        return kind.create(randomX(), randomY(),
+                randomSpeed(GameConstants.TRASH_SPEED_MIN, GameConstants.TRASH_SPEED_MAX));
     }
 
-    private OceanTrash createTrash() {
-        return new OceanTrash(randomX(), randomY(), randomSpeed(GameConstants.TRASH_SPEED_MIN, GameConstants.TRASH_SPEED_MAX));
-    }
-
-    private Fish createFish() {
-        return new Fish(randomX(), randomY(), randomSpeed(GameConstants.FISH_SPEED_MIN, GameConstants.FISH_SPEED_MAX));
+    private OceanObject createFish() {
+        return ObjectKind.SMALL_FISH.create(randomX(), randomY(),
+                randomSpeed(GameConstants.FISH_SPEED_MIN, GameConstants.FISH_SPEED_MAX));
     }
 
     private double randomX() {

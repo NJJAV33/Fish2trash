@@ -20,6 +20,7 @@ public abstract class OceanObject implements ObjectView {
     private double speedX;   // pixels per second, negative = moving left
     private int facing;      // 1 = looking right, -1 = looking left
     private boolean caught;
+    private double immuneTimer;   // seconds left during which the hook cannot grab it
 
     protected OceanObject(double x, double y, double radius, double speedX) {
         this.x = x;
@@ -32,6 +33,9 @@ public abstract class OceanObject implements ObjectView {
 
     /** Moves the object sideways and bounces it off the edges of the screen. */
     public void update(double dt, double worldWidth) {
+        if (immuneTimer > 0) {
+            immuneTimer = Math.max(0, immuneTimer - dt);
+        }
         if (caught) {
             return;   // the hook is carrying it now
         }
@@ -67,6 +71,21 @@ public abstract class OceanObject implements ObjectView {
         caught = true;
     }
 
+    /** Lets a caught object go again; the hook cannot grab it for the given time. */
+    public void release(double immunitySeconds) {
+        caught = false;
+        grantImmunity(immunitySeconds);
+    }
+
+    public void grantImmunity(double seconds) {
+        immuneTimer = Math.max(immuneTimer, seconds);
+    }
+
+    /** True if the hook may grab this object right now. Stops double catches. */
+    public boolean isCatchable() {
+        return !caught && immuneTimer <= 0;
+    }
+
     @Override
     public boolean isCaught() {
         return caught;
@@ -92,8 +111,12 @@ public abstract class OceanObject implements ObjectView {
         return facing;
     }
 
-    /** What happens to the player when this object is caught. Each subclass decides. */
-    public abstract void onCaught(Player player);
+    /**
+     * What happens when the hook catches this object. Each subclass decides:
+     * trash gives the player points and rides the hook, a fish costs health
+     * and swims away.
+     */
+    public abstract void onCaught(Player player, Hook hook);
 
     @Override
     public String toString() {

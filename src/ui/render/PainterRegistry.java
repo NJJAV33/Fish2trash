@@ -17,7 +17,9 @@ public final class PainterRegistry {
     private final Map<ObjectKind, ObjectPainter> painters = new EnumMap<>(ObjectKind.class);
 
     public PainterRegistry() {
+        painters.put(ObjectKind.PLASTIC_BOTTLE, new BottlePainter());
         painters.put(ObjectKind.CAN, new CanPainter());
+        painters.put(ObjectKind.FISHING_NET, new NetPainter());
         painters.put(ObjectKind.SMALL_FISH, new SmallFishPainter());
 
         // Fail at startup, not in the middle of a game, if a new kind was

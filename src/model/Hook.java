@@ -45,6 +45,13 @@ public class Hook {
         state = State.RETRACTING;
     }
 
+    /** Start reeling in with nothing on the hook. */
+    public void beginRetractEmpty() {
+        if (state == State.EXTENDING) {
+            state = State.RETRACTING;
+        }
+    }
+
     /** Moves the hook forward by dt seconds of game time. */
     public void update(double dt) {
         switch (state) {
