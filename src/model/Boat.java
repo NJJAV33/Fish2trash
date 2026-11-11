@@ -8,9 +8,6 @@ package model;
  */
 public class Boat {
 
-    public static final int WIDTH = 120;
-    public static final int HEIGHT = 28;
-
     private final double x;   // center of the boat
     private final double y;   // waterline (bottom of the hull)
     private final Hook hook;

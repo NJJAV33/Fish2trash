@@ -2,6 +2,7 @@ package model;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import util.GameConstants;
 
 /**
  * A piece of trash (a soda can). Catching it cleans the ocean and earns points.
@@ -11,15 +12,13 @@ import java.awt.Graphics2D;
  */
 public class OceanTrash extends OceanObject {
 
-    public static final int POINTS = 10;
-
     public OceanTrash(double x, double y, double speedX) {
-        super(x, y, 14, speedX);
+        super(x, y, GameConstants.RADIUS_TRASH, speedX);
     }
 
     @Override
     public void onCaught(Player player) {
-        player.addPoints(POINTS);
+        player.addPoints(GameConstants.POINTS_BOTTLE);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package model;
 
+import util.GameConstants;
+
 /**
  * The fishing hook hanging under the boat.
  *
@@ -12,15 +14,7 @@ public class Hook {
 
     public enum State { SWINGING, EXTENDING, RETRACTING }
 
-    public static final double TIP_RADIUS = 8;     // size of the hook for collisions
-
-    private static final double REST_LENGTH = 40;  // rope length while swinging
-    private static final double MAX_LENGTH = 440;  // furthest the hook can reach
-    private static final double MAX_ANGLE = Math.toRadians(60);
-    private static final double SWING_SPEED = 1.8;     // how fast it rocks
-    private static final double EXTEND_SPEED = 380;    // pixels per second
-    private static final double RETRACT_SPEED = 420;   // pixels per second, empty
-    private static final double CARRY_SPEED = 260;     // pixels per second, loaded
+    private static final double MAX_ANGLE = Math.toRadians(GameConstants.SWING_MAX_DEG);
 
     private final double anchorX;
     private final double anchorY;
@@ -35,7 +29,7 @@ public class Hook {
         this.anchorX = anchorX;
         this.anchorY = anchorY;
         this.state = State.SWINGING;
-        this.length = REST_LENGTH;
+        this.length = GameConstants.HOOK_REST;
     }
 
     /** Called when Space is pressed. Only a swinging hook can be launched. */
@@ -58,23 +52,23 @@ public class Hook {
                 // A sine wave goes smoothly from -1 to 1 and back, which gives
                 // a pendulum-like swing between -MAX_ANGLE and +MAX_ANGLE.
                 swingTime += dt;
-                angle = MAX_ANGLE * Math.sin(swingTime * SWING_SPEED);
+                angle = MAX_ANGLE * Math.sin(swingTime * GameConstants.SWING_SPEED);
                 break;
 
             case EXTENDING:
                 // The angle is frozen, so the hook travels in a straight line.
-                length += EXTEND_SPEED * dt;
-                if (length >= MAX_LENGTH) {
-                    length = MAX_LENGTH;
+                length += GameConstants.HOOK_EXTEND * dt;
+                if (length >= GameConstants.HOOK_MAX) {
+                    length = GameConstants.HOOK_MAX;
                     state = State.RETRACTING;
                 }
                 break;
 
             case RETRACTING:
-                double speed = (caughtObject == null) ? RETRACT_SPEED : CARRY_SPEED;
+                double speed = (caughtObject == null) ? GameConstants.HOOK_RETRACT : GameConstants.HOOK_CARRY;
                 length -= speed * dt;
-                if (length <= REST_LENGTH) {
-                    length = REST_LENGTH;
+                if (length <= GameConstants.HOOK_REST) {
+                    length = GameConstants.HOOK_REST;
                     state = State.SWINGING;
                 }
                 break;

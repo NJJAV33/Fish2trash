@@ -12,6 +12,7 @@ public final class TestRunner {
     }
 
     public static void main(String[] args) {
+        run("MathxTest", MathxTest::run);
         run("PlayerTest", PlayerTest::run);
 
         System.out.println();

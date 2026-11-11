@@ -2,6 +2,7 @@ package model;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import util.GameConstants;
 
 /**
  * A fish. Catching one hurts the ocean, so the player loses health.
@@ -11,15 +12,13 @@ import java.awt.Graphics2D;
  */
 public class Fish extends OceanObject {
 
-    public static final int DAMAGE = 1;
-
     public Fish(double x, double y, double speedX) {
-        super(x, y, 16, speedX);
+        super(x, y, GameConstants.RADIUS_SMALL_FISH, speedX);
     }
 
     @Override
     public void onCaught(Player player) {
-        player.loseHealth(DAMAGE);
+        player.loseHealth(GameConstants.DAMAGE_FISH);
     }
 
     @Override

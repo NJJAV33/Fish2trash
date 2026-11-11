@@ -22,6 +22,7 @@ import model.Boat;
 import model.Hook;
 import model.OceanObject;
 import model.Player;
+import util.GameConstants;
 
 /**
  * The game screen: draws everything and turns key presses into game actions.
@@ -44,7 +45,7 @@ public final class GamePanel extends JPanel {
     private long lastTickNanos;
 
     public GamePanel() {
-        setPreferredSize(new Dimension(GameManager.WORLD_WIDTH, GameManager.WORLD_HEIGHT));
+        setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
         setupKeyBindings();
         timer = new Timer(FRAME_DELAY_MS, e -> tick());
     }
@@ -118,9 +119,9 @@ public final class GamePanel extends JPanel {
     }
 
     private void drawBackground(Graphics2D g) {
-        int w = GameManager.WORLD_WIDTH;
-        int h = GameManager.WORLD_HEIGHT;
-        int waterY = GameManager.WATER_Y;
+        int w = GameConstants.WORLD_WIDTH;
+        int h = GameConstants.WORLD_HEIGHT;
+        int waterY = GameConstants.WATER_Y;
 
         g.setPaint(new GradientPaint(0, 0, new Color(150, 205, 245), 0, waterY, new Color(205, 235, 255)));
         g.fillRect(0, 0, w, waterY);
@@ -139,17 +140,17 @@ public final class GamePanel extends JPanel {
         Boat boat = manager.getBoat();
         int cx = (int) boat.getX();
         int waterline = (int) boat.getY();
-        int half = Boat.WIDTH / 2;
+        int half = GameConstants.BOAT_WIDTH / 2;
 
         // Cabin
         g.setColor(new Color(240, 240, 235));
-        g.fillRect(cx - 25, waterline - Boat.HEIGHT - 22, 40, 24);
+        g.fillRect(cx - 25, waterline - GameConstants.BOAT_HEIGHT - 22, 40, 24);
         g.setColor(new Color(110, 170, 210));
-        g.fillRect(cx - 18, waterline - Boat.HEIGHT - 16, 12, 10);
+        g.fillRect(cx - 18, waterline - GameConstants.BOAT_HEIGHT - 16, 12, 10);
 
         // Hull: a trapezoid that sits slightly in the water
         int[] hullX = {cx - half, cx + half, cx + half - 18, cx - half + 18};
-        int[] hullY = {waterline - Boat.HEIGHT, waterline - Boat.HEIGHT, waterline + 4, waterline + 4};
+        int[] hullY = {waterline - GameConstants.BOAT_HEIGHT, waterline - GameConstants.BOAT_HEIGHT, waterline + 4, waterline + 4};
         g.setColor(new Color(170, 60, 45));
         g.fillPolygon(hullX, hullY, 4);
         g.setColor(new Color(110, 35, 25));
@@ -183,19 +184,19 @@ public final class GamePanel extends JPanel {
 
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        g.drawString("Score: " + player.getScore() + " / " + GameManager.QUOTA, 22, 36);
+        g.drawString("Score: " + player.getScore() + " / " + GameConstants.QUOTA_CH1, 22, 36);
         g.drawString("Health: " + player.getHealth(), 22, 62);
         g.drawString("Time: " + secondsLeft + "s", 22, 88);
 
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        g.drawString("SPACE: launch hook    R: restart", 12, GameManager.WORLD_HEIGHT - 22);
+        g.drawString("SPACE: launch hook    R: restart", 12, GameConstants.WORLD_HEIGHT - 22);
     }
 
     private void drawEndScreen(Graphics2D g) {
         boolean won = manager.getState() == GameManager.State.WON;
 
         g.setColor(new Color(0, 0, 0, 160));
-        g.fillRect(0, 0, GameManager.WORLD_WIDTH, GameManager.WORLD_HEIGHT);
+        g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 56));
         g.setColor(won ? new Color(120, 230, 120) : new Color(240, 90, 90));
@@ -210,7 +211,7 @@ public final class GamePanel extends JPanel {
 
     private void drawCentered(Graphics2D g, String text, int y) {
         FontMetrics metrics = g.getFontMetrics();
-        int x = (GameManager.WORLD_WIDTH - metrics.stringWidth(text)) / 2;
+        int x = (GameConstants.WORLD_WIDTH - metrics.stringWidth(text)) / 2;
         g.drawString(text, x, y);
     }
 }

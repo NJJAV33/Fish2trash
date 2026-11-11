@@ -10,6 +10,7 @@ import model.Hook;
 import model.OceanObject;
 import model.OceanTrash;
 import model.Player;
+import util.GameConstants;
 
 /**
  * The rules of the game: what is in the ocean, what the hook touches, the
@@ -20,17 +21,6 @@ import model.Player;
 public final class GameManager {
 
     public enum State { PLAYING, WON, LOST }
-
-    public static final int WORLD_WIDTH = 800;
-    public static final int WORLD_HEIGHT = 600;
-    public static final int WATER_Y = 130;        // y position of the sea surface
-
-    public static final int QUOTA = 50;
-    public static final int STARTING_HEALTH = 3;
-    public static final double GAME_SECONDS = 60;
-
-    private static final int TRASH_COUNT = 6;
-    private static final int FISH_COUNT = 4;
 
     private final Random random = new Random();
 
@@ -50,18 +40,18 @@ public final class GameManager {
 
     /** Puts every piece of game state back to the start. */
     public void restart() {
-        player = new Player(STARTING_HEALTH);
-        boat = new Boat(WORLD_WIDTH / 2.0, WATER_Y);   // new boat = new hook too
+        player = new Player(GameConstants.HEALTH_CH1);
+        boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y);   // new boat = new hook too
 
         objects.clear();
-        for (int i = 0; i < TRASH_COUNT; i++) {
+        for (int i = 0; i < GameConstants.SPAWN_TRASH_COUNT; i++) {
             objects.add(createTrash());
         }
-        for (int i = 0; i < FISH_COUNT; i++) {
+        for (int i = 0; i < GameConstants.SPAWN_FISH_COUNT; i++) {
             objects.add(createFish());
         }
 
-        timeLeft = GAME_SECONDS;
+        timeLeft = GameConstants.TIME_CH1_S;
         state = State.PLAYING;
         endMessage = "";
     }
@@ -88,7 +78,7 @@ public final class GameManager {
         Hook hook = boat.getHook();
         hook.update(dt);
         for (OceanObject object : objects) {
-            object.update(dt, WORLD_WIDTH);
+            object.update(dt, GameConstants.WORLD_WIDTH);
         }
 
         checkHookCollision(hook);
@@ -104,7 +94,7 @@ public final class GameManager {
         for (OceanObject object : objects) {
             // Skipping caught objects means nothing can be collected twice.
             if (!object.isCaught()
-                    && object.collidesWith(hook.getTipX(), hook.getTipY(), Hook.TIP_RADIUS)) {
+                    && object.collidesWith(hook.getTipX(), hook.getTipY(), GameConstants.RADIUS_HOOK)) {
                 object.markCaught();
 
                 // POLYMORPHISM: the same call does different things -
@@ -129,7 +119,7 @@ public final class GameManager {
     }
 
     private void checkEndConditions() {
-        if (player.getScore() >= QUOTA) {
+        if (player.getScore() >= GameConstants.QUOTA_CH1) {
             endGame(State.WON, "Quota reached!");
         } else if (!player.isAlive()) {
             endGame(State.LOST, "You caught too many fish!");
@@ -144,24 +134,25 @@ public final class GameManager {
     // ---- Spawning ----
 
     private OceanObject createRandomObject() {
-        // 60% trash, 40% fish
-        return (random.nextDouble() < 0.6) ? createTrash() : createFish();
+        return (random.nextDouble() < GameConstants.SPAWN_TRASH_CHANCE) ? createTrash() : createFish();
     }
 
     private OceanTrash createTrash() {
-        return new OceanTrash(randomX(), randomY(), randomSpeed(20, 45));
+        return new OceanTrash(randomX(), randomY(), randomSpeed(GameConstants.TRASH_SPEED_MIN, GameConstants.TRASH_SPEED_MAX));
     }
 
     private Fish createFish() {
-        return new Fish(randomX(), randomY(), randomSpeed(60, 120));
+        return new Fish(randomX(), randomY(), randomSpeed(GameConstants.FISH_SPEED_MIN, GameConstants.FISH_SPEED_MAX));
     }
 
     private double randomX() {
-        return 40 + random.nextDouble() * (WORLD_WIDTH - 80);
+        return GameConstants.SPAWN_MARGIN_X
+                + random.nextDouble() * (GameConstants.WORLD_WIDTH - 2 * GameConstants.SPAWN_MARGIN_X);
     }
 
     private double randomY() {
-        return WATER_Y + 80 + random.nextDouble() * (WORLD_HEIGHT - WATER_Y - 140);
+        return GameConstants.MIN_SPAWN_Y
+                + random.nextDouble() * (GameConstants.MAX_SPAWN_Y - GameConstants.MIN_SPAWN_Y);
     }
 
     /** A speed between min and max, randomly to the left or right. */
