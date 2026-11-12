@@ -136,6 +136,16 @@ public final class StoryText {
     public static final String TUT_PUFFER = "Pufferfish swell up near the hook. Steer clear!";
     public static final String TUT_BARRACUDA = "Barracuda flash, then charge. Dodge or recall!";
 
+    // ---- Hints after repeated mistakes ----
+    public static final String HINT_FISH_STREAK = "Those are fish! Lift only trash. Watch the shapes.";
+    public static final String HINT_SLIP = "Wrong tool! Hook = bottles, Magnet = cans, Cutter = nets.";
+    public static final String HINT_GEAR_PLASTIC = "Plastic bottles: use the Hook (1).";
+    public static final String HINT_GEAR_CAN = "Metal cans: use the Magnet (2).";
+    public static final String HINT_GEAR_NET = "Fishing nets: use the Net Cutter (3).";
+    public static final String HINT_IDLE = "Still there? Drop the line. Trash won't wait.";
+    public static final String HINT_LOW_TIME = "Time is low. Go for the big pieces!";
+    public static final String HINT_LOW_HEALTH = "Last health! Skip anything that swims.";
+
     // ---- Chapter cleared ----
     public static final String CLEAR_TITLE = "CHAPTER CLEARED";
     public static final String CLEAR_POINTS = "Points";

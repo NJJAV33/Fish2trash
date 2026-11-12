@@ -391,12 +391,39 @@ classDiagram
 
     class SessionStats {
         -counts Map
+        -fishStreak int
+        -slipStreak int
+        -secondsSinceLaunch double
         +onGameEvent(event)
+        +tick(dt)
         +getLaunches() int
         +getCatches() int
         +getSlips() int
         +getFishHits() int
+        +getFishStreak() int
+        +getSlipStreak() int
     }
+
+    class HintEngine {
+        -rules List
+        -spoken Set
+        -cooldown double
+        -shown int
+        +update(dt, stats, game) String
+    }
+
+    class HintRule {
+        <<interface>>
+        +isTriggered(stats, game) boolean
+        +getPriority() int
+        +getText(stats) String
+    }
+
+    class FishStreakRule
+    class SlipStreakRule
+    class IdleRule
+    class LowTimeRule
+    class LowHealthRule
 
     class GameEvent {
         -x double
@@ -421,6 +448,7 @@ classDiagram
         DELIVERED
         LOW_TIME_TICK
         TUTORIAL_PROMPT
+        HINT_SHOWN
         QUOTA_REACHED
         CHAPTER_CLEARED
         CHAPTER_FAILED
@@ -482,6 +510,14 @@ classDiagram
     GameManager *-- Level
     GameManager *-- TimeLimit
     GameManager *-- SessionStats
+    GameManager *-- HintEngine
+    HintEngine *-- HintRule : 5 rules
+    HintEngine ..> SessionStats : reads
+    HintRule <|.. FishStreakRule
+    HintRule <|.. SlipStreakRule
+    HintRule <|.. IdleRule
+    HintRule <|.. LowTimeRule
+    HintRule <|.. LowHealthRule
     GameManager --> ChapterData : plays
     GameManager o-- GameListener : listeners, 0 or more
     GameListener <|.. SessionStats

@@ -88,6 +88,15 @@ public final class GameConstants {
     public static final int LOW_TIME_S = 10;       // the clock ticks and turns red from here down
     public static final int URGENT_TIME_S = 5;     // and ticks higher from here down
 
+    // ---- Hints after repeated mistakes ----
+    public static final double HINT_COOLDOWN_S = 20;       // quiet time after every hint
+    public static final int HINT_MAX_PER_CHAPTER = 3;
+    public static final int HINT_FISH_STREAK = 3;          // fish hooked in a row
+    public static final int HINT_SLIP_STREAK = 2;          // wrong-tool touches in a row
+    public static final double HINT_IDLE_S = 12;           // seconds without dropping the line
+    public static final double HINT_LOW_TIME_S = 15;       // seconds left, with less than half the quota
+    public static final int HINT_LOW_HEALTH = 1;
+
     // ---- Spawning (the tables themselves are in model.ChapterData) ----
     public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
     public static final double MIN_SPAWN_Y = 210;          // default spawn depth range

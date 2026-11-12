@@ -30,6 +30,7 @@ public final class GameManager implements GameView, CatchResolver {
     private final Level level;
     private final List<GameListener> listeners = new ArrayList<>();
     private final SessionStats stats = new SessionStats();
+    private final HintEngine hints = new HintEngine();
 
     private final Player player;
     private final Boat boat;
@@ -154,6 +155,16 @@ public final class GameManager implements GameView, CatchResolver {
         checkHookCollision(hook);
         if (lineWasOut && hook.isSwinging()) {
             onHookReturned(hook);
+        }
+        giveHintIfDue(dt);
+    }
+
+    /** The hint engine watches the stats; when it has something to say, it is announced like any event. */
+    private void giveHintIfDue(double dt) {
+        stats.tick(dt);
+        String hint = hints.update(dt, stats, this);
+        if (status == ChapterStatus.RUNNING && !hint.isEmpty()) {
+            emit(GameEvent.withText(EventType.HINT_SHOWN, hint));
         }
     }
 

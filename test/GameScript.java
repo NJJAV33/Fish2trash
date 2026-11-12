@@ -61,13 +61,14 @@ final class GameScript {
 
     /**
      * Registers a listener that writes down every gameplay event.
-     * Tips and low-time ticks are left out: they depend on the clock, not on
-     * what the player does.
+     * Tips, hints and low-time ticks are left out: they are advice and
+     * clock signals, not part of what the player did.
      */
     static List<GameEvent> record(GameManager game) {
         List<GameEvent> events = new ArrayList<>();
         game.addListener(event -> {
-            if (event.getType() != EventType.TUTORIAL_PROMPT && event.getType() != EventType.LOW_TIME_TICK) {
+            if (event.getType() != EventType.TUTORIAL_PROMPT && event.getType() != EventType.HINT_SHOWN
+                    && event.getType() != EventType.LOW_TIME_TICK) {
                 events.add(event);
             }
         });

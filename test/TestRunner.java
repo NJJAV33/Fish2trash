@@ -23,6 +23,7 @@ public final class TestRunner {
         run("EquipmentMatrixTest", EquipmentMatrixTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
+        run("HintTest", HintTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);
         run("LoadoutTest", LoadoutTest::run);
         run("MathxTest", MathxTest::run);
