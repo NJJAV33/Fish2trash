@@ -17,6 +17,7 @@ public final class TestRunner {
         run("BoatHookTest", BoatHookTest::run);
         run("ChapterFlowTest", ChapterFlowTest::run);
         run("DangerousFishTest", DangerousFishTest::run);
+        run("DiagramTest", DiagramTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);
