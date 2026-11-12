@@ -1,6 +1,6 @@
-# FISH2TRASH (Swing demo)
+# FISH2TRASH
 
-Clean the ocean: hook trash, avoid fish. Reach 50 points before time or health runs out.
+Clean the ocean: hook the trash, spare the fish. Reach 100 points before time or health runs out.
 
 ## Requirements
 
@@ -25,88 +25,109 @@ javac --release 17 -d out $(find src -name '*.java')
 java -cp out Main
 ```
 
-**Controls:** `Space` launch the hook · `R` restart
+## Controls
+
+| Key | Action |
+|---|---|
+| `A` / `D` or arrow keys | Move the boat (only while the hook is swinging) |
+| `Space` | Drop the hook. Press again while it is going out to pull it back |
+| `R` | Restart |
+
+## Rules
+
+- Trash earns points: bottle 10, can 20, fishing net 50.
+- Hooking a fish costs 1 health. The fish swims away.
+- Reach the quota of 100 and the clock stops; you win when that catch reaches the boat.
+- You lose if time runs out or health reaches 0.
 
 ## Folder structure
 
 ```
 FISH2TRASH/
-├── README.md
 ├── src/
-│   ├── Main.java              opens the window on the Swing thread
-│   ├── model/                 the things in the game
-│   │   ├── Player.java        private health and score
-│   │   ├── Boat.java          position, owns the Hook
-│   │   ├── Hook.java          swing → extend → retract
-│   │   ├── OceanObject.java   abstract base: position, movement, collision
-│   │   ├── OceanTrash.java    +10 points when caught
-│   │   └── Fish.java          −1 health when caught
-│   ├── game/
-│   │   └── GameManager.java   rules: objects, collisions, countdown, win/lose
-│   └── ui/
-│       └── GamePanel.java     drawing + key bindings + frame timer
-├── test/                      tests, run by scripts/test
-│   ├── TestRunner.java        runs every test, exits with 1 if one fails
-│   ├── Check.java             assertTrue / assertEquals helpers
-│   └── PlayerTest.java
-├── scripts/                   build, run and test (.sh and .bat)
-├── out/                       compiled game (created by the build, not in git)
-└── out-test/                  compiled tests (not in git)
+│   ├── Main.java            opens the window on the Swing thread
+│   ├── model/               the things in the game - no drawing code
+│   │   ├── OceanObject      abstract base: position, movement, collision
+│   │   ├── OceanTrash       abstract: gives points, rides the hook
+│   │   │   └── PlasticBottle, Can, FishingNet
+│   │   ├── Fish             abstract: costs health, swims away
+│   │   │   └── SmallFish
+│   │   ├── ObjectKind       enum: builds each object, lookup key for painters
+│   │   ├── ObjectView       read-only view of an object, for the ui
+│   │   ├── Player           private health and score
+│   │   ├── Boat, Hook       the boat owns the hook
+│   │   ├── TimeLimit        the countdown
+│   │   └── Equipment, PlainHook, Loadout, CatchOutcome, CatchResolver
+│   ├── game/                the rules
+│   │   ├── GameManager      one chapter attempt: collisions, quota, win/lose
+│   │   ├── ChapterStatus    running / cleared / failed
+│   │   └── GameEvent, EventType, GameListener   (observer pattern)
+│   ├── ui/
+│   │   ├── GamePanel        frame timer, keys, HUD
+│   │   ├── InputState       which movement keys are held
+│   │   └── render/          SceneRenderer, PainterRegistry and one painter per kind
+│   └── util/
+│       ├── GameConstants    every tuning number in one place
+│       └── Mathx            clamp, lerp, easing
+├── test/                    tests, run by scripts/test
+├── scripts/                 build, run and test (.sh and .bat)
+├── out/                     compiled game (created by the build, not in git)
+└── out-test/                compiled tests (not in git)
 ```
 
 ## How the classes work together
 
 1. `Main` builds a `JFrame` on the event-dispatch thread and adds a `GamePanel`.
 2. `GamePanel` runs a `javax.swing.Timer` (~60 fps). Every tick it measures the real
-   time since the last tick (`dt`), calls `manager.update(dt)`, then `repaint()`.
-   `paintComponent` only *reads* the game state — updating and drawing stay separate.
-3. `GameManager` owns the `Player`, the `Boat` (which owns the `Hook`), and a
-   `List<OceanObject>` holding both trash and fish. Each update it counts down the timer,
-   moves the hook and objects, and checks if the hook tip touches an object.
-4. On a hit, the manager marks the object caught and calls `object.onCaught(player)`.
-   It doesn't know or care whether it's trash or a fish — the object decides.
-5. The hook drags the object back to the boat, where it's removed and a new one spawns.
-6. Score ≥ 50 → win immediately. Health 0 or time 0 → lose. After that, `update()`
-   does nothing until `R` calls `restart()`, which rebuilds every piece of state.
+   time since the last tick (`dt`), passes the held movement keys to the game, calls
+   `manager.update(dt)`, then `repaint()`. Painting only *reads* the game.
+3. `GameManager` owns the `Player`, the `Boat` (which owns the `Hook`), a `TimeLimit`
+   and a `List<OceanObject>` holding bottles, cans, nets and fish.
+4. When the hook tip touches an object, the tool on the line (`Equipment`) answers with
+   a `CatchOutcome`: catch, slip or pass. The outcome calls back into the manager.
+5. On a catch the manager calls `object.onCaught(player, hook)`. Trash adds points and
+   attaches itself to the hook; a fish costs health and swims away. The manager never
+   checks which one it was.
+6. The manager announces what happened as `GameEvent`s to its `GameListener`s.
+7. `SceneRenderer` draws the world. For each object it asks `PainterRegistry` for the
+   painter of that object's `ObjectKind`.
 
 ### OOP concepts, and where to point at them
 
 | Concept | Where |
 |---|---|
-| Encapsulation | `Player` — `health`/`score` are private; only `addPoints()` and `loseHealth()` change them, and they enforce the rules. `GameManager.getObjects()` returns a read-only list. |
-| Inheritance | `OceanTrash` and `Fish` both `extends OceanObject` and reuse its movement and collision code. |
-| Abstraction | `OceanObject` is `abstract` with abstract `onCaught()` and `draw()` — it defines *what* every ocean object does, not *how*. |
-| Polymorphism | `object.onCaught(player)` in `GameManager` and `object.draw(g2)` in `GamePanel` — same call, different behavior per subclass. |
-| Composition | `Boat` creates and owns its `Hook`. |
+| Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. `GameManager.getObjects()` returns a read-only list. |
+| Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`. `Equipment` → `PlainHook`. |
+| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `ObjectView`, `GameListener`, `CatchResolver` and `ObjectPainter` are interfaces that hide what is behind them. |
+| Polymorphism | `object.onCaught(player, hook)`, `tool.attempt(object)`, `outcome.resolve(...)` and `painter.paint(...)`: one call, different behaviour per class. |
+| Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools. |
+
+Design rules, checked by `ArchitectureTest` on every test run: `model` and `game` have
+no drawing, window or sound imports; nothing uses `instanceof`; no public fields
+except constants.
 
 ## Manual testing checklist
 
-**Catching trash**
-- [ ] Hook swings left and right under the boat by itself.
-- [ ] Space launches it straight in the direction it was pointing.
-- [ ] Hitting a can gives +10 score; the can rides the hook back and disappears.
-- [ ] A new object appears after the catch.
-- [ ] Space does nothing while the hook is already out.
+**Boat and hook**
+- [ ] `A`/`D` and the arrow keys move the boat; it stops near both screen edges.
+- [ ] The boat cannot move while the hook is out.
+- [ ] `Space` launches the hook straight along its swing angle.
+- [ ] `Space` again while it is going out pulls it back empty.
+- [ ] A launch that hits nothing goes to full length and returns empty.
 
-**Catching fish**
-- [ ] Hitting a fish removes 1 health; score doesn't change.
-- [ ] The hook catches only one object per launch, even if it passes others on the way back.
+**Catching**
+- [ ] Bottle +10, can +20, net +50. The trash rides the hook up and a new piece appears.
+- [ ] A fish costs 1 health, gives no points, and swims away; the hook comes back empty.
+- [ ] Only one object is touched per launch.
 
-**Missing**
-- [ ] A launch that hits nothing goes to max distance and returns empty.
-
-**Winning**
-- [ ] Catching the 5th can (50 points) shows **YOU WIN!** right away, before the hook gets back.
-- [ ] Timer, hook and objects freeze; Space does nothing.
-
-**Losing**
-- [ ] Catching 3 fish shows **GAME OVER — You caught too many fish!**
-- [ ] Letting the timer hit 0 shows **GAME OVER — Time's up!**
-- [ ] Gameplay freezes after losing.
+**Winning and losing**
+- [ ] At 100 points the timer stops; **YOU WIN!** shows when the catch reaches the boat.
+- [ ] Three fish show **GAME OVER** with "You caught too many fish!".
+- [ ] Letting the timer hit 0 shows **GAME OVER** with "Time's up!".
+- [ ] Nothing moves after the end; `Space` does nothing.
 
 **Restarting**
-- [ ] R after a win or loss: score 0, health 3, time 60, fresh objects, hook swinging.
-- [ ] R in the middle of a game also resets everything, including a hook that was out.
+- [ ] `R` at any time starts a fresh game: score 0, health 3, time 65.
 
 ## Contributing
 

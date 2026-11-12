@@ -1,0 +1,37 @@
+package ui.render;
+
+import java.awt.Graphics2D;
+import java.util.EnumMap;
+import java.util.Map;
+import model.ObjectKind;
+import model.ObjectView;
+
+/**
+ * Knows which painter draws which kind of object.
+ *
+ * The lookup is a map from ObjectKind to painter, so drawing needs no
+ * if/else chain and no type checks.
+ */
+public final class PainterRegistry {
+
+    private final Map<ObjectKind, ObjectPainter> painters = new EnumMap<>(ObjectKind.class);
+
+    public PainterRegistry() {
+        painters.put(ObjectKind.PLASTIC_BOTTLE, new BottlePainter());
+        painters.put(ObjectKind.CAN, new CanPainter());
+        painters.put(ObjectKind.FISHING_NET, new NetPainter());
+        painters.put(ObjectKind.SMALL_FISH, new SmallFishPainter());
+
+        // Fail at startup, not in the middle of a game, if a new kind was
+        // added without a painter.
+        for (ObjectKind kind : ObjectKind.values()) {
+            if (!painters.containsKey(kind)) {
+                throw new IllegalStateException("No painter registered for " + kind);
+            }
+        }
+    }
+
+    public void paint(Graphics2D g, ObjectView object) {
+        painters.get(object.getKind()).paint(g, object);
+    }
+}

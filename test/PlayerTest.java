@@ -19,8 +19,9 @@ public final class PlayerTest {
         player.addPoints(-50);
         Check.assertEquals("negative points are ignored", 10, player.getScore());
 
-        player.loseHealth(1);
+        player.loseHealth();
         Check.assertEquals("health after one hit", 2, player.getHealth());
+        Check.assertEquals("max health stays the same", 3, player.getMaxHealth());
         Check.assertTrue("still alive at 2 health", player.isAlive());
 
         player.loseHealth(99);

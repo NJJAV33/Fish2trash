@@ -1,45 +1,32 @@
 package model;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import util.GameConstants;
 
 /**
- * A fish. Catching one hurts the ocean, so the player loses health.
+ * A fish. Hooking one hurts it, so the player loses health and the fish
+ * swims away again.
  *
  * INHERITANCE: Fish "is an" OceanObject, just like OceanTrash, but it
- * overrides onCaught() and draw() with its own behavior.
+ * overrides onCaught() with the opposite result. Concrete fish extend it.
  */
-public class Fish extends OceanObject {
+public abstract class Fish extends OceanObject {
 
-    public static final int DAMAGE = 1;
+    private final int damage;
 
-    public Fish(double x, double y, double speedX) {
-        super(x, y, 16, speedX);
+    protected Fish(double x, double y, double radius, double speedX, int damage) {
+        super(x, y, radius, speedX);
+        this.damage = damage;
     }
 
     @Override
-    public void onCaught(Player player) {
-        player.loseHealth(DAMAGE);
+    public void onCaught(Player player, Hook hook) {
+        player.loseHealth(damage);
+        // The fish gets away, and cannot be hooked again for a moment.
+        release(GameConstants.FISH_RELEASE_IMMUNITY_S);
+        hook.beginRetractEmpty();
     }
 
-    @Override
-    public void draw(Graphics2D g) {
-        int cx = (int) x;
-        int cy = (int) y;
-        int facing = (speedX >= 0) ? 1 : -1;   // 1 = facing right, -1 = facing left
-
-        g.setColor(new Color(255, 145, 40));
-        g.fillOval(cx - 18, cy - 11, 36, 22);          // body
-
-        int tailBase = cx - facing * 15;                // tail sits behind the body
-        int tailEnd = cx - facing * 30;
-        g.fillPolygon(new int[] {tailBase, tailEnd, tailEnd},
-                      new int[] {cy, cy - 10, cy + 10}, 3);
-
-        int eyeX = cx + facing * 9;
-        g.setColor(Color.WHITE);
-        g.fillOval(eyeX - 4, cy - 7, 8, 8);
-        g.setColor(Color.BLACK);
-        g.fillOval(eyeX - 2, cy - 5, 4, 4);
+    public int getDamage() {
+        return damage;
     }
 }

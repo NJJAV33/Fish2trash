@@ -1,37 +1,31 @@
 package model;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-
 /**
- * A piece of trash (a soda can). Catching it cleans the ocean and earns points.
+ * A piece of trash. Catching it earns points and it rides the hook up to
+ * the boat.
  *
  * INHERITANCE: OceanTrash "is an" OceanObject, so it gets position, movement
- * and collision for free and only adds what makes trash different.
+ * and collision for free. It is still abstract: the concrete kinds of trash
+ * (PlasticBottle, Can, FishingNet) extend it and only say what they are and
+ * what they are worth.
  */
-public class OceanTrash extends OceanObject {
+public abstract class OceanTrash extends OceanObject {
 
-    public static final int POINTS = 10;
+    private final int points;
 
-    public OceanTrash(double x, double y, double speedX) {
-        super(x, y, 14, speedX);
+    protected OceanTrash(double x, double y, double radius, double speedX, int points) {
+        super(x, y, radius, speedX);
+        this.points = points;
     }
 
     @Override
-    public void onCaught(Player player) {
-        player.addPoints(POINTS);
+    public void onCaught(Player player, Hook hook) {
+        markCaught();
+        player.addPoints(points);
+        hook.attach(this);
     }
 
-    @Override
-    public void draw(Graphics2D g) {
-        int left = (int) (x - 10);
-        int top = (int) (y - 14);
-
-        g.setColor(new Color(175, 180, 186));      // metal can
-        g.fillRoundRect(left, top, 20, 28, 6, 6);
-        g.setColor(new Color(205, 60, 60));        // label
-        g.fillRect(left, top + 9, 20, 10);
-        g.setColor(new Color(90, 95, 100));        // outline
-        g.drawRoundRect(left, top, 20, 28, 6, 6);
+    public int getPoints() {
+        return points;
     }
 }
