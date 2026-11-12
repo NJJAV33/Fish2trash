@@ -28,6 +28,7 @@ public final class StoryText {
             + "SPACE                 Drop the hook\n"
             + "SPACE again           Pull the hook back early\n"
             + "1 2 3  or  Q / E      Change tool (while the hook swings)\n"
+            + "H                     Show the last tip again\n"
             + "P or ESC              Pause\n"
             + "M                     Sound on or off\n"
             + "\n"
@@ -220,7 +221,7 @@ public final class StoryText {
     // ---- Small prompts ----
     public static final String NEXT_PROMPT = "ENTER";
     public static final String SKIP_PROMPT = "ESC: skip";
-    public static final String PLAY_HINT = "A / D: move     SPACE: drop or recall     1 2 3: tool     P: pause     M: sound";
+    public static final String PLAY_HINT = "A / D: move    SPACE: drop or recall    1 2 3: tool    H: last tip    P: pause    M: sound";
     public static final String HUD_OBJECTIVE = "Hook trash, spare the fish";
     public static final String HUD_SCORE = "SCORE";
 

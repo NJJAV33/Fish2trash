@@ -12,6 +12,7 @@ import ui.render.EffectsSystem;
 import ui.render.HudPainter;
 import ui.render.SceneRenderer;
 import util.GameConstants;
+import util.SoundEffect;
 
 /**
  * The screen where a chapter is played. Each time it is entered it starts a
@@ -30,7 +31,7 @@ public final class GameScreen implements Screen {
     private final AudioEventListener sounds;
     private final PauseOverlay pauseOverlay;
     private GameManager game;
-    private String tip;          // the tip on screen, or null
+    private String tip;          // the last tip or hint, or null before the first one
     private double tipAge;       // seconds since it appeared
     private double time;         // seconds on this screen, drives HUD animation
     private double secondsSinceEnd;
@@ -60,8 +61,9 @@ public final class GameScreen implements Screen {
 
     /** OBSERVER: the game announces events; this screen reacts to the ones it shows. */
     private void onGameEvent(GameEvent event) {
-        // A tip, or the reason a tool could not be picked. Both appear in the same toast.
+        // A tip, a hint, or the reason a tool could not be picked. All appear in the same toast.
         boolean carriesMessage = event.getType() == EventType.TUTORIAL_PROMPT
+                || event.getType() == EventType.HINT_SHOWN
                 || event.getType() == EventType.SWAP_DENIED;
         if (carriesMessage && !event.getText().isEmpty()) {
             tip = event.getText();
@@ -101,8 +103,18 @@ public final class GameScreen implements Screen {
             game.spaceAction();
         } else if (keyCode == KeyEvent.VK_P || keyCode == KeyEvent.VK_ESCAPE) {
             pause();
+        } else if (keyCode == KeyEvent.VK_H) {
+            showLastTipAgain();
         } else if (GameConstants.EQUIPMENT_ENABLED) {
             toolKey(keyCode);
+        }
+    }
+
+    /** H brings the last tip or hint back, for a player who missed it. */
+    private void showLastTipAgain() {
+        if (tip != null) {
+            tipAge = 0;
+            screens.getAudio().play(SoundEffect.HINT);
         }
     }
 

@@ -38,6 +38,7 @@ public final class ScreenFlowTest {
         endingTheRunReturnsToTheMenu();
         menusClickAndTheMKeyMutes();
         toolKeysReachTheGame();
+        theHKeyBringsTheLastTipBack();
     }
 
     private static void menusClickAndTheMKeyMutes() {
@@ -77,6 +78,36 @@ public final class ScreenFlowTest {
                 SoundEffect.WRONG_TOOL, audio.getPlayed().get(audio.getPlayed().size() - 1));
         draw();   // the "arrives in chapter 2" message is on screen now
         expect("the chapter goes on", GameState.PLAYING);
+    }
+
+    private static void theHKeyBringsTheLastTipBack() {
+        startChapterOne();
+        press(KeyEvent.VK_H);
+        Check.assertTrue("H does nothing before the first tip", !audio.getPlayed().contains(SoundEffect.HINT));
+
+        play(2.0);   // the first tip appears one second into chapter 1
+        int tipsHeard = count(SoundEffect.HINT);
+        Check.assertEquals("the first tip chimes", 1, tipsHeard);
+        play(5.0);   // long enough for it to fade away
+        press(KeyEvent.VK_H);
+        Check.assertEquals("H shows it again, with its chime", tipsHeard + 1, count(SoundEffect.HINT));
+        draw();
+
+        // By second 15: the tip about fish (second 8), and the idle hint
+        // for twelve seconds without dropping the line.
+        play(8.0);
+        Check.assertEquals("the next tip and the idle hint chime too", tipsHeard + 3, count(SoundEffect.HINT));
+        expect("the chapter goes on", GameState.PLAYING);
+    }
+
+    private static int count(SoundEffect effect) {
+        int count = 0;
+        for (SoundEffect played : audio.getPlayed()) {
+            if (played == effect) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static void menuOpensHowToAndComesBack() {

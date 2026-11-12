@@ -47,7 +47,9 @@ public final class StoryTextTest {
         String[] tips = {
             StoryText.TUT_AIM, StoryText.TUT_FISH, StoryText.TUT_QUOTA,
             StoryText.TUT_MAGNET, StoryText.TUT_MAGNET_ALT, StoryText.TUT_BIGFISH,
-            StoryText.TUT_CUTTER, StoryText.TUT_CUTTER_ALT, StoryText.TUT_PUFFER, StoryText.TUT_BARRACUDA
+            StoryText.TUT_CUTTER, StoryText.TUT_CUTTER_ALT, StoryText.TUT_PUFFER, StoryText.TUT_BARRACUDA,
+            StoryText.HINT_FISH_STREAK, StoryText.HINT_SLIP, StoryText.HINT_GEAR_PLASTIC, StoryText.HINT_GEAR_CAN,
+            StoryText.HINT_GEAR_NET, StoryText.HINT_IDLE, StoryText.HINT_LOW_TIME, StoryText.HINT_LOW_HEALTH
         };
         for (String tip : tips) {
             checkPage("tip \"" + tip + "\"", tip, 1, TIP_LENGTH);
