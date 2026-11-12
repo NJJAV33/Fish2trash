@@ -24,6 +24,7 @@ public final class TestRunner {
         run("OceanObjectTest", OceanObjectTest::run);
         run("PlayerTest", PlayerTest::run);
         run("RenderTest", RenderTest::run);
+        run("ScreenFlowTest", ScreenFlowTest::run);
         run("SessionTest", SessionTest::run);
 
         System.out.println();

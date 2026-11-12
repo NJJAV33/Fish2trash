@@ -95,6 +95,11 @@ public final class GamePanel extends JPanel {
         return screens.getState();
     }
 
+    /** True while the pause menu is up. */
+    public boolean isPaused() {
+        return screens.isPaused();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
