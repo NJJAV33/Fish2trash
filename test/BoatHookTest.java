@@ -1,5 +1,6 @@
 import model.Boat;
 import model.Hook;
+import model.Loadout;
 import util.GameConstants;
 
 /** Checks boat steering and the hook's swing, launch and recall rules. */
@@ -21,7 +22,7 @@ public final class BoatHookTest {
     }
 
     private static void boatMovesAndTakesTheHookAlong() {
-        Boat boat = new Boat(400, GameConstants.WATER_Y);
+        Boat boat = new Boat(400, GameConstants.WATER_Y, Loadout.standard());
         boat.moveBy(1, 0.5);
         Check.assertEquals("boat moved right", 400 + GameConstants.BOAT_SPEED * 0.5, boat.getX(), TINY);
         Check.assertEquals("hook anchor follows the boat", boat.getX(), boat.getHook().getAnchorX(), TINY);
@@ -36,7 +37,7 @@ public final class BoatHookTest {
     }
 
     private static void boatStaysInsideTheScreen() {
-        Boat boat = new Boat(400, GameConstants.WATER_Y);
+        Boat boat = new Boat(400, GameConstants.WATER_Y, Loadout.standard());
         boat.moveBy(1, 100);
         Check.assertEquals("boat stops at the right limit", GameConstants.BOAT_MAX_X, boat.getX(), TINY);
         boat.moveBy(-1, 100);
@@ -44,14 +45,14 @@ public final class BoatHookTest {
     }
 
     private static void boatHoldsStillWhileTheLineIsOut() {
-        Boat boat = new Boat(400, GameConstants.WATER_Y);
+        Boat boat = new Boat(400, GameConstants.WATER_Y, Loadout.standard());
         boat.getHook().launch();
         boat.moveBy(1, 1);
         Check.assertEquals("boat cannot move while the hook is out", 400.0, boat.getX(), TINY);
     }
 
     private static void hookFliesStraightAndComesBack() {
-        Hook hook = new Hook(400, GameConstants.WATER_Y);
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.standard());
         Check.assertTrue("hook starts swinging", hook.isSwinging());
         Check.assertEquals("hook starts at rest length", GameConstants.HOOK_REST, hook.getLength(), TINY);
 
@@ -83,7 +84,7 @@ public final class BoatHookTest {
     }
 
     private static void hookCanBeRecalledOnTheWayOut() {
-        Hook hook = new Hook(400, GameConstants.WATER_Y);
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.standard());
         hook.recall();
         Check.assertTrue("recall does nothing while swinging", hook.isSwinging());
 

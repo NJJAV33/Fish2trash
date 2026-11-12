@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import model.Boat;
+import model.CatchResolver;
+import model.Equipment;
 import model.Hook;
+import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
 import model.Player;
@@ -18,7 +21,7 @@ import util.GameConstants;
  * It contains no drawing and no keyboard code - the ui package handles those.
  * A new game is simply a new GameManager.
  */
-public final class GameManager {
+public final class GameManager implements CatchResolver {
 
     public enum State { PLAYING, WON, LOST }
 
@@ -48,10 +51,10 @@ public final class GameManager {
     // A launch that comes back with this still false was a miss.
     private boolean launchResolved;
 
-    public GameManager(Random random) {
+    public GameManager(Loadout loadout, Random random) {
         this.random = random;
         player = new Player(GameConstants.HEALTH_CH1);
-        boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y);
+        boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y, loadout);
 
         for (int i = 0; i < GameConstants.SPAWN_TRASH_COUNT; i++) {
             objects.add(createTrash());
@@ -134,24 +137,27 @@ public final class GameManager {
             return;
         }
 
+        Equipment tool = hook.getLoadout().getSelected();
         for (OceanObject object : objects) {
-            // isCatchable() is false for caught or just-released objects,
-            // so nothing can be collected twice.
-            if (object.isCatchable()
-                    && object.collidesWith(hook.getTipX(), hook.getTipY(), GameConstants.RADIUS_HOOK)) {
-                resolveCatch(object, hook);
-                return;   // one object per launch
+            if (object.collidesWith(hook.getTipX(), hook.getTipY(), tool.getTipRadius())) {
+                // The tool decides the outcome (catch, slip or pass), and the
+                // outcome calls back onCatch, onSlip or onPass below.
+                tool.attempt(object).resolve(this, object);
+                if (!hook.isExtending()) {
+                    return;   // this throw is over; a pass keeps flying
+                }
             }
         }
     }
 
-    private void resolveCatch(OceanObject object, Hook hook) {
+    @Override
+    public void onCatch(OceanObject object) {
         int scoreBefore = player.getScore();
         int healthBefore = player.getHealth();
 
         // POLYMORPHISM: the same call does different things - trash adds
         // points and rides the hook, a fish costs health and swims away.
-        object.onCaught(player, hook);
+        object.onCaught(player, boat.getHook());
         launchResolved = true;
 
         // The manager looks at what changed instead of asking what the object is.
@@ -162,6 +168,20 @@ public final class GameManager {
             emit(GameEvent.about(EventType.HEALTH_LOST, object, healthBefore - player.getHealth()));
         }
         checkEndConditions();
+    }
+
+    @Override
+    public void onSlip(OceanObject object) {
+        // Wrong tool: nothing is gained or lost except time.
+        object.grantImmunity(GameConstants.SLIP_IMMUNITY_S);
+        boat.getHook().beginRetractEmpty();
+        launchResolved = true;
+        emit(GameEvent.about(EventType.SLIPPED, object, 0));
+    }
+
+    @Override
+    public void onPass(OceanObject object) {
+        // The tool ignores this object, so the throw simply carries on.
     }
 
     /** The hook is back at the boat: unload the catch, or count a miss. */

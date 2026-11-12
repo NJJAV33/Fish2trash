@@ -24,10 +24,12 @@ public class Hook {
     private double length;
     private double swingTime;   // seconds spent swinging, drives the swing motion
     private OceanObject caughtObject;
+    private final Loadout loadout;   // the tools that can go on this line
 
-    public Hook(double anchorX, double anchorY) {
+    public Hook(double anchorX, double anchorY, Loadout loadout) {
         this.anchorX = anchorX;
         this.anchorY = anchorY;
+        this.loadout = loadout;
         this.state = State.SWINGING;
         this.length = GameConstants.HOOK_REST;
     }
@@ -148,5 +150,9 @@ public class Hook {
 
     public void clearCaughtObject() {
         caughtObject = null;
+    }
+
+    public Loadout getLoadout() {
+        return loadout;
     }
 }

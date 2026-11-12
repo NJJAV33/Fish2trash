@@ -33,7 +33,12 @@ public final class GameConstants {
     public static final double HOOK_CARRY = 260;     // speed coming back loaded
     public static final double SWING_MAX_DEG = 60;   // widest swing angle
     public static final double SWING_SPEED = 1.8;    // how fast it rocks
-    public static final double RADIUS_HOOK = 8;      // size of the hook tip for collisions
+
+    // ---- Tools ----
+    public static final double RADIUS_HOOK = 12;     // size of the hook tip for collisions
+    public static final double SLIP_IMMUNITY_S = 1.5;   // an object that slipped off can't be touched for this long
+    // false = one hook catches every kind of trash; true = each kind needs its own tool
+    public static final boolean EQUIPMENT_ENABLED = false;
 
     // ---- Trash: points and size ----
     public static final int POINTS_BOTTLE = 10;

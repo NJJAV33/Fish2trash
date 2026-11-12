@@ -16,11 +16,11 @@ public class Boat {
     private int facing;       // 1 = pointing right, -1 = pointing left
     private final Hook hook;
 
-    public Boat(double x, double y) {
+    public Boat(double x, double y, Loadout loadout) {
         this.x = x;
         this.y = y;
         this.facing = 1;
-        this.hook = new Hook(x, y);
+        this.hook = new Hook(x, y, loadout);
     }
 
     /**

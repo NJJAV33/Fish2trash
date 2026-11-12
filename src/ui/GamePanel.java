@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 import game.GameManager;
+import model.Loadout;
 import model.Player;
 import ui.render.SceneRenderer;
 import util.GameConstants;
@@ -36,7 +37,7 @@ public final class GamePanel extends JPanel {
     private static final int FRAME_DELAY_MS = 16;      // about 60 frames per second
     private static final double MAX_STEP_SECONDS = 0.05;
 
-    private GameManager manager = new GameManager(new Random());
+    private GameManager manager = new GameManager(Loadout.standard(), new Random());
     private final SceneRenderer renderer = new SceneRenderer();
     private final InputState input = new InputState();
     private final Timer timer;
@@ -74,7 +75,7 @@ public final class GamePanel extends JPanel {
     private void setupKeyBindings() {
         bindKey(KeyEvent.VK_SPACE, false, () -> manager.spaceAction());
         // Restarting is just starting a brand new game.
-        bindKey(KeyEvent.VK_R, false, () -> manager = new GameManager(new Random()));
+        bindKey(KeyEvent.VK_R, false, () -> manager = new GameManager(Loadout.standard(), new Random()));
 
         // Movement keys are tracked on press AND release, so holding works.
         bindKey(KeyEvent.VK_A, false, () -> input.setLeftHeld(true));

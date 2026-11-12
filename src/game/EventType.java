@@ -10,6 +10,8 @@ public enum EventType {
     OBJECT_CAUGHT,
     /** The hook hit wildlife. The event's value is the health lost. */
     HEALTH_LOST,
+    /** Wrong tool: the object slipped off the hook. */
+    SLIPPED,
     /** The hook went all the way out and came back with nothing. */
     MISSED,
     /** A caught object reached the boat. */

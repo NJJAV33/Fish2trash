@@ -1,6 +1,7 @@
 import model.Can;
 import model.FishingNet;
 import model.Hook;
+import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
 import model.PlasticBottle;
@@ -71,7 +72,7 @@ public final class ModelCatchTest {
     }
 
     private static Hook launchedHook() {
-        Hook hook = new Hook(400, GameConstants.WATER_Y);
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.standard());
         hook.launch();
         return hook;
     }

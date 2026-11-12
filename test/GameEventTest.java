@@ -4,6 +4,7 @@ import game.GameManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import model.Loadout;
 import model.OceanObject;
 
 /**
@@ -24,7 +25,7 @@ public final class GameEventTest {
     }
 
     private static void catchingTrashReportsCatchThenDelivery() {
-        GameManager game = new GameManager(new Random(7));
+        GameManager game = new GameManager(Loadout.standard(), new Random(7));
         List<GameEvent> events = record(game);
         OceanObject trash = GameScript.firstCatchable(game, true);
         int objectsBefore = game.getObjects().size();
@@ -41,7 +42,7 @@ public final class GameEventTest {
     }
 
     private static void hookingAFishReportsHealthLost() {
-        GameManager game = new GameManager(new Random(7));
+        GameManager game = new GameManager(Loadout.standard(), new Random(7));
         List<GameEvent> events = record(game);
         OceanObject fish = GameScript.firstCatchable(game, false);
 
@@ -55,7 +56,7 @@ public final class GameEventTest {
     }
 
     private static void aMissIsReported() {
-        GameManager game = new GameManager(new Random(7));
+        GameManager game = new GameManager(Loadout.standard(), new Random(7));
         List<GameEvent> events = record(game);
         GameScript.clearTheWater(game);
 
@@ -67,7 +68,7 @@ public final class GameEventTest {
     }
 
     private static void aRecallIsNotAMiss() {
-        GameManager game = new GameManager(new Random(7));
+        GameManager game = new GameManager(Loadout.standard(), new Random(7));
         List<GameEvent> events = record(game);
         GameScript.clearTheWater(game);
 
