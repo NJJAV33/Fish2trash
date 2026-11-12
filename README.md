@@ -46,6 +46,7 @@ java -cp out Main
 | `Space` | Drop the hook. Press again while it is going out to pull it back |
 | `1` `2` `3` | Put the Hook, Magnet or Net Cutter on the line (only while it swings) |
 | `Q` / `E` | Previous / next tool |
+| `H` | Show the last tip or hint again |
 | `P` or `Esc` | Pause (resume, sound on or off, restart the chapter, or quit to the menu) |
 | `M` | Sound on or off, on any screen |
 | `Enter` | Confirm, next story page |
@@ -79,6 +80,10 @@ What each tool does:
   reaches the boat.
 - Run out of time or health and you are fired. You can retry the chapter;
   chapters you already cleared stay cleared.
+- The game gives a hint when you keep making the same mistake: three fish in a row,
+  two slips off the wrong tool, twelve seconds without dropping the line, little time
+  with less than half the quota, or your last health. At most three hints per chapter,
+  at least 20 seconds apart.
 
 ## Folder structure
 
@@ -106,7 +111,10 @@ FISH2TRASH/
 │   │   ├── GameSession      the whole run: current chapter, cleared chapters, retries
 │   │   ├── GameView         what the screen may read from a game
 │   │   ├── ChapterResult, ChapterStatus, FailCause, SessionStats, GameState
-│   │   └── GameEvent, EventType, GameListener   (observer pattern)
+│   │   ├── GameEvent, EventType, GameListener   (observer pattern)
+│   │   ├── HintEngine       decides when the player gets a hint
+│   │   └── HintRule         interface, one small class per reason for a hint:
+│   │                        FishStreakRule, SlipStreakRule, IdleRule, LowTimeRule, LowHealthRule
 │   ├── ui/                  the screens
 │   │   ├── GamePanel        frame timer and keyboard
 │   │   ├── ScreenManager    which screen is showing, fades between them
@@ -150,6 +158,8 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
    checks which one it was.
 8. The manager announces what happened as `GameEvent`s to its `GameListener`s
    (the stats counter, the effects, the sounds, and the screen that shows tips).
+   The `HintEngine` reads the stats and, when a `HintRule` is triggered, a hint goes out
+   as one more event.
 9. When the chapter ends, the session records a `ChapterResult` and the screens move on:
    report card and next chapter after a clear, pink slip and retry after a fail.
 
@@ -159,14 +169,15 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 |---|---|
 | Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. Lists are handed out read-only. |
 | Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`. `Equipment` → `PlainHook`, `Magnet`, `NetCutter`. |
-| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver`, `ObjectPainter`, `ToolPainter` and `AudioPlayer` are interfaces that hide what is behind them. |
-| Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
+| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver`, `HintRule`, `ObjectPainter`, `ToolPainter` and `AudioPlayer` are interfaces that hide what is behind them. |
+| Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `rule.isTriggered(stats, game)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
 | Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
 | Custom exception | `Loadout.select()` throws the checked `EquipmentLockedException` for a tool the crew does not have yet. `GameManager.selectTool()` catches it and turns it into a message on screen. |
 | Enums with behaviour | `ObjectKind.create()` and `EquipmentType.create()` build their own objects; `CatchOutcome.resolve()` calls the right method. No `switch` over types. |
 
 Patterns used: observer (`GameListener`), template method (`OceanObject.update`,
-`Equipment.attempt`), a state machine per screen (`ScreenManager`) and inside
+`Equipment.attempt`), strategy (`HintRule`: the engine runs a list of interchangeable
+rules), a state machine per screen (`ScreenManager`) and inside
 `Hook` and `Barracuda`, null object (`SilentAudioPlayer` stands in when there is no
 sound device or in tests).
 
@@ -187,6 +198,7 @@ no test library is needed. The script exits with an error if any check fails.
 | `ModelCatchTest`, `DangerousFishTest` | What each kind of object does when hooked; pufferfish and barracuda behaviour |
 | `EquipmentMatrixTest` | Every cell of the tool table above: three tools against seven kinds of object |
 | `EquipmentTest`, `LoadoutTest` | How a slip plays out; which tools each chapter has; the swap rules (locked tool, wait, not while the line is out) |
+| `HintTest` | Each hint rule fires exactly at its threshold; the most urgent hint goes first; 20 seconds between hints; three per chapter at most |
 | `GameEventTest`, `ChapterFlowTest` | The events the game announces; winning, the frozen clock, and both ways to lose |
 | `LevelSpawnTest` | Spawn tables: timing, counts, distance from the hook, and enough trash to finish |
 | `SessionTest` | Moving on after a clear, retrying after a fail |
@@ -243,6 +255,14 @@ The tests cannot judge how the game feels or sounds. Use the checklist below for
 - [ ] Enter retries the same chapter; Esc returns to the menu.
 - [ ] `P` or `Esc` pauses. Resume, Restart chapter and Quit to menu all work.
 - [ ] Clicking another window pauses the game.
+
+**Hints**
+- [ ] Wait 12 seconds without dropping the line: "Still there? ..." appears.
+- [ ] Hook three fish in a row (chapter 3 has the health for it): a hint about fish appears.
+- [ ] In chapter 2, hit cans with the Hook twice: "Metal cans: use the Magnet (2)."
+- [ ] On the last health: "Last health! ..."
+- [ ] `H` shows the last tip or hint again.
+- [ ] Never more than three hints in one chapter attempt.
 
 **Sound**
 - [ ] Dropping the hook, each kind of trash, a fish hit, reaching the quota, clearing

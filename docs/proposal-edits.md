@@ -55,8 +55,9 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 
 - [ ] **2.4 Scoring:** the points are right (10, 20, 50). Add: "Reaching the quota stops
       the clock; the chapter is cleared when that catch reaches the boat."
-- [ ] **2.4 Optional extras:** sound effects and a tool for each kind of trash are in:
-      list them as "Included extras". Badges, hints and a high-score list are planned.
+- [ ] **2.4 Optional extras:** sound effects, a tool for each kind of trash, and hints
+      after repeated mistakes are in: list them as "Included extras". Badges and a
+      high-score list are planned.
       **(later)** Move each one to the "Included extras" line when it is merged.
 - [ ] **2.5 Penalties:** "Accidentally catch a fish: -1 health" stays. Add a row:
       "Catch a pufferfish or barracuda: -2 health". Add that the fish swims away.
