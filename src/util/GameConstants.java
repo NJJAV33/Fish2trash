@@ -17,6 +17,7 @@ public final class GameConstants {
     public static final int WORLD_WIDTH = 800;
     public static final int WORLD_HEIGHT = 600;
     public static final int WATER_Y = 130;           // y position of the sea surface
+    public static final int SEABED_Y = 586;          // y position of the sea floor
 
     // ---- Boat ----
     public static final int BOAT_WIDTH = 120;
@@ -50,22 +51,45 @@ public final class GameConstants {
 
     // ---- Fish ----
     public static final int DAMAGE_FISH = 1;
+    public static final int DAMAGE_DANGEROUS = 2;        // pufferfish and barracuda
     public static final double RADIUS_SMALL_FISH = 14;
+    public static final double RADIUS_BIG_FISH = 24;
+    public static final double RADIUS_PUFFER = 22;
+    public static final double RADIUS_BARRACUDA = 22;
     public static final double FISH_RELEASE_IMMUNITY_S = 1.5;   // a hooked fish can't be hooked again for this long
 
-    // ---- Chapter rules ----
-    public static final int QUOTA_CH1 = 100;
-    public static final double TIME_CH1_S = 65;
-    public static final int HEALTH_CH1 = 3;
+    // ---- Pufferfish: weaves up and down, swells when the hook is near ----
+    public static final double PUFFER_WEAVE_AMPLITUDE = 55;   // pixels above and below its depth
+    public static final double PUFFER_WEAVE_PERIOD_S = 3.2;   // seconds for one full up-and-down
+    public static final double PUFFER_SENSE_RANGE = 120;      // it swells when the hook tip is this close
+    public static final double PUFFER_SWELL = 0.5;            // fully swollen = 50% bigger
+    public static final double PUFFER_INFLATE_PER_S = 2.5;    // how fast it swells and shrinks
 
-    // ---- Spawning ----
-    public static final int SPAWN_TRASH_COUNT = 6;
-    public static final int SPAWN_FISH_COUNT = 4;
-    public static final double SPAWN_MARGIN_X = 40;        // keep spawns off the screen edges
-    public static final double MIN_SPAWN_Y = 210;
-    public static final double MAX_SPAWN_Y = 540;
-    public static final double TRASH_SPEED_MIN = 20;
-    public static final double TRASH_SPEED_MAX = 45;
-    public static final double FISH_SPEED_MIN = 60;
-    public static final double FISH_SPEED_MAX = 120;
+    // ---- Barracuda: patrols, then flashes and charges at the hook ----
+    public static final double BARRACUDA_SENSE_RANGE = 150;   // sideways distance at which it notices the line
+    public static final double BARRACUDA_TELEGRAPH_S = 0.6;   // warning flash before the charge
+    public static final double BARRACUDA_CHARGE_S = 0.8;
+    public static final double BARRACUDA_CHARGE_SPEED = 400;  // pixels per second
+    public static final double BARRACUDA_COOLDOWN_S = 3;      // rest before it can charge again
+
+    // ---- Chapters: points needed, seconds allowed, starting health ----
+    public static final int QUOTA_CH1 = 100;
+    public static final int QUOTA_CH2 = 200;
+    public static final int QUOTA_CH3 = 350;
+    public static final double TIME_CH1_S = 65;
+    public static final double TIME_CH2_S = 90;
+    public static final double TIME_CH3_S = 105;
+    public static final int HEALTH_CH1 = 3;
+    public static final int HEALTH_CH2 = 4;
+    public static final int HEALTH_CH3 = 5;
+
+    // ---- Spawning (the tables themselves are in model.ChapterData) ----
+    public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
+    public static final double MIN_SPAWN_Y = 210;          // default spawn depth range
+    public static final double MAX_SPAWN_Y = 540;          // the hook cannot reach much deeper
+    public static final double SPAWN_FADE_IN_S = 0.5;      // new objects fade in and can't be hooked meanwhile
+    public static final double SPAWN_MIN_DIST_TRASH = 100; // nothing appears closer to the hook than this
+    public static final double SPAWN_MIN_DIST_FISH = 150;
+    public static final int SPAWN_PLACEMENT_TRIES = 8;     // attempts to find a spot away from the hook
+    public static final double SUPPLY_MARGIN = 1.3;        // keep 30% more trash in the water than still needed
 }

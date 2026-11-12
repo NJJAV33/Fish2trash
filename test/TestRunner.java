@@ -15,13 +15,17 @@ public final class TestRunner {
         run("ArchitectureTest", ArchitectureTest::run);
         run("BoatHookTest", BoatHookTest::run);
         run("ChapterFlowTest", ChapterFlowTest::run);
+        run("DangerousFishTest", DangerousFishTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
+        run("LevelSpawnTest", LevelSpawnTest::run);
         run("MathxTest", MathxTest::run);
         run("ModelCatchTest", ModelCatchTest::run);
         run("OceanObjectTest", OceanObjectTest::run);
         run("PlayerTest", PlayerTest::run);
         run("RenderTest", RenderTest::run);
+        run("ScreenFlowTest", ScreenFlowTest::run);
+        run("SessionTest", SessionTest::run);
 
         System.out.println();
         System.out.println(Check.getChecks() + " checks, " + Check.getFailures() + " failed");

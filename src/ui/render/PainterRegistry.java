@@ -1,5 +1,6 @@
 package ui.render;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.util.EnumMap;
 import java.util.Map;
@@ -21,6 +22,9 @@ public final class PainterRegistry {
         painters.put(ObjectKind.CAN, new CanPainter());
         painters.put(ObjectKind.FISHING_NET, new NetPainter());
         painters.put(ObjectKind.SMALL_FISH, new SmallFishPainter());
+        painters.put(ObjectKind.BIG_FISH, new BigFishPainter());
+        painters.put(ObjectKind.PUFFERFISH, new PufferPainter());
+        painters.put(ObjectKind.BARRACUDA, new BarracudaPainter());
 
         // Fail at startup, not in the middle of a game, if a new kind was
         // added without a painter.
@@ -32,6 +36,16 @@ public final class PainterRegistry {
     }
 
     public void paint(Graphics2D g, ObjectView object) {
-        painters.get(object.getKind()).paint(g, object);
+        ObjectPainter painter = painters.get(object.getKind());
+        float opacity = (float) object.getOpacity();
+        if (opacity >= 1f) {
+            painter.paint(g, object);
+            return;
+        }
+        // Still fading in: draw it see-through on a copy of the graphics.
+        Graphics2D faded = (Graphics2D) g.create();
+        faded.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
+        painter.paint(faded, object);
+        faded.dispose();
     }
 }

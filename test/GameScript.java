@@ -1,4 +1,8 @@
+import game.EventType;
+import game.GameEvent;
 import game.GameManager;
+import java.util.ArrayList;
+import java.util.List;
 import model.Hook;
 import model.OceanObject;
 
@@ -16,12 +20,19 @@ final class GameScript {
         // only static methods
     }
 
-    /** The first object in the game that is (or is not) trash and can still be caught. */
+    /**
+     * The first object in the game that is (or is not) trash and can be caught.
+     * Some objects only appear later in a chapter, and new ones fade in first,
+     * so this plays on until one is ready.
+     */
     static OceanObject firstCatchable(GameManager game, boolean trash) {
-        for (OceanObject object : game.getObjects()) {
-            if (object.getKind().isTrash() == trash && object.isCatchable()) {
-                return object;
+        for (int i = 0; i < MAX_STEPS && game.isPlaying(); i++) {
+            for (OceanObject object : game.getObjects()) {
+                if (object.getKind().isTrash() == trash && object.isCatchable()) {
+                    return object;
+                }
             }
+            game.update(STEP);
         }
         throw new IllegalStateException("no catchable object with trash=" + trash);
     }
@@ -46,6 +57,28 @@ final class GameScript {
             game.update(STEP);
         }
         playUntilHookIsBack(game);
+    }
+
+    /**
+     * Registers a listener that writes down every gameplay event.
+     * Tips are left out: they depend on the clock, not on what the player does.
+     */
+    static List<GameEvent> record(GameManager game) {
+        List<GameEvent> events = new ArrayList<>();
+        game.addListener(event -> {
+            if (event.getType() != EventType.TUTORIAL_PROMPT) {
+                events.add(event);
+            }
+        });
+        return events;
+    }
+
+    static List<EventType> types(List<GameEvent> events) {
+        List<EventType> types = new ArrayList<>();
+        for (GameEvent event : events) {
+            types.add(event.getType());
+        }
+        return types;
     }
 
     static void playUntilHookIsBack(GameManager game) {

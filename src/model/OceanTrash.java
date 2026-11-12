@@ -25,6 +25,7 @@ public abstract class OceanTrash extends OceanObject {
         hook.attach(this);
     }
 
+    @Override
     public int getPoints() {
         return points;
     }

@@ -2,6 +2,7 @@ import game.GameManager;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
+import model.ChapterData;
 import model.Loadout;
 import ui.render.PainterRegistry;
 import ui.render.SceneRenderer;
@@ -25,7 +26,7 @@ public final class RenderTest {
         BufferedImage image = new BufferedImage(
                 GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
-        new SceneRenderer().paint(g, new GameManager(Loadout.standard(), new Random(1)));
+        new SceneRenderer().paint(g, new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(1)));
         g.dispose();
 
         int sky = image.getRGB(10, 10);

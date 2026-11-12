@@ -1,66 +1,73 @@
 package ui;
 
-import java.awt.Color;
+import game.GameState;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Random;
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.Timer;
-import game.ChapterStatus;
-import game.GameManager;
-import model.Loadout;
-import model.Player;
 import ui.render.SceneRenderer;
 import util.GameConstants;
 
 /**
- * The game screen: shows the scene and HUD and turns key presses into game actions.
+ * The window's content: it runs the frame timer, receives the keyboard, and
+ * hands both to the ScreenManager. It does not know any game rules.
  *
- * Updating and painting are kept apart: the timer calls manager.update()
- * to change the game, and paintComponent() only reads the game to draw it.
+ * Updating and painting are kept apart: the timer updates the current screen,
+ * and paintComponent() only draws it.
  */
 // Swing panels are Serializable by inheritance, but this game never saves one,
 // so the "field is not serializable" warning does not apply here.
 @SuppressWarnings("serial")
 public final class GamePanel extends JPanel {
 
-    private static final long serialVersionUID = 1L;
-
     private static final int FRAME_DELAY_MS = 16;      // about 60 frames per second
     private static final double MAX_STEP_SECONDS = 0.05;
 
-    // The line shown on the end screen for each way a chapter can end.
-    private static final Map<ChapterStatus, String> END_MESSAGES = new EnumMap<>(ChapterStatus.class);
-    static {
-        END_MESSAGES.put(ChapterStatus.CLEARED, "Quota reached!");
-        END_MESSAGES.put(ChapterStatus.FAILED_TIME, "Time's up!");
-        END_MESSAGES.put(ChapterStatus.FAILED_HEALTH, "You caught too many fish!");
-    }
-
-    private GameManager manager = new GameManager(Loadout.standard(), new Random());
-    private final SceneRenderer renderer = new SceneRenderer();
     private final InputState input = new InputState();
+    private final ScreenManager screens = new ScreenManager();
+    private final GameScreen gameScreen;
     private final Timer timer;
     private long lastTickNanos;
 
     public GamePanel() {
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
-        setupKeyBindings();
+        setFocusable(true);   // a panel only receives keys if it can have the focus
+        addKeyListener(new KeyHandler());
+        addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                // Another window took the keyboard: no key is "still held",
+                // and a chapter in progress should not run unattended.
+                input.releaseAll();
+                if (screens.getState() == GameState.PLAYING) {
+                    gameScreen.pause();
+                }
+            }
+        });
+
+        // One screen per state. They share one renderer for their backdrops.
+        SceneRenderer renderer = new SceneRenderer();
+        gameScreen = new GameScreen(screens, input, renderer);
+        screens.register(GameState.MENU, new MainMenu(screens, renderer));
+        screens.register(GameState.HOW_TO, new HowToScreen(screens, renderer));
+        screens.register(GameState.STORY, new StoryScreen(screens, renderer));
+        screens.register(GameState.PLAYING, gameScreen);
+        screens.register(GameState.CHAPTER_CLEAR, new ChapterClearScreen(screens, renderer));
+        screens.register(GameState.GAME_OVER, new GameOverScreen(screens, renderer));
+        screens.register(GameState.ENDING, new VictoryScreen(screens));
+        screens.start(GameState.MENU);
+
         timer = new Timer(FRAME_DELAY_MS, e -> tick());
     }
 
     public void start() {
+        requestFocusInWindow();
         lastTickNanos = System.nanoTime();
         timer.start();
     }
@@ -74,97 +81,54 @@ public final class GamePanel extends JPanel {
         lastTickNanos = now;
         dt = Math.min(dt, MAX_STEP_SECONDS);   // avoid a huge jump after a pause
 
-        manager.setBoatDirection(input.getDirection());
-        manager.update(dt);   // ignored by the manager once the game is over
+        advance(dt);
         repaint();
     }
 
-    /**
-     * Key bindings work whenever the window is focused, unlike KeyListener,
-     * which needs this exact panel to have keyboard focus.
-     */
-    private void setupKeyBindings() {
-        bindKey(KeyEvent.VK_SPACE, false, () -> manager.spaceAction());
-        // Restarting is just starting a brand new game.
-        bindKey(KeyEvent.VK_R, false, () -> manager = new GameManager(Loadout.standard(), new Random()));
-
-        // Movement keys are tracked on press AND release, so holding works.
-        bindKey(KeyEvent.VK_A, false, () -> input.setLeftHeld(true));
-        bindKey(KeyEvent.VK_A, true, () -> input.setLeftHeld(false));
-        bindKey(KeyEvent.VK_LEFT, false, () -> input.setLeftHeld(true));
-        bindKey(KeyEvent.VK_LEFT, true, () -> input.setLeftHeld(false));
-        bindKey(KeyEvent.VK_D, false, () -> input.setRightHeld(true));
-        bindKey(KeyEvent.VK_D, true, () -> input.setRightHeld(false));
-        bindKey(KeyEvent.VK_RIGHT, false, () -> input.setRightHeld(true));
-        bindKey(KeyEvent.VK_RIGHT, true, () -> input.setRightHeld(false));
+    /** Moves the game forward by dt seconds. The timer calls this; tests can call it directly. */
+    public void advance(double dt) {
+        screens.update(dt);
     }
 
-    /** Runs the action when the key is pressed (or released, if onRelease is true). */
-    private void bindKey(int keyCode, boolean onRelease, Runnable action) {
-        String name = (onRelease ? "released " : "pressed ") + keyCode;
-        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), name);
-        getActionMap().put(name, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                action.run();
-            }
-        });
+    /** Which screen is showing. */
+    public GameState getState() {
+        return screens.getState();
     }
 
-    // ---- Drawing ----
+    /** True while the pause menu is up. */
+    public boolean isPaused() {
+        return screens.isPaused();
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        screens.paint(g2);
+    }
 
-        renderer.paint(g2, manager);
-        drawHud(g2);
+    /** Turns raw keyboard events into held keys and fresh key presses. */
+    private final class KeyHandler extends KeyAdapter {
 
-        if (!manager.isPlaying()) {
-            drawEndScreen(g2);
+        @Override
+        public void keyPressed(KeyEvent e) {
+            boolean fresh = input.press(e.getKeyCode(), e.getWhen());
+            if (fresh) {
+                screens.keyPressed(e.getKeyCode());   // repeats of a held key are not passed on
+            }
         }
-    }
 
-    private void drawHud(Graphics2D g) {
-        Player player = manager.getPlayer();
-        int secondsLeft = (int) Math.ceil(manager.getTimeLeft());
+        @Override
+        public void keyReleased(KeyEvent e) {
+            input.release(e.getKeyCode(), e.getWhen());
+        }
 
-        g.setColor(new Color(0, 0, 0, 120));
-        g.fillRoundRect(10, 10, 200, 92, 12, 12);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        g.drawString("Score: " + player.getScore() + " / " + manager.getQuota(), 22, 36);
-        g.drawString("Health: " + player.getHealth() + " / " + player.getMaxHealth(), 22, 62);
-        g.drawString("Time: " + secondsLeft + "s", 22, 88);
-
-        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        g.drawString("A / D: move boat    SPACE: drop or recall hook    R: restart", 12, GameConstants.WORLD_HEIGHT - 22);
-    }
-
-    private void drawEndScreen(Graphics2D g) {
-        boolean won = manager.getStatus() == ChapterStatus.CLEARED;
-
-        g.setColor(new Color(0, 0, 0, 160));
-        g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
-
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 56));
-        g.setColor(won ? new Color(120, 230, 120) : new Color(240, 90, 90));
-        drawCentered(g, won ? "YOU WIN!" : "GAME OVER", 250);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
-        drawCentered(g, END_MESSAGES.get(manager.getStatus()), 300);
-        drawCentered(g, "Final score: " + manager.getPlayer().getScore(), 340);
-        drawCentered(g, "Press R to restart", 400);
-    }
-
-    private void drawCentered(Graphics2D g, String text, int y) {
-        FontMetrics metrics = g.getFontMetrics();
-        int x = (GameConstants.WORLD_WIDTH - metrics.stringWidth(text)) / 2;
-        g.drawString(text, x, y);
+        @Override
+        public void keyTyped(KeyEvent e) {
+            screens.keyTyped(e.getKeyChar());
+        }
     }
 }

@@ -1,43 +1,33 @@
 package game;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import model.Boat;
 import model.CatchResolver;
+import model.ChapterData;
 import model.Equipment;
 import model.Hook;
+import model.Level;
 import model.Loadout;
-import model.ObjectKind;
 import model.OceanObject;
 import model.Player;
 import model.TimeLimit;
 import util.GameConstants;
 
 /**
- * The rules of one chapter attempt: what is in the ocean, what the hook
- * touches, the countdown, and whether the player has won or lost.
+ * The rules of one chapter attempt: what the hook touches, the countdown, and
+ * whether the player has won or lost.
  *
  * It contains no drawing and no keyboard code - the ui package handles those.
- * A new game is simply a new GameManager.
+ * A new attempt is simply a new GameManager.
  */
-public final class GameManager implements CatchResolver {
+public final class GameManager implements GameView, CatchResolver {
 
-    // Which trash appears: a kind listed more often is more common.
-    private static final ObjectKind[] TRASH_MIX = {
-        ObjectKind.PLASTIC_BOTTLE, ObjectKind.PLASTIC_BOTTLE, ObjectKind.PLASTIC_BOTTLE,
-        ObjectKind.CAN, ObjectKind.CAN, ObjectKind.FISHING_NET
-    };
-
-    // The random source is handed in, so a test can pass a fixed seed and
-    // get the same game every time.
-    private final Random random;
-
-    // POLYMORPHISM: one list holds bottles, cans, nets and fish, because all
-    // of them are OceanObjects. The manager never needs to know which is which.
-    private final List<OceanObject> objects = new ArrayList<>();
+    private final ChapterData chapter;
+    private final Level level;
     private final List<GameListener> listeners = new ArrayList<>();
+    private final SessionStats stats = new SessionStats();
 
     private final Player player;
     private final Boat boat;
@@ -51,21 +41,24 @@ public final class GameManager implements CatchResolver {
     // A launch that comes back with this still false was a miss.
     private boolean launchResolved;
 
-    public GameManager(Loadout loadout, Random random) {
-        this.random = random;
-        player = new Player(GameConstants.HEALTH_CH1);
+    /**
+     * @param chapter the chapter to play
+     * @param loadout the tools the crew has
+     * @param random  the random source; a test can pass a fixed seed to get
+     *                the same game every time
+     */
+    public GameManager(ChapterData chapter, Loadout loadout, Random random) {
+        this.chapter = chapter;
+        level = new Level(chapter, random);
+        player = new Player(level.getStartHealth());
         boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y, loadout);
-
-        for (int i = 0; i < GameConstants.SPAWN_TRASH_COUNT; i++) {
-            objects.add(createTrash());
-        }
-        for (int i = 0; i < GameConstants.SPAWN_FISH_COUNT; i++) {
-            objects.add(createFish());
-        }
-
-        timeLimit = new TimeLimit(GameConstants.TIME_CH1_S);
-        quota = GameConstants.QUOTA_CH1;
+        timeLimit = new TimeLimit(level.getTimeLimitSeconds());
+        quota = level.getQuota();
         status = ChapterStatus.RUNNING;
+        addListener(stats);   // the stats count events like any other listener
+
+        // Run the level for zero seconds, so the water is stocked from the first frame.
+        level.update(0, boat.getHook(), 0);
     }
 
     /** Registers someone who wants to hear about game events. */
@@ -120,8 +113,9 @@ public final class GameManager implements CatchResolver {
         Hook hook = boat.getHook();
         boolean lineWasOut = hook.isLineOut();
         hook.update(dt);
-        for (OceanObject object : objects) {
-            object.update(dt, GameConstants.WORLD_WIDTH);
+        level.update(dt, hook, player.getScore());
+        for (String tip : level.pollTutorialPrompts()) {
+            emit(GameEvent.withText(EventType.TUTORIAL_PROMPT, tip));
         }
 
         checkHookCollision(hook);
@@ -136,8 +130,10 @@ public final class GameManager implements CatchResolver {
             return;
         }
 
+        // POLYMORPHISM: the list holds bottles, cans, nets and fish, because
+        // all of them are OceanObjects. The manager never asks which is which.
         Equipment tool = hook.getLoadout().getSelected();
-        for (OceanObject object : objects) {
+        for (OceanObject object : level.getObjects()) {
             if (object.collidesWith(hook.getTipX(), hook.getTipY(), tool.getTipRadius())) {
                 // The tool decides the outcome (catch, slip or pass), and the
                 // outcome calls back onCatch, onSlip or onPass below.
@@ -196,9 +192,8 @@ public final class GameManager implements CatchResolver {
     private void onHookReturned(Hook hook) {
         OceanObject carried = hook.getCaughtObject();
         if (carried != null) {
-            objects.remove(carried);
+            level.remove(carried);   // the level decides what appears in its place
             hook.clearCaughtObject();
-            objects.add(createTrash());   // keep the ocean stocked
             emit(GameEvent.about(EventType.DELIVERED, carried, 0));
             if (quotaReached) {
                 status = ChapterStatus.CLEARED;
@@ -214,63 +209,68 @@ public final class GameManager implements CatchResolver {
         emit(GameEvent.of(EventType.CHAPTER_FAILED));
     }
 
-    // ---- Spawning ----
+    // ---- Reading the game (GameView) ----
 
-    private OceanObject createTrash() {
-        ObjectKind kind = TRASH_MIX[random.nextInt(TRASH_MIX.length)];
-        return kind.create(randomX(), randomY(),
-                randomSpeed(GameConstants.TRASH_SPEED_MIN, GameConstants.TRASH_SPEED_MAX));
+    @Override
+    public ChapterData getChapter() {
+        return chapter;
     }
 
-    private OceanObject createFish() {
-        return ObjectKind.SMALL_FISH.create(randomX(), randomY(),
-                randomSpeed(GameConstants.FISH_SPEED_MIN, GameConstants.FISH_SPEED_MAX));
-    }
-
-    private double randomX() {
-        return GameConstants.SPAWN_MARGIN_X
-                + random.nextDouble() * (GameConstants.WORLD_WIDTH - 2 * GameConstants.SPAWN_MARGIN_X);
-    }
-
-    private double randomY() {
-        return GameConstants.MIN_SPAWN_Y
-                + random.nextDouble() * (GameConstants.MAX_SPAWN_Y - GameConstants.MIN_SPAWN_Y);
-    }
-
-    /** A speed between min and max, randomly to the left or right. */
-    private double randomSpeed(double min, double max) {
-        double speed = min + random.nextDouble() * (max - min);
-        return random.nextBoolean() ? speed : -speed;
-    }
-
-    // ---- Read-only access for the ui ----
-
-    public Player getPlayer() {
-        return player;
-    }
-
+    @Override
     public Boat getBoat() {
         return boat;
     }
 
-    /** Returns a read-only view, so other classes cannot add or remove objects. */
+    /** The objects in the water, as a read-only list. */
+    @Override
     public List<OceanObject> getObjects() {
-        return Collections.unmodifiableList(objects);
+        return level.getObjects();
     }
 
-    public double getTimeLeft() {
-        return timeLimit.getRemaining();
+    @Override
+    public int getScore() {
+        return player.getScore();
     }
 
+    @Override
     public int getQuota() {
         return quota;
     }
 
+    @Override
+    public int getHealth() {
+        return player.getHealth();
+    }
+
+    @Override
+    public int getMaxHealth() {
+        return player.getMaxHealth();
+    }
+
+    @Override
+    public double getTimeLeft() {
+        return timeLimit.getRemaining();
+    }
+
+    @Override
+    public double getTimeTotal() {
+        return timeLimit.getTotal();
+    }
+
+    @Override
     public ChapterStatus getStatus() {
         return status;
     }
 
     public boolean isPlaying() {
         return status == ChapterStatus.RUNNING;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public SessionStats getStats() {
+        return stats;
     }
 }

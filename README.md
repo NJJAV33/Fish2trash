@@ -1,6 +1,10 @@
 # FISH2TRASH
 
-Clean the ocean: hook the trash, spare the fish. Reach 100 points before time or health runs out.
+Hook the trash. Spare the fish. Save the reef.
+
+A 2D story game in Java Swing. You play Nico Abella, the newest member of Captain
+Dolor's clean-up crew at Bantay Reef. Each chapter has a quota of trash to collect
+before time or health runs out. Clear all three and the reef comes back to life.
 
 ## Requirements
 
@@ -31,14 +35,26 @@ java -cp out Main
 |---|---|
 | `A` / `D` or arrow keys | Move the boat (only while the hook is swinging) |
 | `Space` | Drop the hook. Press again while it is going out to pull it back |
-| `R` | Restart |
+| `P` or `Esc` | Pause (resume, restart the chapter, or quit to the menu) |
+| `Enter` | Confirm, next story page |
+| `Esc` on a story page | Skip the story |
+| `Up` / `Down` | Move in menus |
 
-## Rules
+## How to play
 
-- Trash earns points: bottle 10, can 20, fishing net 50.
-- Hooking a fish costs 1 health. The fish swims away.
-- Reach the quota of 100 and the clock stops; you win when that catch reaches the boat.
-- You lose if time runs out or health reaches 0.
+| Chapter | Trash to look for | Quota | Time | Health |
+|---|---|---|---|---|
+| 1. Plastic Shallows | bottles (10 points) | 100 | 65 s | 3 |
+| 2. Old Pier Wreck | cans (20), bottles | 200 | 90 s | 4 |
+| 3. Ghost Net Deep | fishing nets (50), cans, bottles | 350 | 105 s | 5 |
+
+- Hooking a fish costs 1 health and the fish swims away. Pufferfish and barracuda
+  (chapter 3) cost 2. A pufferfish swells when the hook is near; a barracuda
+  flashes, then charges.
+- Reaching the quota stops the clock. The chapter is cleared when that catch
+  reaches the boat.
+- Run out of time or health and you are fired. You can retry the chapter;
+  chapters you already cleared stay cleared.
 
 ## Folder structure
 
@@ -51,23 +67,28 @@ FISH2TRASH/
 │   │   ├── OceanTrash       abstract: gives points, rides the hook
 │   │   │   └── PlasticBottle, Can, FishingNet
 │   │   ├── Fish             abstract: costs health, swims away
-│   │   │   └── SmallFish
+│   │   │   └── SmallFish, BigFish, Pufferfish, Barracuda
 │   │   ├── ObjectKind       enum: builds each object, lookup key for painters
-│   │   ├── ObjectView       read-only view of an object, for the ui
-│   │   ├── Player           private health and score
-│   │   ├── Boat, Hook       the boat owns the hook
-│   │   ├── TimeLimit        the countdown
-│   │   └── Equipment, PlainHook, Loadout, CatchOutcome, CatchResolver
+│   │   ├── ObjectView, HookSensor   small read-only interfaces
+│   │   ├── Player, Boat, Hook, TimeLimit
+│   │   ├── Equipment, PlainHook, Loadout, CatchOutcome, CatchResolver
+│   │   └── Level, ChapterData, SpawnRule, TutorialPrompt   the chapters as data
 │   ├── game/                the rules
 │   │   ├── GameManager      one chapter attempt: collisions, quota, win/lose
-│   │   ├── ChapterStatus    running / cleared / failed
+│   │   ├── GameSession      the whole run: current chapter, cleared chapters, retries
+│   │   ├── GameView         what the screen may read from a game
+│   │   ├── ChapterResult, ChapterStatus, FailCause, SessionStats, GameState
 │   │   └── GameEvent, EventType, GameListener   (observer pattern)
-│   ├── ui/
-│   │   ├── GamePanel        frame timer, keys, HUD
-│   │   ├── InputState       which movement keys are held
-│   │   └── render/          SceneRenderer, PainterRegistry and one painter per kind
+│   ├── ui/                  the screens
+│   │   ├── GamePanel        frame timer and keyboard
+│   │   ├── ScreenManager    which screen is showing, fades between them
+│   │   ├── Screen           interface every screen implements
+│   │   ├── MainMenu, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
+│   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen
+│   │   └── render/          SceneRenderer, HudPainter, one painter per object kind
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
+│       ├── StoryText        every line of text the player reads
 │       └── Mathx            clamp, lerp, easing
 ├── test/                    tests, run by scripts/test
 ├── scripts/                 build, run and test (.sh and .bat)
@@ -79,28 +100,36 @@ FISH2TRASH/
 
 1. `Main` builds a `JFrame` on the event-dispatch thread and adds a `GamePanel`.
 2. `GamePanel` runs a `javax.swing.Timer` (~60 fps). Every tick it measures the real
-   time since the last tick (`dt`), passes the held movement keys to the game, calls
-   `manager.update(dt)`, then `repaint()`. Painting only *reads* the game.
-3. `GameManager` owns the `Player`, the `Boat` (which owns the `Hook`), a `TimeLimit`
-   and a `List<OceanObject>` holding bottles, cans, nets and fish.
-4. When the hook tip touches an object, the tool on the line (`Equipment`) answers with
+   time since the last tick (`dt`) and passes it, and any fresh key press, to the
+   `ScreenManager`. Painting only *reads* the game.
+3. `ScreenManager` holds one `Screen` per `GameState` and the `GameSession` (the run).
+4. `GameScreen` asks the session for a `GameManager` for the current chapter.
+5. `GameManager` owns the `Player`, the `Boat` (which owns the `Hook`), a `TimeLimit`
+   and a `Level`. The `Level` reads the chapter's spawn table from `ChapterData` and
+   keeps the water stocked.
+6. When the hook tip touches an object, the tool on the line (`Equipment`) answers with
    a `CatchOutcome`: catch, slip or pass. The outcome calls back into the manager.
-5. On a catch the manager calls `object.onCaught(player, hook)`. Trash adds points and
+7. On a catch the manager calls `object.onCaught(player, hook)`. Trash adds points and
    attaches itself to the hook; a fish costs health and swims away. The manager never
    checks which one it was.
-6. The manager announces what happened as `GameEvent`s to its `GameListener`s.
-7. `SceneRenderer` draws the world. For each object it asks `PainterRegistry` for the
-   painter of that object's `ObjectKind`.
+8. The manager announces what happened as `GameEvent`s to its `GameListener`s
+   (the stats counter, and the screen that shows tips).
+9. When the chapter ends, the session records a `ChapterResult` and the screens move on:
+   report card and next chapter after a clear, pink slip and retry after a fail.
 
 ### OOP concepts, and where to point at them
 
 | Concept | Where |
 |---|---|
-| Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. `GameManager.getObjects()` returns a read-only list. |
-| Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`. `Equipment` → `PlainHook`. |
-| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `ObjectView`, `GameListener`, `CatchResolver` and `ObjectPainter` are interfaces that hide what is behind them. |
-| Polymorphism | `object.onCaught(player, hook)`, `tool.attempt(object)`, `outcome.resolve(...)` and `painter.paint(...)`: one call, different behaviour per class. |
-| Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools. |
+| Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. Lists are handed out read-only. |
+| Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`. `Equipment` → `PlainHook`. |
+| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver` and `ObjectPainter` are interfaces that hide what is behind them. |
+| Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
+| Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
+
+Patterns used: observer (`GameListener`), template method (`OceanObject.update`,
+`Equipment.attempt`), a state machine per screen (`ScreenManager`) and inside
+`Hook` and `Barracuda`.
 
 Design rules, checked by `ArchitectureTest` on every test run: `model` and `game` have
 no drawing, window or sound imports; nothing uses `instanceof`; no public fields
@@ -108,26 +137,41 @@ except constants.
 
 ## Manual testing checklist
 
+**Menus and story**
+- [ ] The game opens on the menu. Up/Down move, Enter selects.
+- [ ] How to Play opens and Enter returns.
+- [ ] Start shows the opening and chapter 1 story. Enter finishes a page, then turns it.
+- [ ] Esc skips the story.
+
 **Boat and hook**
 - [ ] `A`/`D` and the arrow keys move the boat; it stops near both screen edges.
 - [ ] The boat cannot move while the hook is out.
 - [ ] `Space` launches the hook straight along its swing angle.
 - [ ] `Space` again while it is going out pulls it back empty.
-- [ ] A launch that hits nothing goes to full length and returns empty.
+- [ ] Holding `Space` down does not pull the hook back by itself.
 
-**Catching**
-- [ ] Bottle +10, can +20, net +50. The trash rides the hook up and a new piece appears.
-- [ ] A fish costs 1 health, gives no points, and swims away; the hook comes back empty.
-- [ ] Only one object is touched per launch.
+**Chapter 1**
+- [ ] Bottle +10; it rides the hook up and a new one appears.
+- [ ] A fish costs 1 health, gives no points, and swims away.
+- [ ] Tips appear at about 1, 8 and 16 seconds.
+- [ ] At 100 points the timer stops; the chapter clears when the catch reaches the boat.
 
-**Winning and losing**
-- [ ] At 100 points the timer stops; **YOU WIN!** shows when the catch reaches the boat.
-- [ ] Three fish show **GAME OVER** with "You caught too many fish!".
-- [ ] Letting the timer hit 0 shows **GAME OVER** with "Time's up!".
-- [ ] Nothing moves after the end; `Space` does nothing.
+**Chapter 2**
+- [ ] Health 4, time 1:30. Cans are worth 20; most sit low on the right.
+- [ ] Big blue fish are clearly faster.
 
-**Restarting**
-- [ ] `R` at any time starts a fresh game: score 0, health 3, time 65.
+**Chapter 3**
+- [ ] Health 5, time 1:45. Nets are worth 50.
+- [ ] A pufferfish swells when the hook is near. Hooking it costs 2.
+- [ ] A barracuda flashes, then charges. Hooking it costs 2.
+- [ ] Clearing it shows the ending, then the shift report, then the menu.
+
+**Losing and pausing**
+- [ ] Time running out shows the pink slip with a "tide" or "time" message.
+- [ ] Health reaching 0 shows the pink slip with a "fish" message.
+- [ ] Enter retries the same chapter; Esc returns to the menu.
+- [ ] `P` or `Esc` pauses. Resume, Restart chapter and Quit to menu all work.
+- [ ] Clicking another window pauses the game.
 
 ## Contributing
 

@@ -1,5 +1,7 @@
 package model;
 
+import util.GameConstants;
+
 /**
  * Anything floating or swimming in the ocean that the hook can catch.
  *
@@ -21,6 +23,7 @@ public abstract class OceanObject implements ObjectView {
     private int facing;      // 1 = looking right, -1 = looking left
     private boolean caught;
     private double immuneTimer;   // seconds left during which the hook cannot grab it
+    private double age;           // seconds since it appeared
 
     protected OceanObject(double x, double y, double radius, double speedX) {
         this.x = x;
@@ -31,21 +34,50 @@ public abstract class OceanObject implements ObjectView {
         this.caught = false;
     }
 
-    /** Moves the object sideways and bounces it off the edges of the screen. */
-    public void update(double dt, double worldWidth) {
+    /**
+     * Advances the object by dt seconds.
+     *
+     * TEMPLATE METHOD: this method is final, so every object follows the same
+     * steps - grow older, move, bounce off the screen edges. Only the "move"
+     * step can be replaced by a subclass.
+     */
+    public final void update(double dt, double worldWidth) {
+        age += dt;
         if (immuneTimer > 0) {
             immuneTimer = Math.max(0, immuneTimer - dt);
         }
         if (caught) {
             return;   // the hook is carrying it now
         }
+        move(dt);
+        double r = getRadius();
+        if (x - r < 0) {
+            x = r;
+            turnAround();
+        } else if (x + r > worldWidth) {
+            x = worldWidth - r;
+            turnAround();
+        }
+    }
+
+    /** How the object moves in dt seconds. The default is a steady sideways drift. */
+    protected void move(double dt) {
         x += speedX * dt;
-        if (x - radius < 0) {
-            x = radius;
-            turnAround();
-        } else if (x + radius > worldWidth) {
-            x = worldWidth - radius;
-            turnAround();
+    }
+
+    /**
+     * Lets the object notice the hook. Most objects ignore it; some fish
+     * override this to react.
+     */
+    public void sense(HookSensor hook) {
+        // nothing by default
+    }
+
+    /** Changes the sideways speed; the object turns to face the way it now swims. */
+    protected void setSpeedX(double speedX) {
+        this.speedX = speedX;
+        if (speedX != 0) {
+            facing = (speedX < 0) ? -1 : 1;
         }
     }
 
@@ -58,7 +90,7 @@ public abstract class OceanObject implements ObjectView {
     public boolean collidesWith(double otherX, double otherY, double otherRadius) {
         double dx = x - otherX;
         double dy = y - otherY;
-        double reach = radius + otherRadius;
+        double reach = getRadius() + otherRadius;
         return dx * dx + dy * dy <= reach * reach;
     }
 
@@ -109,6 +141,27 @@ public abstract class OceanObject implements ObjectView {
     @Override
     public int getFacing() {
         return facing;
+    }
+
+    public double getSpeedX() {
+        return speedX;
+    }
+
+    /** Calm by default. Dangerous fish override this to show a warning. */
+    @Override
+    public double getAlert() {
+        return 0;
+    }
+
+    /** New objects fade in: 0 = invisible, 1 = fully there. */
+    @Override
+    public double getOpacity() {
+        return Math.min(1.0, age / GameConstants.SPAWN_FADE_IN_S);
+    }
+
+    /** Points for collecting this object. Wildlife is worth nothing; trash overrides this. */
+    public int getPoints() {
+        return 0;
     }
 
     /**
