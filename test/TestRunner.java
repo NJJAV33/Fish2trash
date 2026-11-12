@@ -13,6 +13,7 @@ public final class TestRunner {
 
     public static void main(String[] args) {
         run("ArchitectureTest", ArchitectureTest::run);
+        run("BalanceBotTest", BalanceBotTest::run);
         run("BoatHookTest", BoatHookTest::run);
         run("ChapterFlowTest", ChapterFlowTest::run);
         run("DangerousFishTest", DangerousFishTest::run);
@@ -26,6 +27,7 @@ public final class TestRunner {
         run("RenderTest", RenderTest::run);
         run("ScreenFlowTest", ScreenFlowTest::run);
         run("SessionTest", SessionTest::run);
+        run("StoryTextTest", StoryTextTest::run);
 
         System.out.println();
         System.out.println(Check.getChecks() + " checks, " + Check.getFailures() + " failed");
