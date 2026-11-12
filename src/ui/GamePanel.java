@@ -9,6 +9,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.Random;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -35,7 +36,7 @@ public final class GamePanel extends JPanel {
     private static final int FRAME_DELAY_MS = 16;      // about 60 frames per second
     private static final double MAX_STEP_SECONDS = 0.05;
 
-    private final GameManager manager = new GameManager();
+    private GameManager manager = new GameManager(new Random());
     private final SceneRenderer renderer = new SceneRenderer();
     private final InputState input = new InputState();
     private final Timer timer;
@@ -71,8 +72,9 @@ public final class GamePanel extends JPanel {
      * which needs this exact panel to have keyboard focus.
      */
     private void setupKeyBindings() {
-        bindKey(KeyEvent.VK_SPACE, false, manager::spaceAction);
-        bindKey(KeyEvent.VK_R, false, manager::restart);
+        bindKey(KeyEvent.VK_SPACE, false, () -> manager.spaceAction());
+        // Restarting is just starting a brand new game.
+        bindKey(KeyEvent.VK_R, false, () -> manager = new GameManager(new Random()));
 
         // Movement keys are tracked on press AND release, so holding works.
         bindKey(KeyEvent.VK_A, false, () -> input.setLeftHeld(true));

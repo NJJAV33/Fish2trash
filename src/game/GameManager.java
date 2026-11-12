@@ -12,10 +12,11 @@ import model.Player;
 import util.GameConstants;
 
 /**
- * The rules of the game: what is in the ocean, what the hook touches, the
+ * The rules of one game: what is in the ocean, what the hook touches, the
  * countdown, and whether the player has won or lost.
  *
- * It contains no drawing and no keyboard code - GamePanel handles those.
+ * It contains no drawing and no keyboard code - the ui package handles those.
+ * A new game is simply a new GameManager.
  */
 public final class GameManager {
 
@@ -27,29 +28,31 @@ public final class GameManager {
         ObjectKind.CAN, ObjectKind.CAN, ObjectKind.FISHING_NET
     };
 
-    private final Random random = new Random();
+    // The random source is handed in, so a test can pass a fixed seed and
+    // get the same game every time.
+    private final Random random;
 
     // POLYMORPHISM: one list holds bottles, cans, nets and fish, because all
     // of them are OceanObjects. The manager never needs to know which is which.
     private final List<OceanObject> objects = new ArrayList<>();
+    private final List<GameListener> listeners = new ArrayList<>();
 
-    private Player player;
-    private Boat boat;
+    private final Player player;
+    private final Boat boat;
     private double timeLeft;
     private int boatDirection;
     private State state;
     private String endMessage;
 
-    public GameManager() {
-        restart();
-    }
+    // True once the current launch has touched something or was recalled.
+    // A launch that comes back with this still false was a miss.
+    private boolean launchResolved;
 
-    /** Puts every piece of game state back to the start. */
-    public void restart() {
+    public GameManager(Random random) {
+        this.random = random;
         player = new Player(GameConstants.HEALTH_CH1);
-        boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y);   // new boat = new hook too
+        boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y);
 
-        objects.clear();
         for (int i = 0; i < GameConstants.SPAWN_TRASH_COUNT; i++) {
             objects.add(createTrash());
         }
@@ -58,9 +61,19 @@ public final class GameManager {
         }
 
         timeLeft = GameConstants.TIME_CH1_S;
-        boatDirection = 0;
         state = State.PLAYING;
         endMessage = "";
+    }
+
+    /** Registers someone who wants to hear about game events. */
+    public void addListener(GameListener listener) {
+        listeners.add(listener);
+    }
+
+    private void emit(GameEvent event) {
+        for (GameListener listener : listeners) {
+            listener.onGameEvent(event);
+        }
     }
 
     /**
@@ -74,8 +87,12 @@ public final class GameManager {
         Hook hook = boat.getHook();
         if (hook.isSwinging()) {
             hook.launch();
-        } else {
+            launchResolved = false;
+            emit(GameEvent.of(EventType.HOOK_LAUNCHED));
+        } else if (hook.isExtending()) {
             hook.recall();
+            launchResolved = true;
+            emit(GameEvent.of(EventType.HOOK_RECALLED));
         }
     }
 
@@ -99,13 +116,16 @@ public final class GameManager {
 
         boat.moveBy(boatDirection, dt);
         Hook hook = boat.getHook();
+        boolean lineWasOut = hook.isLineOut();
         hook.update(dt);
         for (OceanObject object : objects) {
             object.update(dt, GameConstants.WORLD_WIDTH);
         }
 
         checkHookCollision(hook);
-        removeDeliveredObject(hook);
+        if (lineWasOut && hook.isSwinging()) {
+            onHookReturned(hook);
+        }
     }
 
     private void checkHookCollision(Hook hook) {
@@ -119,28 +139,47 @@ public final class GameManager {
             // so nothing can be collected twice.
             if (object.isCatchable()
                     && object.collidesWith(hook.getTipX(), hook.getTipY(), GameConstants.RADIUS_HOOK)) {
-                // POLYMORPHISM: the same call does different things -
-                // trash adds points and rides the hook, a fish costs health
-                // and swims away.
-                object.onCaught(player, hook);
-                checkEndConditions();
+                resolveCatch(object, hook);
                 return;   // one object per launch
             }
         }
     }
 
-    /** Once the hook is back at the boat, the caught object leaves the ocean. */
-    private void removeDeliveredObject(Hook hook) {
+    private void resolveCatch(OceanObject object, Hook hook) {
+        int scoreBefore = player.getScore();
+        int healthBefore = player.getHealth();
+
+        // POLYMORPHISM: the same call does different things - trash adds
+        // points and rides the hook, a fish costs health and swims away.
+        object.onCaught(player, hook);
+        launchResolved = true;
+
+        // The manager looks at what changed instead of asking what the object is.
+        if (player.getScore() > scoreBefore) {
+            emit(GameEvent.about(EventType.OBJECT_CAUGHT, object, player.getScore() - scoreBefore));
+        }
+        if (player.getHealth() < healthBefore) {
+            emit(GameEvent.about(EventType.HEALTH_LOST, object, healthBefore - player.getHealth()));
+        }
+        checkEndConditions();
+    }
+
+    /** The hook is back at the boat: unload the catch, or count a miss. */
+    private void onHookReturned(Hook hook) {
         OceanObject carried = hook.getCaughtObject();
-        if (carried != null && hook.isSwinging()) {
+        if (carried != null) {
             objects.remove(carried);
             hook.clearCaughtObject();
             objects.add(createTrash());   // keep the ocean stocked
+            emit(GameEvent.about(EventType.DELIVERED, carried, 0));
+        } else if (!launchResolved) {
+            emit(GameEvent.of(EventType.MISSED));
         }
     }
 
     private void checkEndConditions() {
         if (player.getScore() >= GameConstants.QUOTA_CH1) {
+            emit(GameEvent.of(EventType.QUOTA_REACHED));
             endGame(State.WON, "Quota reached!");
         } else if (!player.isAlive()) {
             endGame(State.LOST, "You caught too many fish!");
@@ -150,6 +189,11 @@ public final class GameManager {
     private void endGame(State result, String message) {
         state = result;
         endMessage = message;
+        if (result == State.WON) {
+            emit(GameEvent.of(EventType.CHAPTER_CLEARED));
+        } else {
+            emit(GameEvent.withText(EventType.CHAPTER_FAILED, message));
+        }
     }
 
     // ---- Spawning ----
@@ -181,7 +225,7 @@ public final class GameManager {
         return random.nextBoolean() ? speed : -speed;
     }
 
-    // ---- Read-only access for GamePanel ----
+    // ---- Read-only access for the ui ----
 
     public Player getPlayer() {
         return player;
