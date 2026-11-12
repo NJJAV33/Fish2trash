@@ -37,6 +37,7 @@ public final class ScreenFlowTest {
         runningOutOfTimeGetsYouFiredAndYouCanRetry();
         endingTheRunReturnsToTheMenu();
         menusClickAndTheMKeyMutes();
+        toolKeysReachTheGame();
     }
 
     private static void menusClickAndTheMKeyMutes() {
@@ -63,6 +64,19 @@ public final class ScreenFlowTest {
         draw();
         press(KeyEvent.VK_ENTER);
         Check.assertEquals("choosing it again unmutes", SoundState.ON, panel.getSoundState());
+    }
+
+    private static void toolKeysReachTheGame() {
+        startChapterOne();
+        int before = audio.getPlayed().size();
+        press(KeyEvent.VK_1);
+        Check.assertEquals("picking the tool already on the line is silent", before, audio.getPlayed().size());
+
+        press(KeyEvent.VK_2);   // the magnet only arrives in chapter 2
+        Check.assertEquals("asking for a locked tool is refused out loud",
+                SoundEffect.WRONG_TOOL, audio.getPlayed().get(audio.getPlayed().size() - 1));
+        draw();   // the "arrives in chapter 2" message is on screen now
+        expect("the chapter goes on", GameState.PLAYING);
     }
 
     private static void menuOpensHowToAndComesBack() {

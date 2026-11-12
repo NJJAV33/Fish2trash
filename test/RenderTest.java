@@ -1,8 +1,10 @@
 import game.GameManager;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Random;
 import model.ChapterData;
+import model.EquipmentType;
 import model.Loadout;
 import ui.render.ChapterPalette;
 import ui.render.PainterRegistry;
@@ -21,9 +23,9 @@ public final class RenderTest {
     }
 
     public static void run() {
-        // The constructor throws if any ObjectKind has no painter.
+        // The constructor throws if any ObjectKind or tool has no painter.
         new PainterRegistry();
-        Check.assertTrue("every object kind has a painter", true);
+        Check.assertTrue("every object kind and tool has a painter", true);
 
         BufferedImage image = new BufferedImage(
                 GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -38,6 +40,7 @@ public final class RenderTest {
         Check.assertTrue("sky and sea differ", sky != deepSea);
 
         everyChapterHasItsOwnLook();
+        everyToolHasItsOwnPicture();
         bubblesStayInsideTheirPool();
     }
 
@@ -58,6 +61,31 @@ public final class RenderTest {
                 ChapterPalette.SHALLOWS.getCleaned() != ChapterPalette.SHALLOWS);
         Check.assertTrue("asking twice gives the same cleaned look (so its picture is cached once)",
                 ChapterPalette.SHALLOWS.getCleaned() == ChapterPalette.SHALLOWS.getCleaned());
+    }
+
+    private static void everyToolHasItsOwnPicture() {
+        PainterRegistry painters = new PainterRegistry();
+        EquipmentType[] tools = EquipmentType.values();
+        int[][] pictures = new int[tools.length][];
+        for (int i = 0; i < tools.length; i++) {
+            pictures[i] = toolPicture(painters, tools[i], false);
+            Check.assertTrue(tools[i] + " draws something", !Arrays.equals(pictures[i], new int[pictures[i].length]));
+            toolPicture(painters, tools[i], true);   // the working look must draw without trouble too
+        }
+        for (int i = 1; i < tools.length; i++) {
+            Check.assertTrue(tools[i] + " looks different from " + tools[i - 1],
+                    !Arrays.equals(pictures[i], pictures[i - 1]));
+        }
+    }
+
+    /** The pixels of one tool drawn in the middle of a small black image. */
+    private static int[] toolPicture(PainterRegistry painters, EquipmentType tool, boolean working) {
+        BufferedImage image = new BufferedImage(80, 80, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+        g.translate(40, 40);
+        painters.paintTool(g, tool, 0.3, working);
+        g.dispose();
+        return image.getRGB(0, 0, 80, 80, null, 0, 80);
     }
 
     private static void bubblesStayInsideTheirPool() {

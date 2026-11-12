@@ -25,7 +25,7 @@ public final class GameScreen implements Screen {
     private final ScreenManager screens;
     private final InputState input;
     private final SceneRenderer renderer;
-    private final HudPainter hud = new HudPainter();
+    private final HudPainter hud;
     private final EffectsSystem effects = new EffectsSystem();
     private final AudioEventListener sounds;
     private final PauseOverlay pauseOverlay;
@@ -40,6 +40,7 @@ public final class GameScreen implements Screen {
         this.screens = screens;
         this.input = input;
         this.renderer = renderer;
+        this.hud = new HudPainter(renderer.getPainters());
         this.pauseOverlay = new PauseOverlay(screens);
         this.sounds = new AudioEventListener(screens.getAudio());
     }
@@ -47,7 +48,7 @@ public final class GameScreen implements Screen {
     @Override
     public void onEnter() {
         game = screens.getSession().startChapter();
-        game.addListener(this::onGameEvent);   // this screen listens for tips to show
+        game.addListener(this::onGameEvent);   // this screen listens for messages to show
         effects.reset(game);
         game.addListener(effects);             // the effects listen for catches and hits
         game.addListener(sounds);              // and so do the sounds
@@ -59,7 +60,10 @@ public final class GameScreen implements Screen {
 
     /** OBSERVER: the game announces events; this screen reacts to the ones it shows. */
     private void onGameEvent(GameEvent event) {
-        if (event.getType() == EventType.TUTORIAL_PROMPT) {
+        // A tip, or the reason a tool could not be picked. Both appear in the same toast.
+        boolean carriesMessage = event.getType() == EventType.TUTORIAL_PROMPT
+                || event.getType() == EventType.SWAP_DENIED;
+        if (carriesMessage && !event.getText().isEmpty()) {
             tip = event.getText();
             tipAge = 0;
         }

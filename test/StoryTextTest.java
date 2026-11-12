@@ -1,4 +1,5 @@
 import model.ChapterData;
+import model.EquipmentType;
 import util.StoryText;
 
 /**
@@ -50,6 +51,20 @@ public final class StoryTextTest {
         };
         for (String tip : tips) {
             checkPage("tip \"" + tip + "\"", tip, 1, TIP_LENGTH);
+        }
+
+        // Every tool but the first comes with a page that presents it, and a
+        // "not yet" message short enough for the tip box.
+        for (EquipmentType tool : EquipmentType.values()) {
+            String page = StoryText.gearPage(tool.getUnlockChapter());
+            if (tool.getUnlockChapter() == 1) {
+                Check.assertTrue("chapter 1 has no new-tool page", page.isEmpty());
+            } else {
+                checkPage("new-tool page for the " + tool.getDisplayName(), page, STORY_LINES, STORY_LINE_LENGTH);
+                Check.assertTrue("the page names the " + tool.getDisplayName(), page.contains(tool.getDisplayName()));
+            }
+            checkPage("locked message for the " + tool.getDisplayName(),
+                    String.format(StoryText.TOOL_LOCKED, tool.getDisplayName(), tool.getUnlockChapter()), 1, TIP_LENGTH);
         }
 
         // The quota in the chapter 1 tip must be the real quota.

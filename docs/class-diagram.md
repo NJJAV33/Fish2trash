@@ -552,8 +552,19 @@ classDiagram
 
     class PainterRegistry {
         -painters Map
-        +paint(g, object)
+        -toolPainters Map
+        +paint(g, object, time)
+        +paintTool(g, type, time, working)
     }
+
+    class ToolPainter {
+        <<interface>>
+        +paint(g, time, working)
+    }
+
+    class HookClawPainter
+    class MagnetPainter
+    class CutterPainter
 
     class ObjectPainter {
         <<interface>>
@@ -588,7 +599,7 @@ classDiagram
 
     class HookPainter {
         +paintRope(g, hook, time)
-        +paintHead(g, hook)
+        +paintHead(g, hook, time)
     }
 
     class WaterPainter {
@@ -658,6 +669,12 @@ classDiagram
     SceneRenderer *-- BoatPainter
     SceneRenderer *-- HookPainter
     PainterRegistry o-- ObjectPainter : one per ObjectKind
+    PainterRegistry o-- ToolPainter : one per EquipmentType
+    ToolPainter <|.. HookClawPainter
+    ToolPainter <|.. MagnetPainter
+    ToolPainter <|.. CutterPainter
+    HookPainter --> PainterRegistry : draws the tool with
+    HudPainter --> PainterRegistry : draws tool icons with
 ```
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
