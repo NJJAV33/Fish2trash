@@ -51,8 +51,26 @@ public final class GameConstants {
 
     // ---- Fish ----
     public static final int DAMAGE_FISH = 1;
+    public static final int DAMAGE_DANGEROUS = 2;        // pufferfish and barracuda
     public static final double RADIUS_SMALL_FISH = 14;
+    public static final double RADIUS_BIG_FISH = 24;
+    public static final double RADIUS_PUFFER = 22;
+    public static final double RADIUS_BARRACUDA = 22;
     public static final double FISH_RELEASE_IMMUNITY_S = 1.5;   // a hooked fish can't be hooked again for this long
+
+    // ---- Pufferfish: weaves up and down, swells when the hook is near ----
+    public static final double PUFFER_WEAVE_AMPLITUDE = 55;   // pixels above and below its depth
+    public static final double PUFFER_WEAVE_PERIOD_S = 3.2;   // seconds for one full up-and-down
+    public static final double PUFFER_SENSE_RANGE = 120;      // it swells when the hook tip is this close
+    public static final double PUFFER_SWELL = 0.5;            // fully swollen = 50% bigger
+    public static final double PUFFER_INFLATE_PER_S = 2.5;    // how fast it swells and shrinks
+
+    // ---- Barracuda: patrols, then flashes and charges at the hook ----
+    public static final double BARRACUDA_SENSE_RANGE = 150;   // sideways distance at which it notices the line
+    public static final double BARRACUDA_TELEGRAPH_S = 0.6;   // warning flash before the charge
+    public static final double BARRACUDA_CHARGE_S = 0.8;
+    public static final double BARRACUDA_CHARGE_SPEED = 400;  // pixels per second
+    public static final double BARRACUDA_COOLDOWN_S = 3;      // rest before it can charge again
 
     // ---- Chapters: points needed, seconds allowed, starting health ----
     public static final int QUOTA_CH1 = 100;

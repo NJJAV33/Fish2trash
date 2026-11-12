@@ -50,6 +50,7 @@ public class Level {
         }
         guaranteeSupply(hook, chapterScore);
         for (OceanObject object : objects) {
+            object.sense(hook);   // dangerous fish react to the hook; the rest ignore it
             object.update(dt, GameConstants.WORLD_WIDTH);
         }
     }

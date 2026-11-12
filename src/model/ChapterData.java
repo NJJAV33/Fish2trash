@@ -65,7 +65,7 @@ public final class ChapterData {
                         TutorialPrompt.at(16, StoryText.TUT_QUOTA)));
     }
 
-    /** Chapter 2: cans piled up at the wreck on the right, and more fish in the way. */
+    /** Chapter 2: cans piled up at the wreck on the right, with big, fast fish in the way. */
     private static ChapterData oldPierWreck() {
         return new ChapterData(2, StoryText.CH2_TITLE,
                 GameConstants.QUOTA_CH2, GameConstants.TIME_CH2_S, GameConstants.HEALTH_CH2,
@@ -76,12 +76,14 @@ public final class ChapterData {
                         SpawnRule.of(ObjectKind.CAN).count(3, 4).respawn(3, 5).speed(35, 70).y(200, 420).build(),
                         SpawnRule.of(ObjectKind.PLASTIC_BOTTLE).count(3, 3).respawn(4, 6)
                                 .speed(30, 60).y(160, 380).start(15).build(),
-                        SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(50, 90).y(160, 380).start(8).build()),
+                        SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(50, 90).y(160, 380).start(8).build(),
+                        SpawnRule.of(ObjectKind.BIG_FISH).count(3, 3).speed(70, 190).y(170, 500).start(12).build()),
                 List.of(
-                        TutorialPrompt.aboutGear(1, StoryText.TUT_MAGNET, StoryText.TUT_MAGNET_ALT)));
+                        TutorialPrompt.aboutGear(1, StoryText.TUT_MAGNET, StoryText.TUT_MAGNET_ALT),
+                        TutorialPrompt.at(13, StoryText.TUT_BIGFISH)));
     }
 
-    /** Chapter 3: big, slow ghost nets deep down. */
+    /** Chapter 3: big, slow ghost nets deep down, guarded by dangerous fish. */
     private static ChapterData ghostNetDeep() {
         return new ChapterData(3, StoryText.CH3_TITLE,
                 GameConstants.QUOTA_CH3, GameConstants.TIME_CH3_S, GameConstants.HEALTH_CH3,
@@ -92,9 +94,15 @@ public final class ChapterData {
                         SpawnRule.of(ObjectKind.CAN).count(3, 4).respawn(4, 6).speed(30, 60).y(200, 500).start(18).build(),
                         SpawnRule.of(ObjectKind.PLASTIC_BOTTLE).count(3, 3).respawn(4, 6)
                                 .speed(30, 60).y(160, 300).start(18).build(),
-                        SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(50, 90).y(160, 380).build()),
+                        SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(50, 90).y(160, 380).build(),
+                        SpawnRule.of(ObjectKind.PUFFERFISH).count(2, 2).speed(50, 80).y(250, 450).start(20).build(),
+                        SpawnRule.of(ObjectKind.BARRACUDA).speed(90, 120).y(200, 480).start(20).build(),
+                        // A second barracuda joins late, to keep the end of the chapter tense.
+                        SpawnRule.of(ObjectKind.BARRACUDA).speed(90, 120).y(200, 480).start(60).build()),
                 List.of(
-                        TutorialPrompt.aboutGear(1, StoryText.TUT_CUTTER, StoryText.TUT_CUTTER_ALT)));
+                        TutorialPrompt.aboutGear(1, StoryText.TUT_CUTTER, StoryText.TUT_CUTTER_ALT),
+                        TutorialPrompt.at(21, StoryText.TUT_PUFFER),
+                        TutorialPrompt.at(24, StoryText.TUT_BARRACUDA)));
     }
 
     public int getNumber() {

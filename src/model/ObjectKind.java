@@ -33,6 +33,24 @@ public enum ObjectKind {
         public OceanObject create(double x, double y, double speedX) {
             return new SmallFish(x, y, speedX);
         }
+    },
+    BIG_FISH(false) {
+        @Override
+        public OceanObject create(double x, double y, double speedX) {
+            return new BigFish(x, y, speedX);
+        }
+    },
+    PUFFERFISH(false) {
+        @Override
+        public OceanObject create(double x, double y, double speedX) {
+            return new Pufferfish(x, y, speedX);
+        }
+    },
+    BARRACUDA(false) {
+        @Override
+        public OceanObject create(double x, double y, double speedX) {
+            return new Barracuda(x, y, speedX);
+        }
     };
 
     private final boolean trash;

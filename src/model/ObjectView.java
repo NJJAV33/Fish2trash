@@ -21,6 +21,12 @@ public interface ObjectView {
 
     boolean isCaught();
 
+    /**
+     * How alarmed the object looks: 0 = calm, 1 = fully alarmed. Dangerous
+     * fish use it to warn the player (a pufferfish swells, a barracuda flashes).
+     */
+    double getAlert();
+
     /** 0 = invisible, 1 = fully visible. Objects fade in when they appear. */
     double getOpacity();
 }
