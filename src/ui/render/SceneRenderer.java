@@ -30,25 +30,56 @@ public final class SceneRenderer {
     private static final BasicStroke HOOK_STROKE = new BasicStroke(3);
 
     private final BackgroundPainter background = new BackgroundPainter();
+    private final WaterPainter water = new WaterPainter();
+    private final ParticleSystem bubbles = new ParticleSystem();
+    private double time;   // seconds of animation so far
     private final PainterRegistry painters = new PainterRegistry();
 
+    /**
+     * Moves the animation forward. Called every frame, also on menus and
+     * while the game is paused, so the water never freezes.
+     */
+    public void update(double dt) {
+        time += dt;
+        bubbles.update(dt);
+    }
+
+    /** Seconds of animation so far. */
+    public double getTime() {
+        return time;
+    }
+
     public void paint(Graphics2D g, GameView game) {
-        background.paint(g, ChapterPalette.forChapter(game.getChapter().getNumber()));
+        ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber());
+        background.paint(g, palette);
+        water.paintBackWaves(g, palette, time);
         drawBoat(g, game.getBoat());
         for (ObjectView object : game.getObjects()) {
             painters.paint(g, object);   // the registry picks the painter for this kind
         }
         drawHook(g, game.getBoat().getHook());
+        paintWaterOnTop(g, palette);
     }
 
     /** The scene without boat or objects. Menus and story screens use it as a backdrop. */
     public void paintBackdrop(Graphics2D g, ChapterPalette palette) {
         background.paint(g, palette);
+        water.paintBackWaves(g, palette, time);
+        paintWaterOnTop(g, palette);
     }
 
     /** A backdrop that fades from one look to another. amount: 0 = from, 1 = to. */
     public void paintBackdropBlend(Graphics2D g, ChapterPalette from, ChapterPalette to, double amount) {
         background.paintBlend(g, from, to, amount);
+        water.paintBackWaves(g, to, time);
+        paintWaterOnTop(g, to);
+    }
+
+    /** What lies in front of the boat and the objects: near waves, sunbeams and bubbles. */
+    private void paintWaterOnTop(Graphics2D g, ChapterPalette palette) {
+        water.paintFrontWaves(g, palette, time);
+        water.paintRays(g, palette, time);
+        bubbles.paint(g);
     }
 
     private void drawBoat(Graphics2D g, Boat boat) {

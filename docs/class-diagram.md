@@ -525,6 +525,19 @@ classDiagram
         +paintBlend(g, from, to, amount)
     }
 
+    class WaterPainter {
+        +paintBackWaves(g, palette, time)
+        +paintFrontWaves(g, palette, time)
+        +paintRays(g, palette, time)
+    }
+
+    class ParticleSystem {
+        +MAX_BUBBLES int$
+        +update(dt)
+        +paint(g)
+        +getActiveCount() int
+    }
+
     class ChapterPalette {
         +SHALLOWS ChapterPalette$
         +WRECK ChapterPalette$
@@ -564,6 +577,8 @@ classDiagram
     GameScreen --> SceneRenderer
     GameScreen --> InputState : reads
     SceneRenderer *-- BackgroundPainter
+    SceneRenderer *-- WaterPainter
+    SceneRenderer *-- ParticleSystem
     BackgroundPainter ..> ChapterPalette : one cached picture per look
     SceneRenderer *-- PainterRegistry
     PainterRegistry o-- ObjectPainter : one per ObjectKind

@@ -31,6 +31,7 @@ public final class GamePanel extends JPanel {
 
     private final InputState input = new InputState();
     private final ScreenManager screens = new ScreenManager();
+    private final SceneRenderer renderer = new SceneRenderer();
     private final GameScreen gameScreen;
     private final Timer timer;
     private long lastTickNanos;
@@ -52,7 +53,6 @@ public final class GamePanel extends JPanel {
         });
 
         // One screen per state. They share one renderer for their backdrops.
-        SceneRenderer renderer = new SceneRenderer();
         gameScreen = new GameScreen(screens, input, renderer);
         screens.register(GameState.MENU, new MainMenu(screens, renderer));
         screens.register(GameState.HOW_TO, new HowToScreen(screens, renderer));
@@ -87,6 +87,7 @@ public final class GamePanel extends JPanel {
 
     /** Moves the game forward by dt seconds. The timer calls this; tests can call it directly. */
     public void advance(double dt) {
+        renderer.update(dt);   // water and bubbles keep moving on every screen, even when paused
         screens.update(dt);
     }
 
