@@ -1,6 +1,6 @@
 package ui.render;
 
-import game.GameManager;
+import game.GameView;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
@@ -37,8 +37,8 @@ public final class SceneRenderer {
 
     private final PainterRegistry painters = new PainterRegistry();
 
-    public void paint(Graphics2D g, GameManager game) {
-        drawBackground(g);
+    public void paint(Graphics2D g, GameView game) {
+        paintBackground(g);
         drawBoat(g, game.getBoat());
         for (ObjectView object : game.getObjects()) {
             painters.paint(g, object);   // the registry picks the painter for this kind
@@ -46,7 +46,8 @@ public final class SceneRenderer {
         drawHook(g, game.getBoat().getHook());
     }
 
-    private void drawBackground(Graphics2D g) {
+    /** Sky, sun, sea and sea floor only. Menus and story screens use it as a backdrop. */
+    public void paintBackground(Graphics2D g) {
         int w = GameConstants.WORLD_WIDTH;
         int h = GameConstants.WORLD_HEIGHT;
         int waterY = GameConstants.WATER_Y;

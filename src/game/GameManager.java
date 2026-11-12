@@ -22,7 +22,7 @@ import util.GameConstants;
  * It contains no drawing and no keyboard code - the ui package handles those.
  * A new attempt is simply a new GameManager.
  */
-public final class GameManager implements CatchResolver {
+public final class GameManager implements GameView, CatchResolver {
 
     private final ChapterData chapter;
     private final Level level;
@@ -209,46 +209,68 @@ public final class GameManager implements CatchResolver {
         emit(GameEvent.of(EventType.CHAPTER_FAILED));
     }
 
-    // ---- Read-only access for the ui ----
+    // ---- Reading the game (GameView) ----
 
+    @Override
     public ChapterData getChapter() {
         return chapter;
     }
 
-    public Player getPlayer() {
-        return player;
-    }
-
+    @Override
     public Boat getBoat() {
         return boat;
     }
 
     /** The objects in the water, as a read-only list. */
+    @Override
     public List<OceanObject> getObjects() {
         return level.getObjects();
     }
 
-    public double getTimeLeft() {
-        return timeLimit.getRemaining();
+    @Override
+    public int getScore() {
+        return player.getScore();
     }
 
-    public double getTimeTotal() {
-        return timeLimit.getTotal();
-    }
-
+    @Override
     public int getQuota() {
         return quota;
     }
 
-    public SessionStats getStats() {
-        return stats;
+    @Override
+    public int getHealth() {
+        return player.getHealth();
     }
 
+    @Override
+    public int getMaxHealth() {
+        return player.getMaxHealth();
+    }
+
+    @Override
+    public double getTimeLeft() {
+        return timeLimit.getRemaining();
+    }
+
+    @Override
+    public double getTimeTotal() {
+        return timeLimit.getTotal();
+    }
+
+    @Override
     public ChapterStatus getStatus() {
         return status;
     }
 
     public boolean isPlaying() {
         return status == ChapterStatus.RUNNING;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public SessionStats getStats() {
+        return stats;
     }
 }
