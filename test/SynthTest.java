@@ -1,4 +1,8 @@
+import util.AudioPlayer;
+import util.SilentAudioPlayer;
 import util.SoundEffect;
+import util.SoundState;
+import util.SynthAudioPlayer;
 import util.ToneSynth;
 import util.ToneSynth.Tone;
 import util.ToneSynth.Wave;
@@ -20,6 +24,23 @@ public final class SynthTest {
         aToneHasTheRightPitch();
         theSameRecipeAlwaysGivesTheSameSound();
         everyEffectIsWellFormed();
+        aPlayerWithoutASoundCardDoesNothingSafely();
+    }
+
+    private static void aPlayerWithoutASoundCardDoesNothingSafely() {
+        AudioPlayer noCard = new SynthAudioPlayer(true);
+        Check.assertEquals("no sound card: reported as unavailable", SoundState.UNAVAILABLE, noCard.getState());
+        for (SoundEffect effect : SoundEffect.values()) {
+            noCard.play(effect);   // must not throw
+        }
+        noCard.setMuted(true);
+        Check.assertEquals("muting cannot make it available", SoundState.UNAVAILABLE, noCard.getState());
+
+        AudioPlayer silent = new SilentAudioPlayer();
+        silent.play(SoundEffect.QUOTA);
+        Check.assertTrue("the silent player starts unmuted", !silent.isMuted());
+        silent.setMuted(true);
+        Check.assertTrue("and remembers being muted", silent.isMuted());
     }
 
     /** A wave crosses zero twice per repeat, so 1000 Hz for 50 ms crosses about 100 times. */

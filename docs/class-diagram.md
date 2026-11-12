@@ -613,7 +613,8 @@ and `BarracudaPainter`.
 
 ## 6. Sound (package `util`)
 
-No sound is loaded from a file. `ToneSynth` makes the samples from recipes.
+No sound is loaded from a file. `ToneSynth` makes the samples from recipes, and
+`SynthAudioPlayer` mixes and plays them on its own thread.
 
 ```mermaid
 classDiagram
@@ -630,7 +631,7 @@ classDiagram
         CHAPTER_CLEAR
         CHAPTER_FAIL
         +render(pitch) short[]
-        +getPriority() int
+        +isVaried() boolean
     }
 
     class ToneSynth {
@@ -638,7 +639,38 @@ classDiagram
         +render(lengthMs, pitch, tones)$ short[]
     }
 
+    class AudioPlayer {
+        <<interface>>
+        +play(effect)
+        +setMuted(muted)
+        +isMuted() boolean
+        +getState() SoundState
+    }
+
+    class SynthAudioPlayer {
+        -requests BlockingQueue
+        -muted boolean
+        -unavailable boolean
+        +play(effect)
+    }
+
+    class SilentAudioPlayer {
+        +play(effect)
+    }
+
+    class SoundState {
+        <<enumeration>>
+        ON
+        MUTED
+        UNAVAILABLE
+    }
+
     SoundEffect ..> ToneSynth : is rendered by
+    AudioPlayer <|.. SynthAudioPlayer
+    AudioPlayer <|.. SilentAudioPlayer
+    AudioPlayer ..> SoundEffect : plays
+    AudioPlayer ..> SoundState : reports
+    SynthAudioPlayer ..> SoundEffect : renders all at start
 ```
 
 ## Classes without a box
