@@ -30,6 +30,7 @@ public final class TestRunner {
         run("ScreenFlowTest", ScreenFlowTest::run);
         run("SessionTest", SessionTest::run);
         run("StoryTextTest", StoryTextTest::run);
+        run("SynthTest", SynthTest::run);
 
         System.out.println();
         System.out.println(Check.getChecks() + " checks, " + Check.getFailures() + " failed");

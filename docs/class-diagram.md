@@ -611,6 +611,36 @@ classDiagram
 `CanPainter`, `NetPainter`, `SmallFishPainter`, `BigFishPainter`, `PufferPainter`
 and `BarracudaPainter`.
 
+## 6. Sound (package `util`)
+
+No sound is loaded from a file. `ToneSynth` makes the samples from recipes.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class SoundEffect {
+        <<enumeration>>
+        HOOK_LAUNCH
+        CATCH_PLASTIC
+        CATCH_CAN
+        CATCH_NET
+        FISH_HIT
+        QUOTA
+        CHAPTER_CLEAR
+        CHAPTER_FAIL
+        +render(pitch) short[]
+        +getPriority() int
+    }
+
+    class ToneSynth {
+        +SAMPLE_RATE int$
+        +render(lengthMs, pitch, tones)$ short[]
+    }
+
+    SoundEffect ..> ToneSynth : is rendered by
+```
+
 ## Classes without a box
 
 These hold shared constants or helpers and have no relationships worth drawing:
