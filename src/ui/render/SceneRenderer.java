@@ -1,11 +1,8 @@
 package ui.render;
 
 import game.GameView;
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import model.Boat;
-import model.Hook;
 import model.ObjectView;
 import util.GameConstants;
 
@@ -18,22 +15,13 @@ import util.GameConstants;
  */
 public final class SceneRenderer {
 
-    private static final Color CABIN = new Color(240, 240, 235);
-    private static final Color WINDOW = new Color(110, 170, 210);
-    private static final Color HULL = new Color(170, 60, 45);
-    private static final Color HULL_OUTLINE = new Color(110, 35, 25);
-    private static final Color ROPE = new Color(40, 40, 40);
-    private static final Color HOOK_METAL = new Color(200, 200, 205);
-
-    private static final BasicStroke THIN = new BasicStroke(1);
-    private static final BasicStroke ROPE_STROKE = new BasicStroke(2);
-    private static final BasicStroke HOOK_STROKE = new BasicStroke(3);
-
     private final BackgroundPainter background = new BackgroundPainter();
     private final WaterPainter water = new WaterPainter();
     private final ParticleSystem bubbles = new ParticleSystem();
     private double time;   // seconds of animation so far
     private final PainterRegistry painters = new PainterRegistry();
+    private final BoatPainter boatPainter = new BoatPainter();
+    private final HookPainter hookPainter = new HookPainter();
 
     /**
      * Moves the animation forward. Called every frame, also on menus and
@@ -53,11 +41,23 @@ public final class SceneRenderer {
         ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber());
         background.paint(g, palette);
         water.paintBackWaves(g, palette, time);
-        drawBoat(g, game.getBoat());
+
+        Boat boat = game.getBoat();
+        boatPainter.paint(g, boat.getX(), boat.getY(), boat.getFacing(), time);
+        hookPainter.paintRope(g, boat.getHook(), time);
         for (ObjectView object : game.getObjects()) {
             painters.paint(g, object, time);   // the registry picks the painter for this kind
         }
-        drawHook(g, game.getBoat().getHook());
+        hookPainter.paintHead(g, boat.getHook());
+
+        paintWaterOnTop(g, palette);
+    }
+
+    /** A backdrop with the boat idling at the given place. The menu uses it. */
+    public void paintBackdropWithBoat(Graphics2D g, ChapterPalette palette, double boatX) {
+        background.paint(g, palette);
+        water.paintBackWaves(g, palette, time);
+        boatPainter.paint(g, boatX, GameConstants.WATER_Y, 1, time);
         paintWaterOnTop(g, palette);
     }
 
@@ -80,42 +80,5 @@ public final class SceneRenderer {
         water.paintFrontWaves(g, palette, time);
         water.paintRays(g, palette, time);
         bubbles.paint(g);
-    }
-
-    private void drawBoat(Graphics2D g, Boat boat) {
-        int cx = (int) boat.getX();
-        int waterline = (int) boat.getY();
-        int half = GameConstants.BOAT_WIDTH / 2;
-        int deck = waterline - GameConstants.BOAT_HEIGHT;
-
-        g.setColor(CABIN);
-        g.fillRect(cx - 25, deck - 22, 40, 24);
-        g.setColor(WINDOW);
-        g.fillRect(cx - 18, deck - 16, 12, 10);
-
-        // Hull: a trapezoid that sits slightly in the water
-        int[] hullX = {cx - half, cx + half, cx + half - 18, cx - half + 18};
-        int[] hullY = {deck, deck, waterline + 4, waterline + 4};
-        g.setColor(HULL);
-        g.fillPolygon(hullX, hullY, 4);
-        g.setColor(HULL_OUTLINE);
-        g.drawPolygon(hullX, hullY, 4);
-    }
-
-    private void drawHook(Graphics2D g, Hook hook) {
-        int ax = (int) hook.getAnchorX();
-        int ay = (int) hook.getAnchorY();
-        int tx = (int) hook.getTipX();
-        int ty = (int) hook.getTipY();
-
-        g.setColor(ROPE);
-        g.setStroke(ROPE_STROKE);
-        g.drawLine(ax, ay, tx, ty);
-
-        g.setColor(HOOK_METAL);
-        g.setStroke(HOOK_STROKE);
-        g.drawArc(tx - 7, ty - 3, 14, 14, 180, 200);   // hook curve
-        g.fillOval(tx - 3, ty - 3, 6, 6);
-        g.setStroke(THIN);
     }
 }

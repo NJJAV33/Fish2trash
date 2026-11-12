@@ -525,6 +525,15 @@ classDiagram
         +paintBlend(g, from, to, amount)
     }
 
+    class BoatPainter {
+        +paint(g, x, waterline, facing, time)
+    }
+
+    class HookPainter {
+        +paintRope(g, hook, time)
+        +paintHead(g, hook)
+    }
+
     class WaterPainter {
         +paintBackWaves(g, palette, time)
         +paintFrontWaves(g, palette, time)
@@ -581,6 +590,8 @@ classDiagram
     SceneRenderer *-- ParticleSystem
     BackgroundPainter ..> ChapterPalette : one cached picture per look
     SceneRenderer *-- PainterRegistry
+    SceneRenderer *-- BoatPainter
+    SceneRenderer *-- HookPainter
     PainterRegistry o-- ObjectPainter : one per ObjectKind
 ```
 
