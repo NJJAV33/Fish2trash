@@ -519,6 +519,21 @@ classDiagram
         +paintToast(g, text, age)
     }
 
+    class BackgroundPainter {
+        -cache Map
+        +paint(g, palette)
+        +paintBlend(g, from, to, amount)
+    }
+
+    class ChapterPalette {
+        +SHALLOWS ChapterPalette$
+        +WRECK ChapterPalette$
+        +DEEP ChapterPalette$
+        +REEF ChapterPalette$
+        +forChapter(chapter)$ ChapterPalette
+        +getCleaned() ChapterPalette
+    }
+
     class StoryBoxPainter
     class PortraitPainter
     class GameSession
@@ -548,6 +563,8 @@ classDiagram
     GameScreen --> GameManager : plays
     GameScreen --> SceneRenderer
     GameScreen --> InputState : reads
+    SceneRenderer *-- BackgroundPainter
+    BackgroundPainter ..> ChapterPalette : one cached picture per look
     SceneRenderer *-- PainterRegistry
     PainterRegistry o-- ObjectPainter : one per ObjectKind
 ```

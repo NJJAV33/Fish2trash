@@ -2,6 +2,7 @@ package ui;
 
 import game.GameState;
 import java.awt.Graphics2D;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
 import ui.render.TextDraw;
@@ -43,7 +44,7 @@ public final class MainMenu implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        backdrop.paintBackground(g);
+        backdrop.paintBackdrop(g, ChapterPalette.MENU);
         g.setColor(UiPalette.LIGHT_SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 

@@ -1,0 +1,146 @@
+package ui.render;
+
+import java.awt.Color;
+
+/**
+ * The colours and scenery of one place in the story. Each chapter has its own
+ * look, so the sea visibly changes as the crew cleans it: murky green
+ * shallows, a clearer wreck, the dark deep, and the bright reef at the end.
+ *
+ * There is one shared object per look (they are constants), so a palette can
+ * be used as a key to find its cached background picture.
+ */
+public final class ChapterPalette {
+
+    /** What is drawn on the sea floor. */
+    public enum Scenery { SHALLOWS, WRECK, DEEP, REEF }
+
+    public static final ChapterPalette SHALLOWS = new ChapterPalette(Scenery.SHALLOWS,
+            rgb(0xA7B5A0), rgb(0xC9D1B8), rgb(0x5E7F5A), rgb(0x3F5F45), rgb(0x26382B),
+            rgb(0x6B6A5C), rgb(0xE6DFA6), rgb(0xD8E8B0), 18, rgb(0xC7D15A));
+
+    public static final ChapterPalette WRECK = new ChapterPalette(Scenery.WRECK,
+            rgb(0x9CCBE0), rgb(0xD4EBF2), rgb(0x3E9CB0), rgb(0x2A7390), rgb(0x174B63),
+            rgb(0xB7A67A), rgb(0xFFE27A), rgb(0xE8FAFF), 40, rgb(0x4FD1C5));
+
+    public static final ChapterPalette DEEP = new ChapterPalette(Scenery.DEEP,
+            rgb(0x2B3A5A), rgb(0x46587A), rgb(0x14407A), rgb(0x0B2655), rgb(0x050F2A),
+            rgb(0x1C2438), rgb(0xC9D4F0), rgb(0x6FA8FF), 14, rgb(0x5FB0FF));
+
+    /** The recovered reef of the ending. */
+    public static final ChapterPalette REEF = new ChapterPalette(Scenery.REEF,
+            rgb(0x7FD3F5), rgb(0xFFF1C9), rgb(0x2FB6E6), rgb(0x1B8FD0), rgb(0x0B5FA3),
+            rgb(0xF2DFA0), rgb(0xFFD166), rgb(0xFFF6C8), 70, rgb(0xFFD166));
+
+    /** The backdrop of the menu and other screens outside the story. */
+    public static final ChapterPalette MENU = WRECK;
+
+    private static final ChapterPalette[] BY_CHAPTER = {SHALLOWS, WRECK, DEEP};
+
+    // How far a cleaned-up chapter moves toward the look of the recovered reef.
+    private static final double CLEANED_AMOUNT = 0.6;
+
+    private final Scenery scenery;
+    private final Color skyTop;
+    private final Color skyBottom;
+    private final Color seaTop;
+    private final Color seaMiddle;
+    private final Color seaBottom;
+    private final Color seabed;
+    private final Color sun;
+    private final Color ray;        // sunbeams through the water
+    private final int rayAlpha;     // 0 to 255: how strong the sunbeams are
+    private final Color accent;
+    private ChapterPalette cleaned; // made the first time it is asked for
+
+    private ChapterPalette(Scenery scenery, Color skyTop, Color skyBottom, Color seaTop, Color seaMiddle,
+                           Color seaBottom, Color seabed, Color sun, Color ray, int rayAlpha, Color accent) {
+        this.scenery = scenery;
+        this.skyTop = skyTop;
+        this.skyBottom = skyBottom;
+        this.seaTop = seaTop;
+        this.seaMiddle = seaMiddle;
+        this.seaBottom = seaBottom;
+        this.seabed = seabed;
+        this.sun = sun;
+        this.ray = ray;
+        this.rayAlpha = rayAlpha;
+        this.accent = accent;
+    }
+
+    private static Color rgb(int hex) {
+        return new Color(hex);
+    }
+
+    /** The look of chapter 1, 2 or 3. */
+    public static ChapterPalette forChapter(int chapter) {
+        return BY_CHAPTER[chapter - 1];
+    }
+
+    /**
+     * The same place after the crew has cleaned it: every colour moved part
+     * of the way toward the recovered reef. Shown when a chapter is cleared.
+     */
+    public ChapterPalette getCleaned() {
+        if (cleaned == null) {
+            cleaned = new ChapterPalette(scenery,
+                    mix(skyTop, REEF.skyTop), mix(skyBottom, REEF.skyBottom),
+                    mix(seaTop, REEF.seaTop), mix(seaMiddle, REEF.seaMiddle), mix(seaBottom, REEF.seaBottom),
+                    mix(seabed, REEF.seabed), mix(sun, REEF.sun), mix(ray, REEF.ray),
+                    (int) (rayAlpha + (REEF.rayAlpha - rayAlpha) * CLEANED_AMOUNT), mix(accent, REEF.accent));
+            cleaned.cleaned = cleaned;   // cleaning a clean place changes nothing
+        }
+        return cleaned;
+    }
+
+    private static Color mix(Color from, Color to) {
+        return new Color(
+                (int) (from.getRed() + (to.getRed() - from.getRed()) * CLEANED_AMOUNT),
+                (int) (from.getGreen() + (to.getGreen() - from.getGreen()) * CLEANED_AMOUNT),
+                (int) (from.getBlue() + (to.getBlue() - from.getBlue()) * CLEANED_AMOUNT));
+    }
+
+    public Scenery getScenery() {
+        return scenery;
+    }
+
+    public Color getSkyTop() {
+        return skyTop;
+    }
+
+    public Color getSkyBottom() {
+        return skyBottom;
+    }
+
+    public Color getSeaTop() {
+        return seaTop;
+    }
+
+    public Color getSeaMiddle() {
+        return seaMiddle;
+    }
+
+    public Color getSeaBottom() {
+        return seaBottom;
+    }
+
+    public Color getSeabed() {
+        return seabed;
+    }
+
+    public Color getSun() {
+        return sun;
+    }
+
+    public Color getRay() {
+        return ray;
+    }
+
+    public int getRayAlpha() {
+        return rayAlpha;
+    }
+
+    public Color getAccent() {
+        return accent;
+    }
+}

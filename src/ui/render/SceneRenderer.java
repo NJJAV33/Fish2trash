@@ -3,7 +3,6 @@ package ui.render;
 import game.GameView;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import model.Boat;
 import model.Hook;
@@ -11,19 +10,14 @@ import model.ObjectView;
 import util.GameConstants;
 
 /**
- * Draws the game world: sky, sea, boat, ocean objects and the hook.
+ * Draws the game world: the background of the chapter, the boat, the ocean
+ * objects and the hook.
  *
  * It only reads the game. All drawing lives here in the ui package, so the
  * model classes stay free of any graphics code.
  */
 public final class SceneRenderer {
 
-    private static final Color SKY_TOP = new Color(150, 205, 245);
-    private static final Color SKY_BOTTOM = new Color(205, 235, 255);
-    private static final Color SUN = new Color(255, 220, 90);
-    private static final Color SEA_TOP = new Color(35, 125, 195);
-    private static final Color SEA_BOTTOM = new Color(10, 40, 90);
-    private static final Color SEA_FLOOR = new Color(194, 170, 120);
     private static final Color CABIN = new Color(240, 240, 235);
     private static final Color WINDOW = new Color(110, 170, 210);
     private static final Color HULL = new Color(170, 60, 45);
@@ -35,10 +29,11 @@ public final class SceneRenderer {
     private static final BasicStroke ROPE_STROKE = new BasicStroke(2);
     private static final BasicStroke HOOK_STROKE = new BasicStroke(3);
 
+    private final BackgroundPainter background = new BackgroundPainter();
     private final PainterRegistry painters = new PainterRegistry();
 
     public void paint(Graphics2D g, GameView game) {
-        paintBackground(g);
+        background.paint(g, ChapterPalette.forChapter(game.getChapter().getNumber()));
         drawBoat(g, game.getBoat());
         for (ObjectView object : game.getObjects()) {
             painters.paint(g, object);   // the registry picks the painter for this kind
@@ -46,23 +41,14 @@ public final class SceneRenderer {
         drawHook(g, game.getBoat().getHook());
     }
 
-    /** Sky, sun, sea and sea floor only. Menus and story screens use it as a backdrop. */
-    public void paintBackground(Graphics2D g) {
-        int w = GameConstants.WORLD_WIDTH;
-        int h = GameConstants.WORLD_HEIGHT;
-        int waterY = GameConstants.WATER_Y;
+    /** The scene without boat or objects. Menus and story screens use it as a backdrop. */
+    public void paintBackdrop(Graphics2D g, ChapterPalette palette) {
+        background.paint(g, palette);
+    }
 
-        g.setPaint(new GradientPaint(0, 0, SKY_TOP, 0, waterY, SKY_BOTTOM));
-        g.fillRect(0, 0, w, waterY);
-
-        g.setColor(SUN);
-        g.fillOval(w - 100, 68, 52, 52);   // sits below the HUD bar
-
-        g.setPaint(new GradientPaint(0, waterY, SEA_TOP, 0, h, SEA_BOTTOM));
-        g.fillRect(0, waterY, w, h - waterY);
-
-        g.setColor(SEA_FLOOR);
-        g.fillRect(0, h - 14, w, 14);
+    /** A backdrop that fades from one look to another. amount: 0 = from, 1 = to. */
+    public void paintBackdropBlend(Graphics2D g, ChapterPalette from, ChapterPalette to, double amount) {
+        background.paintBlend(g, from, to, amount);
     }
 
     private void drawBoat(Graphics2D g, Boat boat) {

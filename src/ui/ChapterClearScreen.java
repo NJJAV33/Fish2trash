@@ -4,6 +4,7 @@ import game.ChapterResult;
 import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
 import ui.render.TextDraw;
@@ -17,10 +18,12 @@ public final class ChapterClearScreen implements Screen {
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
     private static final int VALUE_X = 570;
+    private static final double CLEAN_UP_SECONDS = 2.0;   // how long the water takes to clear
 
     private final ScreenManager screens;
     private final SceneRenderer backdrop;
     private ChapterResult result;
+    private double time;
 
     public ChapterClearScreen(ScreenManager screens, SceneRenderer backdrop) {
         this.screens = screens;
@@ -30,6 +33,12 @@ public final class ChapterClearScreen implements Screen {
     @Override
     public void onEnter() {
         result = screens.getSession().getLastResult();
+        time = 0;
+    }
+
+    @Override
+    public void update(double dt) {
+        time += dt;
     }
 
     @Override
@@ -42,7 +51,9 @@ public final class ChapterClearScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        backdrop.paintBackground(g);
+        // The sea visibly clears up behind the report card.
+        ChapterPalette before = ChapterPalette.forChapter(result.getChapter());
+        backdrop.paintBackdropBlend(g, before, before.getCleaned(), time / CLEAN_UP_SECONDS);
         g.setColor(UiPalette.LIGHT_SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 

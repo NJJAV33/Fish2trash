@@ -60,7 +60,7 @@ public final class GamePanel extends JPanel {
         screens.register(GameState.PLAYING, gameScreen);
         screens.register(GameState.CHAPTER_CLEAR, new ChapterClearScreen(screens, renderer));
         screens.register(GameState.GAME_OVER, new GameOverScreen(screens, renderer));
-        screens.register(GameState.ENDING, new VictoryScreen(screens));
+        screens.register(GameState.ENDING, new VictoryScreen(screens, renderer));
         screens.start(GameState.MENU);
 
         timer = new Timer(FRAME_DELAY_MS, e -> tick());

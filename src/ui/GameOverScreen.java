@@ -6,6 +6,7 @@ import game.GameState;
 import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
 import ui.render.TextDraw;
@@ -55,7 +56,7 @@ public final class GameOverScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        backdrop.paintBackground(g);
+        backdrop.paintBackdrop(g, ChapterPalette.forChapter(result.getChapter()));
         g.setColor(UiPalette.SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
         g.setColor(UiPalette.FIRED_TINT);

@@ -3,6 +3,7 @@ package ui;
 import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
 import ui.render.TextDraw;
@@ -32,7 +33,7 @@ public final class HowToScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        backdrop.paintBackground(g);
+        backdrop.paintBackdrop(g, ChapterPalette.MENU);
         g.setColor(UiPalette.PANEL_SOLID);
         g.fillRoundRect(90, 70, 620, 460, 18, 18);
         g.setColor(UiPalette.PANEL_EDGE);
