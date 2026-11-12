@@ -9,12 +9,15 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Random;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
+import game.ChapterStatus;
 import game.GameManager;
 import model.Loadout;
 import model.Player;
@@ -36,6 +39,14 @@ public final class GamePanel extends JPanel {
 
     private static final int FRAME_DELAY_MS = 16;      // about 60 frames per second
     private static final double MAX_STEP_SECONDS = 0.05;
+
+    // The line shown on the end screen for each way a chapter can end.
+    private static final Map<ChapterStatus, String> END_MESSAGES = new EnumMap<>(ChapterStatus.class);
+    static {
+        END_MESSAGES.put(ChapterStatus.CLEARED, "Quota reached!");
+        END_MESSAGES.put(ChapterStatus.FAILED_TIME, "Time's up!");
+        END_MESSAGES.put(ChapterStatus.FAILED_HEALTH, "You caught too many fish!");
+    }
 
     private GameManager manager = new GameManager(Loadout.standard(), new Random());
     private final SceneRenderer renderer = new SceneRenderer();
@@ -126,8 +137,8 @@ public final class GamePanel extends JPanel {
 
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        g.drawString("Score: " + player.getScore() + " / " + GameConstants.QUOTA_CH1, 22, 36);
-        g.drawString("Health: " + player.getHealth(), 22, 62);
+        g.drawString("Score: " + player.getScore() + " / " + manager.getQuota(), 22, 36);
+        g.drawString("Health: " + player.getHealth() + " / " + player.getMaxHealth(), 22, 62);
         g.drawString("Time: " + secondsLeft + "s", 22, 88);
 
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
@@ -135,7 +146,7 @@ public final class GamePanel extends JPanel {
     }
 
     private void drawEndScreen(Graphics2D g) {
-        boolean won = manager.getState() == GameManager.State.WON;
+        boolean won = manager.getStatus() == ChapterStatus.CLEARED;
 
         g.setColor(new Color(0, 0, 0, 160));
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
@@ -146,7 +157,7 @@ public final class GamePanel extends JPanel {
 
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
-        drawCentered(g, manager.getEndMessage(), 300);
+        drawCentered(g, END_MESSAGES.get(manager.getStatus()), 300);
         drawCentered(g, "Final score: " + manager.getPlayer().getScore(), 340);
         drawCentered(g, "Press R to restart", 400);
     }

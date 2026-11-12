@@ -54,8 +54,8 @@ public final class GameConstants {
     public static final double FISH_RELEASE_IMMUNITY_S = 1.5;   // a hooked fish can't be hooked again for this long
 
     // ---- Chapter rules ----
-    public static final int QUOTA_CH1 = 50;
-    public static final double TIME_CH1_S = 60;
+    public static final int QUOTA_CH1 = 100;
+    public static final double TIME_CH1_S = 65;
     public static final int HEALTH_CH1 = 3;
 
     // ---- Spawning ----

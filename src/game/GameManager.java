@@ -12,18 +12,17 @@ import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
 import model.Player;
+import model.TimeLimit;
 import util.GameConstants;
 
 /**
- * The rules of one game: what is in the ocean, what the hook touches, the
- * countdown, and whether the player has won or lost.
+ * The rules of one chapter attempt: what is in the ocean, what the hook
+ * touches, the countdown, and whether the player has won or lost.
  *
  * It contains no drawing and no keyboard code - the ui package handles those.
  * A new game is simply a new GameManager.
  */
 public final class GameManager implements CatchResolver {
-
-    public enum State { PLAYING, WON, LOST }
 
     // Which trash appears: a kind listed more often is more common.
     private static final ObjectKind[] TRASH_MIX = {
@@ -42,10 +41,11 @@ public final class GameManager implements CatchResolver {
 
     private final Player player;
     private final Boat boat;
-    private double timeLeft;
+    private final TimeLimit timeLimit;
+    private final int quota;
     private int boatDirection;
-    private State state;
-    private String endMessage;
+    private ChapterStatus status;
+    private boolean quotaReached;
 
     // True once the current launch has touched something or was recalled.
     // A launch that comes back with this still false was a miss.
@@ -63,9 +63,9 @@ public final class GameManager implements CatchResolver {
             objects.add(createFish());
         }
 
-        timeLeft = GameConstants.TIME_CH1_S;
-        state = State.PLAYING;
-        endMessage = "";
+        timeLimit = new TimeLimit(GameConstants.TIME_CH1_S);
+        quota = GameConstants.QUOTA_CH1;
+        status = ChapterStatus.RUNNING;
     }
 
     /** Registers someone who wants to hear about game events. */
@@ -84,7 +84,7 @@ public final class GameManager implements CatchResolver {
      * if it is still on its way out.
      */
     public void spaceAction() {
-        if (state != State.PLAYING) {
+        if (status != ChapterStatus.RUNNING) {
             return;
         }
         Hook hook = boat.getHook();
@@ -104,16 +104,15 @@ public final class GameManager implements CatchResolver {
         boatDirection = direction;
     }
 
-    /** Advances the game by dt seconds. Does nothing once the game is over. */
+    /** Advances the game by dt seconds. Does nothing once the chapter is over. */
     public void update(double dt) {
-        if (state != State.PLAYING) {
+        if (status != ChapterStatus.RUNNING) {
             return;
         }
 
-        timeLeft -= dt;
-        if (timeLeft <= 0) {
-            timeLeft = 0;
-            endGame(State.LOST, "Time's up!");
+        timeLimit.tick(dt);   // does nothing once the clock is frozen
+        if (timeLimit.isTimeUp()) {
+            fail(ChapterStatus.FAILED_TIME);
             return;
         }
 
@@ -167,7 +166,16 @@ public final class GameManager implements CatchResolver {
         if (player.getHealth() < healthBefore) {
             emit(GameEvent.about(EventType.HEALTH_LOST, object, healthBefore - player.getHealth()));
         }
-        checkEndConditions();
+
+        if (!player.isAlive()) {
+            fail(ChapterStatus.FAILED_HEALTH);
+        } else if (!quotaReached && player.getScore() >= quota) {
+            // Quota met: stop the clock so the catch on the line cannot be
+            // lost to it. The chapter is won when that catch reaches the boat.
+            quotaReached = true;
+            timeLimit.freeze();
+            emit(GameEvent.of(EventType.QUOTA_REACHED));
+        }
     }
 
     @Override
@@ -192,28 +200,18 @@ public final class GameManager implements CatchResolver {
             hook.clearCaughtObject();
             objects.add(createTrash());   // keep the ocean stocked
             emit(GameEvent.about(EventType.DELIVERED, carried, 0));
+            if (quotaReached) {
+                status = ChapterStatus.CLEARED;
+                emit(GameEvent.of(EventType.CHAPTER_CLEARED));
+            }
         } else if (!launchResolved) {
             emit(GameEvent.of(EventType.MISSED));
         }
     }
 
-    private void checkEndConditions() {
-        if (player.getScore() >= GameConstants.QUOTA_CH1) {
-            emit(GameEvent.of(EventType.QUOTA_REACHED));
-            endGame(State.WON, "Quota reached!");
-        } else if (!player.isAlive()) {
-            endGame(State.LOST, "You caught too many fish!");
-        }
-    }
-
-    private void endGame(State result, String message) {
-        state = result;
-        endMessage = message;
-        if (result == State.WON) {
-            emit(GameEvent.of(EventType.CHAPTER_CLEARED));
-        } else {
-            emit(GameEvent.withText(EventType.CHAPTER_FAILED, message));
-        }
+    private void fail(ChapterStatus reason) {
+        status = reason;
+        emit(GameEvent.of(EventType.CHAPTER_FAILED));
     }
 
     // ---- Spawning ----
@@ -261,18 +259,18 @@ public final class GameManager implements CatchResolver {
     }
 
     public double getTimeLeft() {
-        return timeLeft;
+        return timeLimit.getRemaining();
     }
 
-    public State getState() {
-        return state;
+    public int getQuota() {
+        return quota;
+    }
+
+    public ChapterStatus getStatus() {
+        return status;
     }
 
     public boolean isPlaying() {
-        return state == State.PLAYING;
-    }
-
-    public String getEndMessage() {
-        return endMessage;
+        return status == ChapterStatus.RUNNING;
     }
 }

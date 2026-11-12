@@ -16,10 +16,10 @@ public enum EventType {
     MISSED,
     /** A caught object reached the boat. */
     DELIVERED,
-    /** The score reached the chapter's quota. */
+    /** The score reached the chapter's quota. The clock stops here. */
     QUOTA_REACHED,
-    /** The chapter was won. */
+    /** The chapter was won: the catch that met the quota reached the boat. */
     CHAPTER_CLEARED,
-    /** The chapter was lost. The event's text says why. */
+    /** The chapter was lost. GameManager.getStatus() says why. */
     CHAPTER_FAILED
 }
