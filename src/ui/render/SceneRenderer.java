@@ -56,7 +56,7 @@ public final class SceneRenderer {
         g.fillRect(0, 0, w, waterY);
 
         g.setColor(SUN);
-        g.fillOval(w - 110, 20, 60, 60);
+        g.fillOval(w - 100, 68, 52, 52);   // sits below the HUD bar
 
         g.setPaint(new GradientPaint(0, waterY, SEA_TOP, 0, h, SEA_BOTTOM));
         g.fillRect(0, waterY, w, h - waterY);

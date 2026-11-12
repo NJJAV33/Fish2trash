@@ -1,15 +1,14 @@
 package ui;
 
 import game.ChapterResult;
+import game.EventType;
+import game.GameEvent;
 import game.GameManager;
 import game.GameState;
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.HudPainter;
 import ui.render.SceneRenderer;
-import util.GameConstants;
-import util.StoryText;
 
 /**
  * The screen where a chapter is played. Each time it is entered it starts a
@@ -23,8 +22,12 @@ public final class GameScreen implements Screen {
     private final ScreenManager screens;
     private final InputState input;
     private final SceneRenderer renderer;
+    private final HudPainter hud = new HudPainter();
     private final PauseOverlay pauseOverlay;
     private GameManager game;
+    private String tip;          // the tip on screen, or null
+    private double tipAge;       // seconds since it appeared
+    private double time;         // seconds on this screen, drives HUD animation
     private double secondsSinceEnd;
     private boolean leaving;
 
@@ -38,12 +41,25 @@ public final class GameScreen implements Screen {
     @Override
     public void onEnter() {
         game = screens.getSession().startChapter();
+        game.addListener(this::onGameEvent);   // this screen listens for tips to show
+        tip = null;
+        time = 0;
         secondsSinceEnd = 0;
         leaving = false;
     }
 
+    /** OBSERVER: the game announces events; this screen reacts to the ones it shows. */
+    private void onGameEvent(GameEvent event) {
+        if (event.getType() == EventType.TUTORIAL_PROMPT) {
+            tip = event.getText();
+            tipAge = 0;
+        }
+    }
+
     @Override
     public void update(double dt) {
+        time += dt;
+        tipAge += dt;
         game.setBoatDirection(input.getDirection());
         game.update(dt);   // ignored by the manager once the chapter is over
 
@@ -84,24 +100,7 @@ public final class GameScreen implements Screen {
     @Override
     public void paint(Graphics2D g) {
         renderer.paint(g, game);
-        drawHud(g);
-    }
-
-    private void drawHud(Graphics2D g) {
-        int secondsLeft = (int) Math.ceil(game.getTimeLeft());
-
-        g.setColor(new Color(0, 0, 0, 120));
-        g.fillRoundRect(10, 10, 300, 92, 12, 12);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
-        g.drawString(game.getChapter().getTitle(), 22, 32);
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        g.drawString("Score: " + game.getScore() + " / " + game.getQuota(), 22, 56);
-        g.drawString("Health: " + game.getHealth() + " / " + game.getMaxHealth()
-                + "     Time: " + secondsLeft + "s", 22, 82);
-
-        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        g.drawString(StoryText.PLAY_HINT, 12, GameConstants.WORLD_HEIGHT - 22);
+        hud.paint(g, game, time);
+        hud.paintToast(g, tip, tipAge);
     }
 }

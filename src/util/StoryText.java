@@ -183,6 +183,8 @@ public final class StoryText {
     public static final String NEXT_PROMPT = "ENTER";
     public static final String SKIP_PROMPT = "ESC: skip";
     public static final String PLAY_HINT = "A / D: move     SPACE: drop or recall hook     P: pause";
+    public static final String HUD_OBJECTIVE = "Hook trash, spare the fish";
+    public static final String HUD_SCORE = "SCORE";
 
     // The story pages of each chapter, looked up by chapter number (see the methods below).
     private static final String[] TITLES = {CH1_TITLE, CH2_TITLE, CH3_TITLE};
