@@ -525,6 +525,17 @@ classDiagram
         +paintBlend(g, from, to, amount)
     }
 
+    class EffectsSystem {
+        +MAX_EFFECTS int$
+        +reset(game)
+        +onGameEvent(event)
+        +update(dt)
+        +paint(g)
+        +paintFlash(g)
+        +getShakeX() double
+        +getShakeY() double
+    }
+
     class BoatPainter {
         +paint(g, x, waterline, facing, time)
     }
@@ -582,6 +593,7 @@ classDiagram
     StoryBoxPainter *-- PortraitPainter
     GameScreen *-- PauseOverlay
     GameScreen *-- HudPainter
+    GameScreen *-- EffectsSystem
     GameScreen --> GameManager : plays
     GameScreen --> SceneRenderer
     GameScreen --> InputState : reads

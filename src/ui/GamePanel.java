@@ -1,6 +1,7 @@
 package ui;
 
 import game.GameState;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -38,6 +39,7 @@ public final class GamePanel extends JPanel {
 
     public GamePanel() {
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
+        setBackground(Color.BLACK);   // shows at the edges when the scene shakes
         setFocusable(true);   // a panel only receives keys if it can have the focus
         addKeyListener(new KeyHandler());
         addFocusListener(new FocusAdapter() {
