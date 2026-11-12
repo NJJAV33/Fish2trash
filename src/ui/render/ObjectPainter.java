@@ -11,5 +11,6 @@ import model.ObjectView;
  */
 public interface ObjectPainter {
 
-    void paint(Graphics2D g, ObjectView object);
+    /** @param time seconds of animation so far, for swaying, wagging and blinking */
+    void paint(Graphics2D g, ObjectView object, double time);
 }

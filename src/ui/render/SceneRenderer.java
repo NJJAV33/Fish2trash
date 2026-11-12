@@ -55,7 +55,7 @@ public final class SceneRenderer {
         water.paintBackWaves(g, palette, time);
         drawBoat(g, game.getBoat());
         for (ObjectView object : game.getObjects()) {
-            painters.paint(g, object);   // the registry picks the painter for this kind
+            painters.paint(g, object, time);   // the registry picks the painter for this kind
         }
         drawHook(g, game.getBoat().getHook());
         paintWaterOnTop(g, palette);

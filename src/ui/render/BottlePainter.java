@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import model.ObjectView;
 
-/** Draws a see-through plastic bottle floating on its side. */
+/** Draws a see-through plastic bottle floating on its side, rocking gently. */
 public final class BottlePainter implements ObjectPainter {
 
     private static final Color PLASTIC = new Color(191, 230, 242, 170);
@@ -15,13 +15,14 @@ public final class BottlePainter implements ObjectPainter {
     private static final Color SHINE = new Color(255, 255, 255, 190);
     private static final BasicStroke THIN = new BasicStroke(1);
     private static final double TILT = Math.toRadians(75);
+    private static final double ROCK = 0.12;   // how far it rocks, in radians
 
     @Override
-    public void paint(Graphics2D g, ObjectView object) {
+    public void paint(Graphics2D g, ObjectView object, double time) {
         // Work on a copy, so the move and tilt do not leak into other drawing.
         Graphics2D g2 = (Graphics2D) g.create();
         g2.translate(object.getX(), object.getY());
-        g2.rotate(TILT);
+        g2.rotate(TILT + ROCK * Math.sin(2 * time + object.getPhase()));
 
         g2.setColor(PLASTIC);
         g2.fillRoundRect(-7, -9, 14, 22, 6, 6);   // body

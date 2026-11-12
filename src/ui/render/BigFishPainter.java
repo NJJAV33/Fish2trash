@@ -3,29 +3,50 @@ package ui.render;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import model.ObjectView;
 
-/** Draws a big blue fish with a forked tail and stripes. */
+/** Draws a big blue fish with a forked tail and stripes. Fast ones trail speed lines. */
 public final class BigFishPainter implements ObjectPainter {
 
     private static final Color BODY = new Color(61, 126, 191);
     private static final Color BELLY = new Color(170, 205, 235);
     private static final Color STRIPE = new Color(35, 80, 135);
+    private static final Color SPEED_LINE = new Color(255, 255, 255, 90);
     private static final BasicStroke STRIPE_STROKE = new BasicStroke(2);
+    private static final double WAG = 0.28;
+    private static final double FAST = 120;   // pixels per second: from here on it shows speed lines
+
+    private static final int[] TAIL_X = {-26, -46, -40};
+    private static final int[] TAIL_UP_Y = {0, -14, 0};
+    private static final int[] TAIL_DOWN_Y = {0, 14, 0};
+    private static final int[] FIN_X = {-6, 6, -12};
+    private static final int[] FIN_Y = {-11, -11, -20};
 
     @Override
-    public void paint(Graphics2D g, ObjectView object) {
+    public void paint(Graphics2D g, ObjectView object, double time) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.translate(object.getX(), object.getY());
         g2.scale(object.getFacing(), 1);   // drawn facing right; flipped when it swims left
 
-        g2.setColor(BODY);
-        g2.fillOval(-31, -12, 62, 24);
-        // Forked tail: two triangles behind the body
-        g2.fillPolygon(new int[] {-26, -46, -40}, new int[] {0, -14, 0}, 3);
-        g2.fillPolygon(new int[] {-26, -46, -40}, new int[] {0, 14, 0}, 3);
-        g2.fillPolygon(new int[] {-6, 6, -12}, new int[] {-11, -11, -20}, 3);   // back fin
+        if (Math.abs(object.getSpeedX()) > FAST) {
+            g2.setColor(SPEED_LINE);
+            g2.setStroke(STRIPE_STROKE);
+            g2.drawLine(-52, -8, -68, -8);
+            g2.drawLine(-56, 0, -76, 0);
+            g2.drawLine(-52, 8, -68, 8);
+        }
 
+        // Forked tail: two triangles that swing together
+        AffineTransform beforeTail = g2.getTransform();
+        g2.rotate(WAG * Math.sin(14 * time + object.getPhase()), -26, 0);
+        g2.setColor(BODY);
+        g2.fillPolygon(TAIL_X, TAIL_UP_Y, 3);
+        g2.fillPolygon(TAIL_X, TAIL_DOWN_Y, 3);
+        g2.setTransform(beforeTail);
+
+        g2.fillPolygon(FIN_X, FIN_Y, 3);   // back fin
+        g2.fillOval(-31, -12, 62, 24);
         g2.setColor(BELLY);
         g2.fillOval(-22, 0, 44, 10);
 
