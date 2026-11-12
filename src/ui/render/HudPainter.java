@@ -6,6 +6,7 @@ import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import util.GameConstants;
 import util.Mathx;
+import util.SoundState;
 import util.StoryText;
 
 /**
@@ -21,14 +22,16 @@ public final class HudPainter {
     private static final int BAR_HEIGHT = 14;
     private static final int HEARTS_X = 470;
     private static final int HEART_SPACING = 26;
-    private static final int LOW_TIME_SECONDS = 10;
 
     private static final double TOAST_SLIDE_SECONDS = 0.25;
     private static final double TOAST_FADE_SECONDS = 0.4;
     public static final double TOAST_SECONDS = 4.0;   // how long a tip stays, in total
 
-    /** @param time seconds, used to make the timer pulse when it runs low */
-    public void paint(Graphics2D g, GameView game, double time) {
+    /**
+     * @param time  seconds, used to make the timer pulse when it runs low
+     * @param sound whether sound is on, shown as a small speaker
+     */
+    public void paint(Graphics2D g, GameView game, double time, SoundState sound) {
         g.setColor(UiPalette.PANEL);
         g.fillRoundRect(8, 8, 784, 52, 14, 14);
 
@@ -50,6 +53,8 @@ public final class HudPainter {
         g.setColor(UiPalette.TEXT);
         TextDraw.centered(g, String.valueOf(game.getScore()), 747, 48);
 
+        drawSpeaker(g, sound);
+
         // The key reminder sits on a dark strip, so it reads on any sea floor.
         g.setColor(UiPalette.PANEL);
         g.fillRect(0, GameConstants.SEABED_Y, GameConstants.WORLD_WIDTH,
@@ -57,6 +62,26 @@ public final class HudPainter {
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
         TextDraw.centered(g, StoryText.PLAY_HINT, GameConstants.WORLD_WIDTH / 2, 597);
+    }
+
+    /** A small speaker under the HUD bar: with sound waves when on, crossed out when not. */
+    private void drawSpeaker(Graphics2D g, SoundState sound) {
+        boolean on = (sound == SoundState.ON);
+        int x = 762;
+        int y = 68;
+
+        g.setColor(UiPalette.PANEL);
+        g.fillRoundRect(x - 6, y - 4, 34, 26, 10, 10);
+        g.setColor(on ? UiPalette.TEXT : UiPalette.DIM_TEXT);
+        g.fillRect(x, y + 6, 5, 7);
+        g.fillPolygon(new int[] {x + 5, x + 12, x + 12, x + 5}, new int[] {y + 6, y + 1, y + 18, y + 13}, 4);
+        if (on) {
+            g.drawArc(x + 10, y + 5, 8, 9, -60, 120);
+            g.drawArc(x + 10, y + 1, 14, 17, -60, 120);
+        } else {
+            g.drawLine(x + 15, y + 5, x + 22, y + 13);
+            g.drawLine(x + 22, y + 5, x + 15, y + 13);
+        }
     }
 
     private void drawQuotaBar(Graphics2D g, GameView game) {
@@ -98,7 +123,7 @@ public final class HudPainter {
         String text = String.format("%d:%02d", secondsLeft / 60, secondsLeft % 60);
 
         g.setFont(Fonts.TIMER);
-        if (secondsLeft <= LOW_TIME_SECONDS && game.getStatus() == ChapterStatus.RUNNING) {
+        if (secondsLeft <= GameConstants.LOW_TIME_S && game.getStatus() == ChapterStatus.RUNNING) {
             // Running low: red, and pulsing between dim and bright.
             float pulse = (float) (0.65 + 0.35 * Math.sin(time * 8));
             Graphics2D pulsing = (Graphics2D) g.create();

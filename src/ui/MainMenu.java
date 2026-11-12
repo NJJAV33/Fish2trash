@@ -18,11 +18,12 @@ public final class MainMenu implements Screen {
 
     private final ScreenManager screens;
     private final SceneRenderer backdrop;
-    private final MenuList menu = new MenuList();
+    private final MenuList menu;
 
     public MainMenu(ScreenManager screens, SceneRenderer backdrop) {
         this.screens = screens;
         this.backdrop = backdrop;
+        this.menu = new MenuList(screens.getAudio());
         menu.add(StoryText.MENU_START, this::startStory);
         menu.add(StoryText.MENU_HOW_TO, () -> screens.go(GameState.HOW_TO));
         menu.add(StoryText.MENU_QUIT, () -> System.exit(0));

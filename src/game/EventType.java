@@ -16,6 +16,8 @@ public enum EventType {
     MISSED,
     /** A caught object reached the boat. */
     DELIVERED,
+    /** One more second is gone in the last ten. The event's value is the seconds left. */
+    LOW_TIME_TICK,
     /** A tip should be shown. The event's text is the tip. */
     TUTORIAL_PROMPT,
     /** The score reached the chapter's quota. The clock stops here. */

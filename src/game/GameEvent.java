@@ -37,6 +37,11 @@ public final class GameEvent {
         return new GameEvent(type, object.getKind(), object.getX(), object.getY(), value, "");
     }
 
+    /** An event that carries only a number. */
+    public static GameEvent withValue(EventType type, int value) {
+        return new GameEvent(type, null, 0, 0, value, "");
+    }
+
     /** An event that carries a message. */
     public static GameEvent withText(EventType type, String text) {
         return new GameEvent(type, null, 0, 0, 0, text);

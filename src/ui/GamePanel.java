@@ -13,7 +13,9 @@ import java.awt.event.KeyEvent;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import ui.render.SceneRenderer;
+import util.AudioPlayer;
 import util.GameConstants;
+import util.SoundState;
 
 /**
  * The window's content: it runs the frame timer, receives the keyboard, and
@@ -31,13 +33,17 @@ public final class GamePanel extends JPanel {
     private static final double MAX_STEP_SECONDS = 0.05;
 
     private final InputState input = new InputState();
-    private final ScreenManager screens = new ScreenManager();
+    private final AudioPlayer audio;
+    private final ScreenManager screens;
     private final SceneRenderer renderer = new SceneRenderer();
     private final GameScreen gameScreen;
     private final Timer timer;
     private long lastTickNanos;
 
-    public GamePanel() {
+    /** @param audio how the game makes sound; tests pass a silent player */
+    public GamePanel(AudioPlayer audio) {
+        this.audio = audio;
+        this.screens = new ScreenManager(audio);
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
         setBackground(Color.BLACK);   // shows at the edges when the scene shakes
         setFocusable(true);   // a panel only receives keys if it can have the focus
@@ -98,6 +104,11 @@ public final class GamePanel extends JPanel {
         return screens.getState();
     }
 
+    /** Whether sound is on, muted or not available. */
+    public SoundState getSoundState() {
+        return audio.getState();
+    }
+
     /** True while the pause menu is up. */
     public boolean isPaused() {
         return screens.isPaused();
@@ -119,9 +130,13 @@ public final class GamePanel extends JPanel {
         @Override
         public void keyPressed(KeyEvent e) {
             boolean fresh = input.press(e.getKeyCode(), e.getWhen());
-            if (fresh) {
-                screens.keyPressed(e.getKeyCode());   // repeats of a held key are not passed on
+            if (!fresh) {
+                return;   // repeats of a held key are not passed on
             }
+            if (e.getKeyCode() == KeyEvent.VK_M) {
+                audio.setMuted(!audio.isMuted());   // M switches the sound on any screen
+            }
+            screens.keyPressed(e.getKeyCode());
         }
 
         @Override

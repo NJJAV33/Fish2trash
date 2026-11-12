@@ -13,6 +13,7 @@ public final class TestRunner {
 
     public static void main(String[] args) {
         run("ArchitectureTest", ArchitectureTest::run);
+        run("AudioEventTest", AudioEventTest::run);
         run("BalanceBotTest", BalanceBotTest::run);
         run("BoatHookTest", BoatHookTest::run);
         run("ChapterFlowTest", ChapterFlowTest::run);

@@ -14,6 +14,7 @@ import ui.render.TextDraw;
 import ui.render.UiPalette;
 import util.GameConstants;
 import util.Mathx;
+import util.SoundEffect;
 import util.StoryText;
 
 /**
@@ -49,6 +50,7 @@ public final class VictoryScreen implements Screen {
         pager.start(new String[] {StoryText.CH3_OUTRO, StoryText.END_P1, StoryText.END_P2, StoryText.END_P3});
         showingReport = false;
         time = 0;
+        screens.getAudio().play(SoundEffect.ENDING);
     }
 
     @Override
@@ -62,6 +64,7 @@ public final class VictoryScreen implements Screen {
         if (keyCode != KeyEvent.VK_ENTER && keyCode != KeyEvent.VK_SPACE) {
             return;
         }
+        screens.getAudio().play(SoundEffect.MENU_SELECT);
         if (showingReport) {
             screens.go(GameState.MENU);
         } else if (pager.advance()) {

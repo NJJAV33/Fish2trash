@@ -9,6 +9,7 @@ import ui.render.SceneRenderer;
 import ui.render.TextDraw;
 import ui.render.UiPalette;
 import util.GameConstants;
+import util.SoundEffect;
 import util.StoryText;
 
 /** One page that explains the controls and the rules. */
@@ -27,6 +28,7 @@ public final class HowToScreen implements Screen {
     @Override
     public void keyPressed(int keyCode) {
         if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_ESCAPE) {
+            screens.getAudio().play(SoundEffect.MENU_SELECT);
             screens.go(GameState.MENU);
         }
     }

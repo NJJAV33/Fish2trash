@@ -567,6 +567,12 @@ classDiagram
         +getCleaned() ChapterPalette
     }
 
+    class AudioEventListener {
+        -soundForEvent Map
+        -soundForCatch Map
+        +onGameEvent(event)
+    }
+
     class StoryBoxPainter
     class PortraitPainter
     class GameSession
@@ -594,6 +600,7 @@ classDiagram
     GameScreen *-- PauseOverlay
     GameScreen *-- HudPainter
     GameScreen *-- EffectsSystem
+    GameScreen *-- AudioEventListener
     GameScreen --> GameManager : plays
     GameScreen --> SceneRenderer
     GameScreen --> InputState : reads
@@ -658,6 +665,8 @@ classDiagram
         +play(effect)
     }
 
+    class AudioEventListener
+
     class SoundState {
         <<enumeration>>
         ON
@@ -670,6 +679,7 @@ classDiagram
     AudioPlayer <|.. SilentAudioPlayer
     AudioPlayer ..> SoundEffect : plays
     AudioPlayer ..> SoundState : reports
+    AudioEventListener --> AudioPlayer : plays through
     SynthAudioPlayer ..> SoundEffect : renders all at start
 ```
 

@@ -1,6 +1,7 @@
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import ui.GamePanel;
+import util.SynthAudioPlayer;
 
 /**
  * Entry point of FISH2TRASH. Its only job is to open the game window.
@@ -15,7 +16,7 @@ public class Main {
 
     private static void createAndShowWindow() {
         JFrame frame = new JFrame("FISH2TRASH");
-        GamePanel panel = new GamePanel();
+        GamePanel panel = new GamePanel(new SynthAudioPlayer());
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(panel);

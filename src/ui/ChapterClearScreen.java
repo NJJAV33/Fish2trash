@@ -10,6 +10,7 @@ import ui.render.SceneRenderer;
 import ui.render.TextDraw;
 import ui.render.UiPalette;
 import util.GameConstants;
+import util.SoundEffect;
 import util.StoryText;
 
 /** The report card after a cleared chapter. */
@@ -45,6 +46,7 @@ public final class ChapterClearScreen implements Screen {
     public void keyPressed(int keyCode) {
         if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_SPACE) {
             // After the last chapter comes the ending; otherwise the next chapter's story.
+            screens.getAudio().play(SoundEffect.MENU_SELECT);
             screens.go(screens.getSession().isFinished() ? GameState.ENDING : GameState.STORY);
         }
     }

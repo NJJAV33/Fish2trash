@@ -5,8 +5,11 @@ import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
+import java.util.List;
 import ui.GamePanel;
 import util.GameConstants;
+import util.SoundEffect;
+import util.SoundState;
 
 /**
  * Walks through the screens the way a player would, by sending key presses
@@ -19,6 +22,7 @@ public final class ScreenFlowTest {
     private static final double SCREEN_CHANGE = 0.7;   // a fade out and back in, with some slack
 
     private static GamePanel panel;
+    private static RecordingAudioPlayer audio;   // records sounds instead of playing them
     private static long clock;   // pretend time stamps for key events, in milliseconds
 
     private ScreenFlowTest() {
@@ -32,6 +36,33 @@ public final class ScreenFlowTest {
         losingTheWindowFocusPauses();
         runningOutOfTimeGetsYouFiredAndYouCanRetry();
         endingTheRunReturnsToTheMenu();
+        menusClickAndTheMKeyMutes();
+    }
+
+    private static void menusClickAndTheMKeyMutes() {
+        startGame();
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_UP);
+        press(KeyEvent.VK_ENTER);
+        Check.assertEquals("moving and choosing in the menu is heard",
+                List.of(SoundEffect.MENU_MOVE, SoundEffect.MENU_MOVE, SoundEffect.MENU_SELECT), audio.getPlayed());
+
+        Check.assertEquals("sound starts on", SoundState.ON, panel.getSoundState());
+        press(KeyEvent.VK_M);
+        Check.assertEquals("M mutes", SoundState.MUTED, panel.getSoundState());
+        press(KeyEvent.VK_M);
+        Check.assertEquals("M again unmutes", SoundState.ON, panel.getSoundState());
+
+        // The pause menu's second item switches the sound too.
+        startChapterOne();
+        press(KeyEvent.VK_P);
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_ENTER);
+        Check.assertEquals("the pause menu can mute", SoundState.MUTED, panel.getSoundState());
+        Check.assertTrue("and the game stays paused", panel.isPaused());
+        draw();
+        press(KeyEvent.VK_ENTER);
+        Check.assertEquals("choosing it again unmutes", SoundState.ON, panel.getSoundState());
     }
 
     private static void menuOpensHowToAndComesBack() {
@@ -88,14 +119,14 @@ public final class ScreenFlowTest {
 
         press(KeyEvent.VK_P);
         press(KeyEvent.VK_DOWN);
-        press(KeyEvent.VK_ENTER);   // "Restart chapter"
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_ENTER);   // "Restart chapter" (third item, after Resume and Sound)
         play(SCREEN_CHANGE);
         expect("Restart chapter goes back into the game", GameState.PLAYING);
         Check.assertTrue("and it is not paused", !panel.isPaused());
 
         press(KeyEvent.VK_P);
-        press(KeyEvent.VK_DOWN);
-        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_UP);      // up from the first item wraps to the last
         press(KeyEvent.VK_ENTER);   // "Quit to menu"
         play(SCREEN_CHANGE);
         expect("Quit to menu goes to the menu", GameState.MENU);
@@ -141,7 +172,8 @@ public final class ScreenFlowTest {
     // ---- helpers ----
 
     private static void startGame() {
-        panel = new GamePanel();
+        audio = new RecordingAudioPlayer();
+        panel = new GamePanel(audio);
         panel.setSize(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
         clock = 1000;
         play(0.1);

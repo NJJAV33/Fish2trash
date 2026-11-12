@@ -82,6 +82,8 @@ public final class GameConstants {
     public static final int HEALTH_CH1 = 3;
     public static final int HEALTH_CH2 = 4;
     public static final int HEALTH_CH3 = 5;
+    public static final int LOW_TIME_S = 10;       // the clock ticks and turns red from here down
+    public static final int URGENT_TIME_S = 5;     // and ticks higher from here down
 
     // ---- Spawning (the tables themselves are in model.ChapterData) ----
     public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
