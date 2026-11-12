@@ -27,6 +27,7 @@ public final class GameManager implements CatchResolver {
     private final ChapterData chapter;
     private final Level level;
     private final List<GameListener> listeners = new ArrayList<>();
+    private final SessionStats stats = new SessionStats();
 
     private final Player player;
     private final Boat boat;
@@ -54,6 +55,7 @@ public final class GameManager implements CatchResolver {
         timeLimit = new TimeLimit(level.getTimeLimitSeconds());
         quota = level.getQuota();
         status = ChapterStatus.RUNNING;
+        addListener(stats);   // the stats count events like any other listener
 
         // Run the level for zero seconds, so the water is stocked from the first frame.
         level.update(0, boat.getHook(), 0);
@@ -230,8 +232,16 @@ public final class GameManager implements CatchResolver {
         return timeLimit.getRemaining();
     }
 
+    public double getTimeTotal() {
+        return timeLimit.getTotal();
+    }
+
     public int getQuota() {
         return quota;
+    }
+
+    public SessionStats getStats() {
+        return stats;
     }
 
     public ChapterStatus getStatus() {
