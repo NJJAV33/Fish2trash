@@ -36,10 +36,13 @@ public final class GameConstants {
     public static final double SWING_SPEED = 1.8;    // how fast it rocks
 
     // ---- Tools ----
-    public static final double RADIUS_HOOK = 12;     // size of the hook tip for collisions
+    public static final double RADIUS_HOOK = 12;     // size of each tool for collisions
+    public static final double RADIUS_MAGNET = 16;
+    public static final double RADIUS_CUTTER = 22;
+    public static final double TOOL_SWAP_COOLDOWN_S = 1.0;   // wait between two tool changes
     public static final double SLIP_IMMUNITY_S = 1.5;   // an object that slipped off can't be touched for this long
     // false = one hook catches every kind of trash; true = each kind needs its own tool
-    public static final boolean EQUIPMENT_ENABLED = false;
+    public static final boolean EQUIPMENT_ENABLED = true;
 
     // ---- Trash: points and size ----
     public static final int POINTS_BOTTLE = 10;

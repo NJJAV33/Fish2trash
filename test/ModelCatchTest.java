@@ -72,7 +72,7 @@ public final class ModelCatchTest {
     }
 
     private static Hook launchedHook() {
-        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.standard());
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.forChapter(1));
         hook.launch();
         return hook;
     }

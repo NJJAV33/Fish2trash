@@ -52,7 +52,7 @@ public final class AudioEventTest {
     }
 
     private static void theClockTicksOncePerSecondAtTheEnd() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(1));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(1));
         List<Integer> ticks = new ArrayList<>();
         game.addListener(event -> {
             if (event.getType() == EventType.LOW_TIME_TICK) {
@@ -70,7 +70,7 @@ public final class AudioEventTest {
 
     private static void aPlayedChapterSoundsRight() {
         RecordingAudioPlayer audio = new RecordingAudioPlayer();
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(2));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(2));
         game.addListener(new AudioEventListener(audio));
 
         GameScript.hookOnto(game, GameScript.firstCatchable(game, true));

@@ -20,7 +20,7 @@ public final class EffectsTest {
     }
 
     public static void run() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(1));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(1));
         OceanObject something = game.getObjects().get(0);
         EffectsSystem effects = new EffectsSystem();
         effects.reset(game);

@@ -25,7 +25,7 @@ public final class GameEventTest {
     }
 
     private static void catchingTrashReportsCatchThenDelivery() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(7));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         OceanObject trash = GameScript.firstCatchable(game, true);
         int objectsBefore = game.getObjects().size();
@@ -43,7 +43,7 @@ public final class GameEventTest {
     }
 
     private static void hookingAFishReportsHealthLost() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(7));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         OceanObject fish = GameScript.firstCatchable(game, false);
 
@@ -57,7 +57,7 @@ public final class GameEventTest {
     }
 
     private static void aMissIsReported() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(7));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         GameScript.clearTheWater(game);
 
@@ -69,7 +69,7 @@ public final class GameEventTest {
     }
 
     private static void aRecallIsNotAMiss() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(7));
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         GameScript.clearTheWater(game);
 

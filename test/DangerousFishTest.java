@@ -34,7 +34,7 @@ public final class DangerousFishTest {
 
     private static int healthAfterHooking(OceanObject fish) {
         Player player = new Player(5);
-        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.standard());
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.forChapter(1));
         hook.launch();
         fish.onCaught(player, hook);
         return player.getHealth();

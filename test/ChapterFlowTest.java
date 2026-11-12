@@ -122,6 +122,6 @@ public final class ChapterFlowTest {
     }
 
     private static GameManager newGame() {
-        return new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(11));
+        return new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(11));
     }
 }

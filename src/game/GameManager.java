@@ -7,6 +7,8 @@ import model.Boat;
 import model.CatchResolver;
 import model.ChapterData;
 import model.Equipment;
+import model.EquipmentLockedException;
+import model.EquipmentType;
 import model.Hook;
 import model.Level;
 import model.Loadout;
@@ -93,6 +95,34 @@ public final class GameManager implements GameView, CatchResolver {
         }
     }
 
+    /**
+     * The player asks for a tool. Tools are changed at the boat, so the
+     * request is refused while the line is out, right after another change,
+     * or when the crew does not have that tool yet.
+     */
+    public void selectTool(EquipmentType type) {
+        Hook hook = boat.getHook();
+        Loadout loadout = hook.getLoadout();
+        if (status != ChapterStatus.RUNNING || type == loadout.getSelectedType()) {
+            return;
+        }
+        try {
+            if (hook.isSwinging() && loadout.select(type)) {
+                emit(GameEvent.withText(EventType.TOOL_SWITCHED, type.getDisplayName()));
+            } else {
+                emit(GameEvent.of(EventType.SWAP_DENIED));
+            }
+        } catch (EquipmentLockedException e) {
+            // The exception's message says when the tool arrives.
+            emit(GameEvent.withText(EventType.SWAP_DENIED, e.getMessage()));
+        }
+    }
+
+    /** Steps to the next (1) or previous (-1) tool the crew has. */
+    public void cycleTool(int direction) {
+        selectTool(boat.getHook().getLoadout().next(direction));
+    }
+
     /** Which way the player is steering: -1 left, 0 not at all, 1 right. */
     public void setBoatDirection(int direction) {
         boatDirection = direction;
@@ -115,6 +145,7 @@ public final class GameManager implements GameView, CatchResolver {
         Hook hook = boat.getHook();
         boolean lineWasOut = hook.isLineOut();
         hook.update(dt);
+        hook.getLoadout().tick(dt);
         level.update(dt, hook, player.getScore());
         for (String tip : level.pollTutorialPrompts()) {
             emit(GameEvent.withText(EventType.TUTORIAL_PROMPT, tip));
@@ -271,6 +302,21 @@ public final class GameManager implements GameView, CatchResolver {
     @Override
     public ChapterStatus getStatus() {
         return status;
+    }
+
+    @Override
+    public EquipmentType getSelectedTool() {
+        return boat.getHook().getLoadout().getSelectedType();
+    }
+
+    @Override
+    public boolean isToolUnlocked(EquipmentType type) {
+        return boat.getHook().getLoadout().isUnlocked(type);
+    }
+
+    @Override
+    public double getSwapCooldownFraction() {
+        return boat.getHook().getLoadout().getCooldownFraction();
     }
 
     public boolean isPlaying() {

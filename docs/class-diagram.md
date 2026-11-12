@@ -174,20 +174,53 @@ classDiagram
     }
 
     class Loadout {
-        -selected int
-        +standard()$ Loadout
+        -tools Map
+        -selected EquipmentType
+        -cooldown double
+        +forChapter(chapter)$ Loadout
         +getSelected() Equipment
+        +select(type) boolean
+        +next(direction) EquipmentType
+        +isUnlocked(type) boolean
+        +canSwap() boolean
+        +tick(dt)
+    }
+
+    class EquipmentType {
+        <<enumeration>>
+        HOOK
+        MAGNET
+        NET_CUTTER
+        -unlockChapter int
+        -displayName String
+        +create()* Equipment
+        +newestIn(chapter)$ EquipmentType
+    }
+
+    class EquipmentLockedException {
+        <<exception>>
+        -type EquipmentType
+        +getType() EquipmentType
     }
 
     class Equipment {
         <<abstract>>
-        -displayName String
+        -type EquipmentType
         -tipRadius double
         +attempt(object) CatchOutcome
         #outcomeFor(kind)* CatchOutcome
     }
 
     class PlainHook {
+        -outcomes Map
+        #outcomeFor(kind) CatchOutcome
+    }
+
+    class Magnet {
+        #outcomeFor(kind) CatchOutcome
+    }
+
+    class NetCutter {
         -outcomes Map
         #outcomeFor(kind) CatchOutcome
     }
@@ -224,8 +257,13 @@ classDiagram
     HookSensor <|.. Hook
     Hook o-- Loadout : carries
     Hook o-- OceanObject : caught, 0 or 1
-    Loadout *-- Equipment : tools, 1 or more
+    Loadout *-- Equipment : tools, 1 to 3
+    Loadout ..> EquipmentLockedException : throws
     Equipment <|-- PlainHook
+    Equipment <|-- Magnet
+    Equipment <|-- NetCutter
+    Equipment --> EquipmentType : is of
+    EquipmentType ..> Equipment : creates
     Equipment ..> CatchOutcome : answers with
     CatchOutcome ..> CatchResolver : calls back
     OceanObject ..> Player : onCaught
@@ -319,6 +357,8 @@ classDiagram
         +update(dt)
         +spaceAction()
         +setBoatDirection(direction)
+        +selectTool(type)
+        +cycleTool(direction)
         +addListener(listener)
         +onCatch(object)
         +onSlip(object)
@@ -335,6 +375,9 @@ classDiagram
         +getHealth() int
         +getTimeLeft() double
         +getStatus() ChapterStatus
+        +getSelectedTool() EquipmentType
+        +isToolUnlocked(type) boolean
+        +getSwapCooldownFraction() double
     }
 
     class CatchResolver {
@@ -372,8 +415,11 @@ classDiagram
         OBJECT_CAUGHT
         HEALTH_LOST
         SLIPPED
+        TOOL_SWITCHED
+        SWAP_DENIED
         MISSED
         DELIVERED
+        LOW_TIME_TICK
         TUTORIAL_PROMPT
         QUOTA_REACHED
         CHAPTER_CLEARED
@@ -428,7 +474,7 @@ classDiagram
 
     GameSession ..> GameManager : creates
     GameSession *-- ChapterResult : cleared chapters
-    GameSession *-- Loadout : crew tools
+    GameSession ..> Loadout : picks per chapter
     GameView <|.. GameManager
     CatchResolver <|.. GameManager
     GameManager *-- Player

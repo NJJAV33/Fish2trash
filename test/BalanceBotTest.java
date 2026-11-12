@@ -37,7 +37,7 @@ public final class BalanceBotTest {
             double timeLeftTotal = 0;
             for (long seed = 1; seed <= RUNS; seed++) {
                 GameManager game = new GameManager(
-                        ChapterData.forChapter(chapter), Loadout.standard(), new Random(seed));
+                        ChapterData.forChapter(chapter), Loadout.forChapter(chapter), new Random(seed));
                 play(game);
                 if (game.getStatus() == ChapterStatus.CLEARED) {
                     cleared++;

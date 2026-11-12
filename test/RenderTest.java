@@ -28,7 +28,7 @@ public final class RenderTest {
         BufferedImage image = new BufferedImage(
                 GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
-        new SceneRenderer().paint(g, new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(1)));
+        new SceneRenderer().paint(g, new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(1)));
         g.dispose();
 
         int sky = image.getRGB(10, 10);

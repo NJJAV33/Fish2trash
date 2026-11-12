@@ -12,6 +12,10 @@ public enum EventType {
     HEALTH_LOST,
     /** Wrong tool: the object slipped off the hook. */
     SLIPPED,
+    /** Another tool was put on the line. The event's text is the tool's name. */
+    TOOL_SWITCHED,
+    /** A tool change was refused: line out, too soon, or (with a text saying so) not unlocked yet. */
+    SWAP_DENIED,
     /** The hook went all the way out and came back with nothing. */
     MISSED,
     /** A caught object reached the boat. */

@@ -17,7 +17,6 @@ import model.Loadout;
 public final class GameSession {
 
     private final Random random;
-    private final Loadout loadout;   // the crew keeps its tools from chapter to chapter
     private final List<ChapterResult> clearedChapters = new ArrayList<>();
     private int chapterNumber;
     private int retries;
@@ -25,7 +24,6 @@ public final class GameSession {
 
     public GameSession(Random random) {
         this.random = random;
-        this.loadout = Loadout.standard();
         this.chapterNumber = 1;
     }
 
@@ -34,7 +32,8 @@ public final class GameSession {
         if (isFinished()) {
             throw new IllegalStateException("The story is already finished");
         }
-        return new GameManager(ChapterData.forChapter(chapterNumber), loadout, random);
+        // Each chapter starts with the tools the crew has by then.
+        return new GameManager(ChapterData.forChapter(chapterNumber), Loadout.forChapter(chapterNumber), random);
     }
 
     /**

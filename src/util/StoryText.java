@@ -36,6 +36,13 @@ public final class StoryText {
             + "Run out of time or health and you are fired.";
     public static final String BACK_PROMPT = "ENTER: back to menu";
 
+    // ---- Tools ----
+    public static final String TOOL_HOOK = "Hook";
+    public static final String TOOL_MAGNET = "Magnet";
+    public static final String TOOL_CUTTER = "Net Cutter";
+    /** Filled in with the tool's name and the chapter it arrives in. */
+    public static final String TOOL_LOCKED = "The %s arrives in chapter %d.";
+
     // ---- Opening ----
     public static final String CRAWL =
             "The sea around Bantay Reef is choking on our trash.\n"

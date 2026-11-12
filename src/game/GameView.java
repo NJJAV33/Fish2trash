@@ -3,6 +3,7 @@ package game;
 import java.util.List;
 import model.Boat;
 import model.ChapterData;
+import model.EquipmentType;
 import model.ObjectView;
 
 /**
@@ -32,4 +33,12 @@ public interface GameView {
     double getTimeTotal();
 
     ChapterStatus getStatus();
+
+    /** The tool on the line right now. */
+    EquipmentType getSelectedTool();
+
+    boolean isToolUnlocked(EquipmentType type);
+
+    /** The wait after a tool change: 1 right after it, 0 when the next change is allowed. */
+    double getSwapCooldownFraction();
 }

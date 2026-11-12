@@ -7,9 +7,11 @@ import game.GameManager;
 import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import model.EquipmentType;
 import ui.render.EffectsSystem;
 import ui.render.HudPainter;
 import ui.render.SceneRenderer;
+import util.GameConstants;
 
 /**
  * The screen where a chapter is played. Each time it is entered it starts a
@@ -95,6 +97,21 @@ public final class GameScreen implements Screen {
             game.spaceAction();
         } else if (keyCode == KeyEvent.VK_P || keyCode == KeyEvent.VK_ESCAPE) {
             pause();
+        } else if (GameConstants.EQUIPMENT_ENABLED) {
+            toolKey(keyCode);
+        }
+    }
+
+    /** 1, 2 and 3 pick a tool directly; Q and E step to the previous and next one. */
+    private void toolKey(int keyCode) {
+        EquipmentType[] tools = EquipmentType.values();
+        int number = keyCode - KeyEvent.VK_1;   // 0 for the 1 key, 1 for the 2 key, ...
+        if (number >= 0 && number < tools.length) {
+            game.selectTool(tools[number]);
+        } else if (keyCode == KeyEvent.VK_Q) {
+            game.cycleTool(-1);
+        } else if (keyCode == KeyEvent.VK_E) {
+            game.cycleTool(1);
         }
     }
 

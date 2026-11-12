@@ -20,9 +20,11 @@ public final class TestRunner {
         run("DangerousFishTest", DangerousFishTest::run);
         run("DiagramTest", DiagramTest::run);
         run("EffectsTest", EffectsTest::run);
+        run("EquipmentMatrixTest", EquipmentMatrixTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);
+        run("LoadoutTest", LoadoutTest::run);
         run("MathxTest", MathxTest::run);
         run("ModelCatchTest", ModelCatchTest::run);
         run("OceanObjectTest", OceanObjectTest::run);
