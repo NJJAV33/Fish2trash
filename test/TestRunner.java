@@ -12,12 +12,14 @@ public final class TestRunner {
     }
 
     public static void main(String[] args) {
+        run("ArchitectureTest", ArchitectureTest::run);
         run("BoatHookTest", BoatHookTest::run);
         run("ChapterFlowTest", ChapterFlowTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
         run("MathxTest", MathxTest::run);
         run("ModelCatchTest", ModelCatchTest::run);
+        run("OceanObjectTest", OceanObjectTest::run);
         run("PlayerTest", PlayerTest::run);
         run("RenderTest", RenderTest::run);
 
