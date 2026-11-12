@@ -7,6 +7,9 @@ page names a class that no longer exists, so the page cannot quietly go out of d
 To keep the pictures readable, each one shows a part of the game, and getters and
 setters are left out.
 
+On GitHub a large diagram is shown cropped. Use the buttons at its top right corner
+to zoom, move around, or open it at full size.
+
 **How to read them**
 
 | Arrow | Meaning | Example |
@@ -238,7 +241,7 @@ classDiagram
     direction LR
 
     class ChapterData {
-        +CHAPTER_COUNT$ int
+        +CHAPTER_COUNT int$
         -number int
         -title String
         -quota int
