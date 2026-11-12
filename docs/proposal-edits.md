@@ -41,26 +41,31 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] **2.1 Advance:** failing a chapter lets the player retry that chapter; chapters
       already cleared stay cleared.
 - [ ] **Figure 1:** replace the mockup with a real screenshot. Ready-made ones are in
-      `docs/screenshots/` (`chapter1.png`, `chapter3.png`, `menu.png`, `story.png`,
+      `docs/screenshots/` (`chapter1.png`, `chapter2.png`, `chapter3.png`, `menu.png`, `story.png`,
       `ending.png`). Change the caption from "Concept mockup" to "The game in chapter 1".
 - [ ] **2.2 Objects in Water:** the first column header "Objective" should be "Category".
       Add two rows under Marine Wildlife: "Pufferfish (dangerous)" and "Barracuda (dangerous)".
 - [ ] **2.3 Levels:** rename to "Story chapters" and use this table:
 
-  | Chapter | Main trash | Quota | Time | Health | What is new |
-  |---|---|---|---|---|---|
-  | 1. Plastic Shallows | Plastic bottles | 100 | 65 s | 3 | Basic fish and trash |
-  | 2. Old Pier Wreck | Cans | 200 | 90 s | 4 | Big, fast fish |
-  | 3. Ghost Net Deep | Fishing nets | 350 | 105 s | 5 | Pufferfish and barracuda |
+  | Chapter | Main trash | Tool | Quota | Time | Health | What is new |
+  |---|---|---|---|---|---|---|
+  | 1. Plastic Shallows | Plastic bottles | Hook | 100 | 65 s | 3 | Basic fish and trash |
+  | 2. Old Pier Wreck | Cans | Magnet | 200 | 90 s | 4 | Big, fast fish |
+  | 3. Ghost Net Deep | Fishing nets | Net Cutter | 350 | 105 s | 5 | Pufferfish and barracuda |
 
 - [ ] **2.4 Scoring:** the points are right (10, 20, 50). Add: "Reaching the quota stops
       the clock; the chapter is cleared when that catch reaches the boat."
-- [ ] **2.4 Optional extras:** badges, sound effects, hints and a high-score list are
-      planned. **(later)** Move each one to a "Included extras" line when it is merged.
+- [ ] **2.4 Optional extras:** sound effects and a tool for each kind of trash are in:
+      list them as "Included extras". Badges, hints and a high-score list are planned.
+      **(later)** Move each one to the "Included extras" line when it is merged.
 - [ ] **2.5 Penalties:** "Accidentally catch a fish: -1 health" stays. Add a row:
       "Catch a pufferfish or barracuda: -2 health". Add that the fish swims away.
-- [ ] **2.5 Penalties (later):** add "Wrong tool for the trash: the trash slips off, no
-      health lost" when the tools are merged.
+- [ ] **2.5 Penalties:** add a row "Wrong tool for the trash: the trash slips off, the
+      throw is wasted, no health lost".
+- [ ] **2.1 How to Play:** add the tools. "Bottles need the Hook, cans the Magnet, nets
+      the Net Cutter. Keys 1, 2, 3 (or Q / E) change the tool while the line swings.
+      The Magnet ignores fish; the Hook and the Net Cutter do not." The full table is
+      in the README under "How to play".
 
 ## 3. Object-Oriented Design
 
@@ -68,15 +73,16 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       `Player.loseHealth()`, and `Hook.launch()`, `Hook.recall()` and `Hook.update()`.
       Replace `collectTrash()`, `takeDamage()`, `swing()` and `extend()`.
 - [ ] **3.1 Inheritance:** add `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda` under
-      `Fish`, and `PlainHook` under `Equipment`.
+      `Fish`, and `PlainHook`, `Magnet`, `NetCutter` under `Equipment`.
 - [ ] **3.1 Polymorphism example:** name the real call, `object.onCaught(player, hook)`,
       and add `move()` and `sense()` (a pufferfish weaves and swells, a barracuda charges).
 - [ ] **3.1 Abstraction:** add the interfaces `GameView`, `ObjectView`, `Screen` and
       `GameListener`.
 - [ ] **3.1 Other Java concepts:** remove "//double check". Replace `enum (BinType)` with
-      `enum (ObjectKind, EventType, ChapterStatus, GameState, CatchOutcome)`. Remove
-      `BinFullException`; the game has no custom exception yet **(later:** one arrives
-      with the tools and the high-score file). `ArrayList` and `HashMap` are used;
+      `enum (ObjectKind, EquipmentType, EventType, ChapterStatus, GameState, CatchOutcome)`.
+      Replace `BinFullException` with `EquipmentLockedException` (thrown when the player
+      asks for a tool the crew does not have yet). **(later:** a second one arrives with
+      the high-score file). `ArrayList` and `HashMap` are used;
       add `EnumMap`, which the game uses for lookups by enum.
 - [ ] **3.2 Main Classes, Player:** remove "and quota". The quota belongs to the chapter
       (`ChapterData`), not the player.
@@ -96,7 +102,8 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       `MarketLevel`, `TyphoonLevel`).
 - [ ] **3.3 Package Layout:**
   - `model`: add `ObjectKind`, `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`,
-    `ChapterData`, `SpawnRule`, `Equipment`. Change "No JavaFX imports" to
+    `ChapterData`, `SpawnRule`, `Equipment`, `PlainHook`, `Magnet`, `NetCutter`,
+    `EquipmentType`, `Loadout`. Change "No JavaFX imports" to
     "No Swing or AWT imports".
   - `game`: remove `GameController`. Add `GameSession`, `GameEvent`, `GameListener`.
   - `ui`: the screens are `MainMenu`, `StoryScreen`, `GameScreen`, `ChapterClearScreen`,
@@ -164,9 +171,8 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 
 ## Notes at the end of the document
 
-- [ ] `//add complexity; different equipment for diff types of garbage` **(later)**:
-      planned as tools (hook, magnet, net cutter). Remove the note; describe the tools
-      in 2.1 when they are merged.
+- [ ] `//add complexity; different equipment for diff types of garbage`: done, as the
+      three tools (hook, magnet, net cutter). Remove the note; describe the tools in 2.1.
 - [ ] `//story levels represent different types of waste`: done. Each chapter has its
       own main trash. Remove the note.
 - [ ] `//add lore`: done. Remove the note.
