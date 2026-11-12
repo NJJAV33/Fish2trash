@@ -92,7 +92,8 @@ FISH2TRASH/
 │   │   ├── Screen           interface every screen implements
 │   │   ├── MainMenu, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
 │   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen
-│   │   └── render/          SceneRenderer, HudPainter, one painter per object kind
+│   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
+│   │                        water, one painter per object kind
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
@@ -163,7 +164,7 @@ no test library is needed. The script exits with an error if any check fails.
 | `BalanceBotTest` | A simple computer player must be able to win every chapter at least half the time |
 | `StoryTextTest` | Every story page, fail message and tip fits its box |
 | `ScreenFlowTest` | Key presses lead to the right screens: menu, story, pause, fired screen, retry |
-| `RenderTest`, `MathxTest` | Drawing into an off-screen image; the math helpers |
+| `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the math helpers |
 
 The tests cannot judge how the game feels to play. Use the checklist below for that.
 
