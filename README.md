@@ -6,6 +6,13 @@ A 2D story game in Java Swing. You play Nico Abella, the newest member of Captai
 Dolor's clean-up crew at Bantay Reef. Each chapter has a quota of trash to collect
 before time or health runs out. Clear all three and the reef comes back to life.
 
+| | |
+|---|---|
+| ![Main menu](docs/screenshots/menu.png) | ![A story page](docs/screenshots/story.png) |
+| ![Chapter 1](docs/screenshots/chapter1.png) | ![Chapter 3](docs/screenshots/chapter3.png) |
+
+Team project for CIS 2103 (Object Oriented Programming), University of San Carlos.
+
 ## Requirements
 
 JDK 17 or newer. Check yours with `java -version`. No libraries needed.
@@ -91,10 +98,13 @@ FISH2TRASH/
 │       ├── StoryText        every line of text the player reads
 │       └── Mathx            clamp, lerp, easing
 ├── test/                    tests, run by scripts/test
+├── docs/                    class diagram, screenshots, proposal notes
 ├── scripts/                 build, run and test (.sh and .bat)
 ├── out/                     compiled game (created by the build, not in git)
 └── out-test/                compiled tests (not in git)
 ```
+
+A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 
 ## How the classes work together
 
@@ -135,6 +145,28 @@ Design rules, checked by `ArchitectureTest` on every test run: `model` and `game
 no drawing, window or sound imports; nothing uses `instanceof`; no public fields
 except constants.
 
+## Testing
+
+`scripts/test.sh` (or `scripts\test.bat`) builds the game and runs every test. The
+tests are plain Java classes with a `run()` method, listed in `test/TestRunner.java`;
+no test library is needed. The script exits with an error if any check fails.
+
+| Test | What it checks |
+|---|---|
+| `ArchitectureTest` | The design rules above, by reading the source files |
+| `PlayerTest`, `OceanObjectTest`, `BoatHookTest` | Health and score rules, movement, bouncing, collision, the hook's swing, launch and recall |
+| `ModelCatchTest`, `DangerousFishTest` | What each kind of object does when hooked; pufferfish and barracuda behaviour |
+| `EquipmentTest` | What the hook does to each kind of object, and how a slip plays out |
+| `GameEventTest`, `ChapterFlowTest` | The events the game announces; winning, the frozen clock, and both ways to lose |
+| `LevelSpawnTest` | Spawn tables: timing, counts, distance from the hook, and enough trash to finish |
+| `SessionTest` | Moving on after a clear, retrying after a fail |
+| `BalanceBotTest` | A simple computer player must be able to win every chapter at least half the time |
+| `StoryTextTest` | Every story page, fail message and tip fits its box |
+| `ScreenFlowTest` | Key presses lead to the right screens: menu, story, pause, fired screen, retry |
+| `RenderTest`, `MathxTest` | Drawing into an off-screen image; the math helpers |
+
+The tests cannot judge how the game feels to play. Use the checklist below for that.
+
 ## Manual testing checklist
 
 **Menus and story**
@@ -172,6 +204,21 @@ except constants.
 - [ ] Enter retries the same chapter; Esc returns to the menu.
 - [ ] `P` or `Esc` pauses. Resume, Restart chapter and Quit to menu all work.
 - [ ] Clicking another window pauses the game.
+
+## Team
+
+LangoyLaban, BSIT 2.
+
+| Member | Area |
+|---|---|
+| Matthew Llenos | Player, chapters and levels, game manager and session, timer, win and lose, HUD, story |
+| Arjoe R. Marata | Boat, hook and tools, controls, collision, screens and animation |
+| Neil Villarito | Ocean objects, trash and fish classes, spawning, object painters |
+
+## Credits
+
+Everything on screen is drawn in code with Java2D, and all text is written by the
+team. The game uses no external images, fonts, sounds or libraries.
 
 ## Contributing
 
