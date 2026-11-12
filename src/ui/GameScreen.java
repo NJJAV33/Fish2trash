@@ -1,16 +1,15 @@
 package ui;
 
-import game.ChapterStatus;
+import game.ChapterResult;
 import game.GameManager;
-import game.GameSession;
 import game.GameState;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import ui.render.SceneRenderer;
 import util.GameConstants;
+import util.StoryText;
 
 /**
  * The screen where a chapter is played. Each time it is entered it starts a
@@ -18,55 +17,74 @@ import util.GameConstants;
  */
 public final class GameScreen implements Screen {
 
+    // After a chapter ends, hold the last frame briefly before moving on.
+    private static final double END_PAUSE_SECONDS = 0.8;
+
     private final ScreenManager screens;
     private final InputState input;
-    private final SceneRenderer renderer = new SceneRenderer();
+    private final SceneRenderer renderer;
+    private final PauseOverlay pauseOverlay;
     private GameManager game;
+    private double secondsSinceEnd;
+    private boolean leaving;
 
-    public GameScreen(ScreenManager screens, InputState input) {
+    public GameScreen(ScreenManager screens, InputState input, SceneRenderer renderer) {
         this.screens = screens;
         this.input = input;
+        this.renderer = renderer;
+        this.pauseOverlay = new PauseOverlay(screens);
     }
 
     @Override
     public void onEnter() {
         game = screens.getSession().startChapter();
+        secondsSinceEnd = 0;
+        leaving = false;
     }
 
     @Override
     public void update(double dt) {
         game.setBoatDirection(input.getDirection());
         game.update(dt);   // ignored by the manager once the chapter is over
+
+        if (game.getStatus().isOver() && !leaving) {
+            secondsSinceEnd += dt;
+            if (secondsSinceEnd >= END_PAUSE_SECONDS) {
+                leave();
+            }
+        }
+    }
+
+    /** Hands the result to the session and moves to the clear or game-over screen. */
+    private void leave() {
+        leaving = true;
+        ChapterResult result = screens.getSession().onChapterEnded(game);
+        screens.go(result.isCleared() ? GameState.CHAPTER_CLEAR : GameState.GAME_OVER);
     }
 
     @Override
     public void keyPressed(int keyCode) {
         if (game.getStatus().isOver()) {
-            if (keyCode == KeyEvent.VK_ENTER) {
-                continueAfterChapter();
-            }
-        } else if (keyCode == KeyEvent.VK_SPACE) {
+            return;
+        }
+        if (keyCode == KeyEvent.VK_SPACE) {
             game.spaceAction();
+        } else if (keyCode == KeyEvent.VK_P || keyCode == KeyEvent.VK_ESCAPE) {
+            pause();
         }
     }
 
-    /** Records the result, then plays the next chapter (or the same one again after a fail). */
-    private void continueAfterChapter() {
-        GameSession session = screens.getSession();
-        session.onChapterEnded(game);
-        if (session.isFinished()) {
-            screens.startNewRun();
+    /** Pauses the chapter. Also called when the window loses focus. */
+    public void pause() {
+        if (!game.getStatus().isOver()) {
+            screens.pause(pauseOverlay);
         }
-        screens.go(GameState.PLAYING);
     }
 
     @Override
     public void paint(Graphics2D g) {
         renderer.paint(g, game);
         drawHud(g);
-        if (game.getStatus().isOver()) {
-            drawEndOverlay(g);
-        }
     }
 
     private void drawHud(Graphics2D g) {
@@ -84,26 +102,6 @@ public final class GameScreen implements Screen {
                 + "     Time: " + secondsLeft + "s", 22, 82);
 
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        g.drawString("A / D: move boat    SPACE: drop or recall hook", 12, GameConstants.WORLD_HEIGHT - 22);
-    }
-
-    private void drawEndOverlay(Graphics2D g) {
-        boolean won = game.getStatus() == ChapterStatus.CLEARED;
-
-        g.setColor(new Color(0, 0, 0, 160));
-        g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
-
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 48));
-        g.setColor(won ? new Color(120, 230, 120) : new Color(240, 90, 90));
-        drawCentered(g, won ? "CHAPTER CLEARED" : "CHAPTER FAILED", 260);
-
-        g.setColor(Color.WHITE);
-        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
-        drawCentered(g, won ? "ENTER: next chapter" : "ENTER: try again", 330);
-    }
-
-    private void drawCentered(Graphics2D g, String text, int y) {
-        FontMetrics metrics = g.getFontMetrics();
-        g.drawString(text, (GameConstants.WORLD_WIDTH - metrics.stringWidth(text)) / 2, y);
+        g.drawString(StoryText.PLAY_HINT, 12, GameConstants.WORLD_HEIGHT - 22);
     }
 }

@@ -11,6 +11,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import ui.render.SceneRenderer;
 import util.GameConstants;
 
 /**
@@ -30,6 +31,7 @@ public final class GamePanel extends JPanel {
 
     private final InputState input = new InputState();
     private final ScreenManager screens = new ScreenManager();
+    private final GameScreen gameScreen;
     private final Timer timer;
     private long lastTickNanos;
 
@@ -40,14 +42,26 @@ public final class GamePanel extends JPanel {
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
-                // Another window took the keyboard: no key is "still held".
+                // Another window took the keyboard: no key is "still held",
+                // and a chapter in progress should not run unattended.
                 input.releaseAll();
+                if (screens.getState() == GameState.PLAYING) {
+                    gameScreen.pause();
+                }
             }
         });
 
-        screens.register(GameState.PLAYING, new GameScreen(screens, input));
-        screens.startNewRun();
-        screens.start(GameState.PLAYING);
+        // One screen per state. They share one renderer for their backdrops.
+        SceneRenderer renderer = new SceneRenderer();
+        gameScreen = new GameScreen(screens, input, renderer);
+        screens.register(GameState.MENU, new MainMenu(screens, renderer));
+        screens.register(GameState.HOW_TO, new HowToScreen(screens, renderer));
+        screens.register(GameState.STORY, new StoryScreen(screens, renderer));
+        screens.register(GameState.PLAYING, gameScreen);
+        screens.register(GameState.CHAPTER_CLEAR, new ChapterClearScreen(screens, renderer));
+        screens.register(GameState.GAME_OVER, new GameOverScreen(screens, renderer));
+        screens.register(GameState.ENDING, new VictoryScreen(screens));
+        screens.start(GameState.MENU);
 
         timer = new Timer(FRAME_DELAY_MS, e -> tick());
     }
