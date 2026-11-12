@@ -17,6 +17,7 @@ public final class TestRunner {
         run("ChapterFlowTest", ChapterFlowTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
+        run("LevelSpawnTest", LevelSpawnTest::run);
         run("MathxTest", MathxTest::run);
         run("ModelCatchTest", ModelCatchTest::run);
         run("OceanObjectTest", OceanObjectTest::run);

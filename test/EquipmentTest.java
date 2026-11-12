@@ -7,6 +7,7 @@ import java.util.Random;
 import model.Can;
 import model.CatchOutcome;
 import model.CatchResolver;
+import model.ChapterData;
 import model.Equipment;
 import model.Loadout;
 import model.ObjectKind;
@@ -82,16 +83,15 @@ public final class EquipmentTest {
     }
 
     private static void aSlipCostsNothingButTheThrow() {
-        GameManager game = new GameManager(new Loadout(new PlainHook(false)), new Random(7));
-        List<EventType> events = new ArrayList<>();
-        game.addListener((GameEvent event) -> events.add(event.getType()));
+        GameManager game = new GameManager(ChapterData.forChapter(2), new Loadout(new PlainHook(false)), new Random(7));
+        List<GameEvent> events = GameScript.record(game);
         OceanObject slippery = firstCanOrNet(game);
 
         GameScript.hookOnto(game, slippery);
 
-        Check.assertEquals("events for a slip", List.of(EventType.HOOK_LAUNCHED, EventType.SLIPPED), events);
+        Check.assertEquals("events for a slip", List.of(EventType.HOOK_LAUNCHED, EventType.SLIPPED), GameScript.types(events));
         Check.assertEquals("a slip gives no points", 0, game.getPlayer().getScore());
-        Check.assertEquals("a slip costs no health", 3, game.getPlayer().getHealth());
+        Check.assertEquals("a slip costs no health", game.getPlayer().getMaxHealth(), game.getPlayer().getHealth());
         Check.assertTrue("the object stays in the water", game.getObjects().contains(slippery));
         Check.assertTrue("the hook came back empty", game.getBoat().getHook().getCaughtObject() == null);
     }
@@ -102,6 +102,6 @@ public final class EquipmentTest {
                 return object;
             }
         }
-        throw new IllegalStateException("this seed spawned no can or net");
+        throw new IllegalStateException("chapter 2 should start with cans");
     }
 }

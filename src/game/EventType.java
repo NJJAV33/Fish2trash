@@ -16,6 +16,8 @@ public enum EventType {
     MISSED,
     /** A caught object reached the boat. */
     DELIVERED,
+    /** A tip should be shown. The event's text is the tip. */
+    TUTORIAL_PROMPT,
     /** The score reached the chapter's quota. The clock stops here. */
     QUOTA_REACHED,
     /** The chapter was won: the catch that met the quota reached the boat. */

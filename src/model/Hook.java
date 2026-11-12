@@ -10,7 +10,7 @@ import util.GameConstants;
  *   EXTENDING  - shoots out in the direction it was pointing
  *   RETRACTING - reels back in, carrying a caught object if it has one
  */
-public class Hook {
+public class Hook implements HookSensor {
 
     public enum State { SWINGING, EXTENDING, RETRACTING }
 
@@ -99,10 +99,12 @@ public class Hook {
     }
 
     // The tip position comes from the angle and rope length (basic trigonometry).
+    @Override
     public double getTipX() {
         return anchorX + Math.sin(angle) * length;
     }
 
+    @Override
     public double getTipY() {
         return anchorY + Math.cos(angle) * length;
     }
@@ -131,7 +133,7 @@ public class Hook {
         return state == State.RETRACTING;
     }
 
-    /** True while the hook is away from the boat (going out or coming back). */
+    @Override
     public boolean isLineOut() {
         return state != State.SWINGING;
     }

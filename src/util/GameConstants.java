@@ -17,6 +17,7 @@ public final class GameConstants {
     public static final int WORLD_WIDTH = 800;
     public static final int WORLD_HEIGHT = 600;
     public static final int WATER_Y = 130;           // y position of the sea surface
+    public static final int SEABED_Y = 586;          // y position of the sea floor
 
     // ---- Boat ----
     public static final int BOAT_WIDTH = 120;
@@ -53,19 +54,24 @@ public final class GameConstants {
     public static final double RADIUS_SMALL_FISH = 14;
     public static final double FISH_RELEASE_IMMUNITY_S = 1.5;   // a hooked fish can't be hooked again for this long
 
-    // ---- Chapter rules ----
+    // ---- Chapters: points needed, seconds allowed, starting health ----
     public static final int QUOTA_CH1 = 100;
+    public static final int QUOTA_CH2 = 200;
+    public static final int QUOTA_CH3 = 350;
     public static final double TIME_CH1_S = 65;
+    public static final double TIME_CH2_S = 90;
+    public static final double TIME_CH3_S = 105;
     public static final int HEALTH_CH1 = 3;
+    public static final int HEALTH_CH2 = 4;
+    public static final int HEALTH_CH3 = 5;
 
-    // ---- Spawning ----
-    public static final int SPAWN_TRASH_COUNT = 6;
-    public static final int SPAWN_FISH_COUNT = 4;
-    public static final double SPAWN_MARGIN_X = 40;        // keep spawns off the screen edges
-    public static final double MIN_SPAWN_Y = 210;
-    public static final double MAX_SPAWN_Y = 540;
-    public static final double TRASH_SPEED_MIN = 20;
-    public static final double TRASH_SPEED_MAX = 45;
-    public static final double FISH_SPEED_MIN = 60;
-    public static final double FISH_SPEED_MAX = 120;
+    // ---- Spawning (the tables themselves are in model.ChapterData) ----
+    public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
+    public static final double MIN_SPAWN_Y = 210;          // default spawn depth range
+    public static final double MAX_SPAWN_Y = 540;          // the hook cannot reach much deeper
+    public static final double SPAWN_FADE_IN_S = 0.5;      // new objects fade in and can't be hooked meanwhile
+    public static final double SPAWN_MIN_DIST_TRASH = 100; // nothing appears closer to the hook than this
+    public static final double SPAWN_MIN_DIST_FISH = 150;
+    public static final int SPAWN_PLACEMENT_TRIES = 8;     // attempts to find a spot away from the hook
+    public static final double SUPPLY_MARGIN = 1.3;        // keep 30% more trash in the water than still needed
 }

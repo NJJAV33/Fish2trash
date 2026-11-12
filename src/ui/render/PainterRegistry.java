@@ -1,5 +1,6 @@
 package ui.render;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.util.EnumMap;
 import java.util.Map;
@@ -32,6 +33,16 @@ public final class PainterRegistry {
     }
 
     public void paint(Graphics2D g, ObjectView object) {
-        painters.get(object.getKind()).paint(g, object);
+        ObjectPainter painter = painters.get(object.getKind());
+        float opacity = (float) object.getOpacity();
+        if (opacity >= 1f) {
+            painter.paint(g, object);
+            return;
+        }
+        // Still fading in: draw it see-through on a copy of the graphics.
+        Graphics2D faded = (Graphics2D) g.create();
+        faded.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
+        painter.paint(faded, object);
+        faded.dispose();
     }
 }

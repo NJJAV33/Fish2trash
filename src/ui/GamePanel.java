@@ -19,6 +19,7 @@ import javax.swing.KeyStroke;
 import javax.swing.Timer;
 import game.ChapterStatus;
 import game.GameManager;
+import model.ChapterData;
 import model.Loadout;
 import model.Player;
 import ui.render.SceneRenderer;
@@ -48,7 +49,7 @@ public final class GamePanel extends JPanel {
         END_MESSAGES.put(ChapterStatus.FAILED_HEALTH, "You caught too many fish!");
     }
 
-    private GameManager manager = new GameManager(Loadout.standard(), new Random());
+    private GameManager manager = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random());
     private final SceneRenderer renderer = new SceneRenderer();
     private final InputState input = new InputState();
     private final Timer timer;
@@ -86,7 +87,7 @@ public final class GamePanel extends JPanel {
     private void setupKeyBindings() {
         bindKey(KeyEvent.VK_SPACE, false, () -> manager.spaceAction());
         // Restarting is just starting a brand new game.
-        bindKey(KeyEvent.VK_R, false, () -> manager = new GameManager(Loadout.standard(), new Random()));
+        bindKey(KeyEvent.VK_R, false, () -> manager = new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random()));
 
         // Movement keys are tracked on press AND release, so holding works.
         bindKey(KeyEvent.VK_A, false, () -> input.setLeftHeld(true));

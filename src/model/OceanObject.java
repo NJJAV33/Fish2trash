@@ -1,5 +1,7 @@
 package model;
 
+import util.GameConstants;
+
 /**
  * Anything floating or swimming in the ocean that the hook can catch.
  *
@@ -21,6 +23,7 @@ public abstract class OceanObject implements ObjectView {
     private int facing;      // 1 = looking right, -1 = looking left
     private boolean caught;
     private double immuneTimer;   // seconds left during which the hook cannot grab it
+    private double age;           // seconds since it appeared
 
     protected OceanObject(double x, double y, double radius, double speedX) {
         this.x = x;
@@ -33,6 +36,7 @@ public abstract class OceanObject implements ObjectView {
 
     /** Moves the object sideways and bounces it off the edges of the screen. */
     public void update(double dt, double worldWidth) {
+        age += dt;
         if (immuneTimer > 0) {
             immuneTimer = Math.max(0, immuneTimer - dt);
         }
@@ -109,6 +113,17 @@ public abstract class OceanObject implements ObjectView {
     @Override
     public int getFacing() {
         return facing;
+    }
+
+    /** New objects fade in: 0 = invisible, 1 = fully there. */
+    @Override
+    public double getOpacity() {
+        return Math.min(1.0, age / GameConstants.SPAWN_FADE_IN_S);
+    }
+
+    /** Points for collecting this object. Wildlife is worth nothing; trash overrides this. */
+    public int getPoints() {
+        return 0;
     }
 
     /**

@@ -2,9 +2,9 @@ import game.ChapterStatus;
 import game.EventType;
 import game.GameEvent;
 import game.GameManager;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import model.ChapterData;
 import model.Loadout;
 import model.TimeLimit;
 import util.GameConstants;
@@ -45,7 +45,7 @@ public final class ChapterFlowTest {
 
     private static void quotaStopsTheClockAndDeliveryWins() {
         GameManager game = newGame();
-        List<EventType> events = record(game);
+        List<GameEvent> events = GameScript.record(game);
         // Remember what the clock showed at the moment the quota was met.
         double[] timeAtQuota = {-1};
         game.addListener((GameEvent event) -> {
@@ -58,17 +58,18 @@ public final class ChapterFlowTest {
         for (int i = 0; i < 50 && game.isPlaying(); i++) {
             GameScript.hookOnto(game, GameScript.firstCatchable(game, true));
         }
-        int quotaAt = events.indexOf(EventType.QUOTA_REACHED);
-        int clearedAt = events.indexOf(EventType.CHAPTER_CLEARED);
+        List<EventType> types = GameScript.types(events);
+        int quotaAt = types.indexOf(EventType.QUOTA_REACHED);
+        int clearedAt = types.indexOf(EventType.CHAPTER_CLEARED);
         boolean sawQuotaBeforeClear = quotaAt >= 0 && clearedAt > quotaAt;
 
         Check.assertEquals("chapter is cleared", ChapterStatus.CLEARED, game.getStatus());
         Check.assertTrue("score reached the quota", game.getPlayer().getScore() >= game.getQuota());
         Check.assertTrue("quota is announced before the clear", sawQuotaBeforeClear);
         Check.assertEquals("the clear follows the last delivery",
-                EventType.DELIVERED, events.get(clearedAt - 1));
+                EventType.DELIVERED, types.get(clearedAt - 1));
         Check.assertEquals("quota is announced only once",
-                quotaAt, events.lastIndexOf(EventType.QUOTA_REACHED));
+                quotaAt, types.lastIndexOf(EventType.QUOTA_REACHED));
 
         Check.assertTrue("time was left on the clock", game.getTimeLeft() > 0);
         Check.assertEquals("the clock stood still while the last catch was reeled in",
@@ -77,7 +78,7 @@ public final class ChapterFlowTest {
 
     private static void runningOutOfTimeLoses() {
         GameManager game = newGame();
-        List<EventType> events = record(game);
+        List<GameEvent> events = GameScript.record(game);
         GameScript.clearTheWater(game);
 
         for (double t = 0; t < GameConstants.TIME_CH1_S + 1; t += 0.05) {
@@ -85,7 +86,7 @@ public final class ChapterFlowTest {
         }
         Check.assertEquals("out of time", ChapterStatus.FAILED_TIME, game.getStatus());
         Check.assertEquals("clock shows zero", 0.0, game.getTimeLeft(), TINY);
-        Check.assertEquals("failure is announced once", List.of(EventType.CHAPTER_FAILED), events);
+        Check.assertEquals("failure is announced once", List.of(EventType.CHAPTER_FAILED), GameScript.types(events));
     }
 
     private static void runningOutOfHealthLoses() {
@@ -108,7 +109,7 @@ public final class ChapterFlowTest {
         for (double t = 0; t < GameConstants.TIME_CH1_S + 1; t += 0.05) {
             game.update(0.05);
         }
-        List<EventType> events = record(game);
+        List<GameEvent> events = GameScript.record(game);
         double boatX = game.getBoat().getX();
 
         game.setBoatDirection(1);
@@ -121,12 +122,6 @@ public final class ChapterFlowTest {
     }
 
     private static GameManager newGame() {
-        return new GameManager(Loadout.standard(), new Random(11));
-    }
-
-    private static List<EventType> record(GameManager game) {
-        List<EventType> events = new ArrayList<>();
-        game.addListener((GameEvent event) -> events.add(event.getType()));
-        return events;
+        return new GameManager(ChapterData.forChapter(1), Loadout.standard(), new Random(11));
     }
 }

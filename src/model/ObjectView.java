@@ -20,4 +20,7 @@ public interface ObjectView {
     int getFacing();
 
     boolean isCaught();
+
+    /** 0 = invisible, 1 = fully visible. Objects fade in when they appear. */
+    double getOpacity();
 }
