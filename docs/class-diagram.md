@@ -519,6 +519,54 @@ classDiagram
         +paintToast(g, text, age)
     }
 
+    class BackgroundPainter {
+        -cache Map
+        +paint(g, palette)
+        +paintBlend(g, from, to, amount)
+    }
+
+    class EffectsSystem {
+        +MAX_EFFECTS int$
+        +reset(game)
+        +onGameEvent(event)
+        +update(dt)
+        +paint(g)
+        +paintFlash(g)
+        +getShakeX() double
+        +getShakeY() double
+    }
+
+    class BoatPainter {
+        +paint(g, x, waterline, facing, time)
+    }
+
+    class HookPainter {
+        +paintRope(g, hook, time)
+        +paintHead(g, hook)
+    }
+
+    class WaterPainter {
+        +paintBackWaves(g, palette, time)
+        +paintFrontWaves(g, palette, time)
+        +paintRays(g, palette, time)
+    }
+
+    class ParticleSystem {
+        +MAX_BUBBLES int$
+        +update(dt)
+        +paint(g)
+        +getActiveCount() int
+    }
+
+    class ChapterPalette {
+        +SHALLOWS ChapterPalette$
+        +WRECK ChapterPalette$
+        +DEEP ChapterPalette$
+        +REEF ChapterPalette$
+        +forChapter(chapter)$ ChapterPalette
+        +getCleaned() ChapterPalette
+    }
+
     class StoryBoxPainter
     class PortraitPainter
     class GameSession
@@ -545,10 +593,17 @@ classDiagram
     StoryBoxPainter *-- PortraitPainter
     GameScreen *-- PauseOverlay
     GameScreen *-- HudPainter
+    GameScreen *-- EffectsSystem
     GameScreen --> GameManager : plays
     GameScreen --> SceneRenderer
     GameScreen --> InputState : reads
+    SceneRenderer *-- BackgroundPainter
+    SceneRenderer *-- WaterPainter
+    SceneRenderer *-- ParticleSystem
+    BackgroundPainter ..> ChapterPalette : one cached picture per look
     SceneRenderer *-- PainterRegistry
+    SceneRenderer *-- BoatPainter
+    SceneRenderer *-- HookPainter
     PainterRegistry o-- ObjectPainter : one per ObjectKind
 ```
 

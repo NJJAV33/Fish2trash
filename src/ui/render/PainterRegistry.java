@@ -35,17 +35,17 @@ public final class PainterRegistry {
         }
     }
 
-    public void paint(Graphics2D g, ObjectView object) {
+    public void paint(Graphics2D g, ObjectView object, double time) {
         ObjectPainter painter = painters.get(object.getKind());
         float opacity = (float) object.getOpacity();
         if (opacity >= 1f) {
-            painter.paint(g, object);
+            painter.paint(g, object, time);
             return;
         }
         // Still fading in: draw it see-through on a copy of the graphics.
         Graphics2D faded = (Graphics2D) g.create();
         faded.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
-        painter.paint(faded, object);
+        painter.paint(faded, object, time);
         faded.dispose();
     }
 }

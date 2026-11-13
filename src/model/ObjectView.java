@@ -19,6 +19,15 @@ public interface ObjectView {
     /** 1 when the object looks to the right, -1 when it looks to the left. */
     int getFacing();
 
+    /** Sideways speed in pixels per second; negative means moving left. */
+    double getSpeedX();
+
+    /**
+     * A number that differs from object to object and never changes. Drawing
+     * code adds it to the time, so objects do not all sway in step.
+     */
+    double getPhase();
+
     boolean isCaught();
 
     /**

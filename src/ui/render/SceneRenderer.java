@@ -1,104 +1,84 @@
 package ui.render;
 
 import game.GameView;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import model.Boat;
-import model.Hook;
 import model.ObjectView;
 import util.GameConstants;
 
 /**
- * Draws the game world: sky, sea, boat, ocean objects and the hook.
+ * Draws the game world: the background of the chapter, the boat, the ocean
+ * objects and the hook.
  *
  * It only reads the game. All drawing lives here in the ui package, so the
  * model classes stay free of any graphics code.
  */
 public final class SceneRenderer {
 
-    private static final Color SKY_TOP = new Color(150, 205, 245);
-    private static final Color SKY_BOTTOM = new Color(205, 235, 255);
-    private static final Color SUN = new Color(255, 220, 90);
-    private static final Color SEA_TOP = new Color(35, 125, 195);
-    private static final Color SEA_BOTTOM = new Color(10, 40, 90);
-    private static final Color SEA_FLOOR = new Color(194, 170, 120);
-    private static final Color CABIN = new Color(240, 240, 235);
-    private static final Color WINDOW = new Color(110, 170, 210);
-    private static final Color HULL = new Color(170, 60, 45);
-    private static final Color HULL_OUTLINE = new Color(110, 35, 25);
-    private static final Color ROPE = new Color(40, 40, 40);
-    private static final Color HOOK_METAL = new Color(200, 200, 205);
-
-    private static final BasicStroke THIN = new BasicStroke(1);
-    private static final BasicStroke ROPE_STROKE = new BasicStroke(2);
-    private static final BasicStroke HOOK_STROKE = new BasicStroke(3);
-
+    private final BackgroundPainter background = new BackgroundPainter();
+    private final WaterPainter water = new WaterPainter();
+    private final ParticleSystem bubbles = new ParticleSystem();
+    private double time;   // seconds of animation so far
     private final PainterRegistry painters = new PainterRegistry();
+    private final BoatPainter boatPainter = new BoatPainter();
+    private final HookPainter hookPainter = new HookPainter();
+
+    /**
+     * Moves the animation forward. Called every frame, also on menus and
+     * while the game is paused, so the water never freezes.
+     */
+    public void update(double dt) {
+        time += dt;
+        bubbles.update(dt);
+    }
+
+    /** Seconds of animation so far. */
+    public double getTime() {
+        return time;
+    }
 
     public void paint(Graphics2D g, GameView game) {
-        paintBackground(g);
-        drawBoat(g, game.getBoat());
+        ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber());
+        background.paint(g, palette);
+        water.paintBackWaves(g, palette, time);
+
+        Boat boat = game.getBoat();
+        boatPainter.paint(g, boat.getX(), boat.getY(), boat.getFacing(), time);
+        hookPainter.paintRope(g, boat.getHook(), time);
         for (ObjectView object : game.getObjects()) {
-            painters.paint(g, object);   // the registry picks the painter for this kind
+            painters.paint(g, object, time);   // the registry picks the painter for this kind
         }
-        drawHook(g, game.getBoat().getHook());
+        hookPainter.paintHead(g, boat.getHook());
+
+        paintWaterOnTop(g, palette);
     }
 
-    /** Sky, sun, sea and sea floor only. Menus and story screens use it as a backdrop. */
-    public void paintBackground(Graphics2D g) {
-        int w = GameConstants.WORLD_WIDTH;
-        int h = GameConstants.WORLD_HEIGHT;
-        int waterY = GameConstants.WATER_Y;
-
-        g.setPaint(new GradientPaint(0, 0, SKY_TOP, 0, waterY, SKY_BOTTOM));
-        g.fillRect(0, 0, w, waterY);
-
-        g.setColor(SUN);
-        g.fillOval(w - 100, 68, 52, 52);   // sits below the HUD bar
-
-        g.setPaint(new GradientPaint(0, waterY, SEA_TOP, 0, h, SEA_BOTTOM));
-        g.fillRect(0, waterY, w, h - waterY);
-
-        g.setColor(SEA_FLOOR);
-        g.fillRect(0, h - 14, w, 14);
+    /** A backdrop with the boat idling at the given place. The menu uses it. */
+    public void paintBackdropWithBoat(Graphics2D g, ChapterPalette palette, double boatX) {
+        background.paint(g, palette);
+        water.paintBackWaves(g, palette, time);
+        boatPainter.paint(g, boatX, GameConstants.WATER_Y, 1, time);
+        paintWaterOnTop(g, palette);
     }
 
-    private void drawBoat(Graphics2D g, Boat boat) {
-        int cx = (int) boat.getX();
-        int waterline = (int) boat.getY();
-        int half = GameConstants.BOAT_WIDTH / 2;
-        int deck = waterline - GameConstants.BOAT_HEIGHT;
-
-        g.setColor(CABIN);
-        g.fillRect(cx - 25, deck - 22, 40, 24);
-        g.setColor(WINDOW);
-        g.fillRect(cx - 18, deck - 16, 12, 10);
-
-        // Hull: a trapezoid that sits slightly in the water
-        int[] hullX = {cx - half, cx + half, cx + half - 18, cx - half + 18};
-        int[] hullY = {deck, deck, waterline + 4, waterline + 4};
-        g.setColor(HULL);
-        g.fillPolygon(hullX, hullY, 4);
-        g.setColor(HULL_OUTLINE);
-        g.drawPolygon(hullX, hullY, 4);
+    /** The scene without boat or objects. Menus and story screens use it as a backdrop. */
+    public void paintBackdrop(Graphics2D g, ChapterPalette palette) {
+        background.paint(g, palette);
+        water.paintBackWaves(g, palette, time);
+        paintWaterOnTop(g, palette);
     }
 
-    private void drawHook(Graphics2D g, Hook hook) {
-        int ax = (int) hook.getAnchorX();
-        int ay = (int) hook.getAnchorY();
-        int tx = (int) hook.getTipX();
-        int ty = (int) hook.getTipY();
+    /** A backdrop that fades from one look to another. amount: 0 = from, 1 = to. */
+    public void paintBackdropBlend(Graphics2D g, ChapterPalette from, ChapterPalette to, double amount) {
+        background.paintBlend(g, from, to, amount);
+        water.paintBackWaves(g, to, time);
+        paintWaterOnTop(g, to);
+    }
 
-        g.setColor(ROPE);
-        g.setStroke(ROPE_STROKE);
-        g.drawLine(ax, ay, tx, ty);
-
-        g.setColor(HOOK_METAL);
-        g.setStroke(HOOK_STROKE);
-        g.drawArc(tx - 7, ty - 3, 14, 14, 180, 200);   // hook curve
-        g.fillOval(tx - 3, ty - 3, 6, 6);
-        g.setStroke(THIN);
+    /** What lies in front of the boat and the objects: near waves, sunbeams and bubbles. */
+    private void paintWaterOnTop(Graphics2D g, ChapterPalette palette) {
+        water.paintFrontWaves(g, palette, time);
+        water.paintRays(g, palette, time);
+        bubbles.paint(g);
     }
 }

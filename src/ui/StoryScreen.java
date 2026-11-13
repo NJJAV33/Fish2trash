@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
 import ui.render.StoryBoxPainter;
@@ -28,6 +29,7 @@ public final class StoryScreen implements Screen {
     private final StoryBoxPainter box = new StoryBoxPainter();
     private final TextPager pager = new TextPager();
     private final List<String> pageTitles = new ArrayList<>();
+    private final List<ChapterPalette> pageBackdrops = new ArrayList<>();
     private double time;
 
     public StoryScreen(ScreenManager screens, SceneRenderer backdrop) {
@@ -44,23 +46,27 @@ public final class StoryScreen implements Screen {
 
         List<String> pages = new ArrayList<>();
         pageTitles.clear();
+        pageBackdrops.clear();
         // A retry goes straight to the chapter's own pages.
         if (!retrying && chapter == 1) {
-            addPage(pages, StoryText.GAME_TITLE, StoryText.CRAWL);
+            addPage(pages, StoryText.GAME_TITLE, StoryText.CRAWL, ChapterPalette.SHALLOWS);
         }
         if (!retrying && chapter > 1) {
-            addPage(pages, StoryText.chapterTitle(chapter - 1), StoryText.outro(chapter - 1));
+            // The page about the cleared chapter shows that place cleaned up.
+            addPage(pages, StoryText.chapterTitle(chapter - 1), StoryText.outro(chapter - 1),
+                    ChapterPalette.forChapter(chapter - 1).getCleaned());
         }
         for (String page : StoryText.introPages(chapter)) {
-            addPage(pages, StoryText.chapterTitle(chapter), page);
+            addPage(pages, StoryText.chapterTitle(chapter), page, ChapterPalette.forChapter(chapter));
         }
         pager.start(pages.toArray(new String[0]));
         time = 0;
     }
 
-    private void addPage(List<String> pages, String title, String text) {
+    private void addPage(List<String> pages, String title, String text, ChapterPalette backdropLook) {
         pages.add(text);
         pageTitles.add(title);
+        pageBackdrops.add(backdropLook);
     }
 
     @Override
@@ -82,7 +88,7 @@ public final class StoryScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        backdrop.paintBackground(g);
+        backdrop.paintBackdrop(g, pageBackdrops.get(pager.getPageIndex()));
         g.setColor(UiPalette.SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 

@@ -7,6 +7,7 @@ import game.GameManager;
 import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.EffectsSystem;
 import ui.render.HudPainter;
 import ui.render.SceneRenderer;
 
@@ -23,6 +24,7 @@ public final class GameScreen implements Screen {
     private final InputState input;
     private final SceneRenderer renderer;
     private final HudPainter hud = new HudPainter();
+    private final EffectsSystem effects = new EffectsSystem();
     private final PauseOverlay pauseOverlay;
     private GameManager game;
     private String tip;          // the tip on screen, or null
@@ -42,6 +44,8 @@ public final class GameScreen implements Screen {
     public void onEnter() {
         game = screens.getSession().startChapter();
         game.addListener(this::onGameEvent);   // this screen listens for tips to show
+        effects.reset(game);
+        game.addListener(effects);             // and the effects listen for catches and hits
         tip = null;
         time = 0;
         secondsSinceEnd = 0;
@@ -62,6 +66,7 @@ public final class GameScreen implements Screen {
         tipAge += dt;
         game.setBoatDirection(input.getDirection());
         game.update(dt);   // ignored by the manager once the chapter is over
+        effects.update(dt);
 
         if (game.getStatus().isOver() && !leaving) {
             secondsSinceEnd += dt;
@@ -99,7 +104,14 @@ public final class GameScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        renderer.paint(g, game);
+        // The world can shake; the HUD on top of it stays still.
+        Graphics2D world = (Graphics2D) g.create();
+        world.translate(effects.getShakeX(), effects.getShakeY());
+        renderer.paint(world, game);
+        effects.paint(world);
+        world.dispose();
+        effects.paintFlash(g);
+
         hud.paint(g, game, time);
         hud.paintToast(g, tip, tipAge);
     }

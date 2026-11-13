@@ -24,6 +24,7 @@ public abstract class OceanObject implements ObjectView {
     private boolean caught;
     private double immuneTimer;   // seconds left during which the hook cannot grab it
     private double age;           // seconds since it appeared
+    private final double phase;   // differs per object; see getPhase()
 
     protected OceanObject(double x, double y, double radius, double speedX) {
         this.x = x;
@@ -32,6 +33,7 @@ public abstract class OceanObject implements ObjectView {
         this.speedX = speedX;
         this.facing = (speedX < 0) ? -1 : 1;
         this.caught = false;
+        this.phase = (x * 0.37 + y * 0.61) % (2 * Math.PI);   // from where it appeared
     }
 
     /**
@@ -143,8 +145,14 @@ public abstract class OceanObject implements ObjectView {
         return facing;
     }
 
+    @Override
     public double getSpeedX() {
         return speedX;
+    }
+
+    @Override
+    public double getPhase() {
+        return phase;
     }
 
     /** Calm by default. Dangerous fish override this to show a warning. */

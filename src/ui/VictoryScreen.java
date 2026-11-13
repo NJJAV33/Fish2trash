@@ -2,15 +2,18 @@ package ui;
 
 import game.GameSession;
 import game.GameState;
+import java.awt.AlphaComposite;
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
+import ui.render.SceneRenderer;
 import ui.render.StoryBoxPainter;
 import ui.render.TextDraw;
 import ui.render.UiPalette;
 import util.GameConstants;
+import util.Mathx;
 import util.StoryText;
 
 /**
@@ -22,27 +25,23 @@ public final class VictoryScreen implements Screen {
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
     private static final int VALUE_X = 570;
-
-    // The recovered ocean: bright, warm and clear.
-    private static final Color SKY_TOP = new Color(127, 211, 245);
-    private static final Color SKY_BOTTOM = new Color(255, 241, 201);
-    private static final Color SEA_TOP = new Color(47, 182, 230);
-    private static final Color SEA_BOTTOM = new Color(11, 95, 163);
-    private static final Color SAND = new Color(242, 223, 160);
-    private static final Color SUN = new Color(255, 209, 102);
-    private static final Color[] CORAL = {
-        new Color(255, 111, 145), new Color(255, 150, 113), new Color(255, 199, 95),
-        new Color(195, 74, 155), new Color(79, 209, 197)
+    private static final int SCHOOL_SIZE = 24;
+    private static final double SCHOOL_DELAY_SECONDS = 2.0;
+    private static final double SCHOOL_FADE_SECONDS = 1.5;
+    private static final Color[] SCHOOL_COLORS = {
+        new Color(255, 199, 95), new Color(255, 150, 113), new Color(255, 111, 145), new Color(250, 250, 250)
     };
 
     private final ScreenManager screens;
+    private final SceneRenderer backdrop;
     private final StoryBoxPainter box = new StoryBoxPainter();
     private final TextPager pager = new TextPager();
     private boolean showingReport;
     private double time;
 
-    public VictoryScreen(ScreenManager screens) {
+    public VictoryScreen(ScreenManager screens, SceneRenderer backdrop) {
         this.screens = screens;
+        this.backdrop = backdrop;
     }
 
     @Override
@@ -72,7 +71,8 @@ public final class VictoryScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        drawRecoveredOcean(g);
+        backdrop.paintBackdrop(g, ChapterPalette.REEF);
+        drawFishSchool(g);
 
         g.setFont(Fonts.BANNER);
         g.setColor(UiPalette.SHADE);
@@ -88,29 +88,24 @@ public final class VictoryScreen implements Screen {
         }
     }
 
-    private void drawRecoveredOcean(Graphics2D g) {
-        int w = GameConstants.WORLD_WIDTH;
-        int waterY = GameConstants.WATER_Y;
-        int seabedY = GameConstants.SEABED_Y;
-
-        g.setPaint(new GradientPaint(0, 0, SKY_TOP, 0, waterY, SKY_BOTTOM));
-        g.fillRect(0, 0, w, waterY);
-        g.setColor(SUN);
-        g.fillOval(w - 120, 30, 70, 70);
-        g.setPaint(new GradientPaint(0, waterY, SEA_TOP, 0, seabedY, SEA_BOTTOM));
-        g.fillRect(0, waterY, w, seabedY - waterY);
-        g.setColor(SAND);
-        g.fillRect(0, seabedY, w, GameConstants.WORLD_HEIGHT - seabedY);
-
-        // A row of coral along the sea floor, cycling through the coral colours.
-        for (int i = 0; i < 16; i++) {
-            int x = 20 + i * 50;
-            int height = 26 + (i * 37) % 30;   // varied, but the same every frame
-            g.setColor(CORAL[i % CORAL.length]);
-            g.fillRoundRect(x, seabedY - height, 16, height, 12, 12);
-            g.fillRoundRect(x - 12, seabedY - height / 2, 12, height / 2, 10, 10);
-            g.fillRoundRect(x + 16, seabedY - height * 2 / 3, 12, height * 2 / 3, 10, 10);
+    /** A school of small fish that swims back into the reef a moment after the ending starts. */
+    private void drawFishSchool(Graphics2D g) {
+        double arrival = Mathx.clamp((time - SCHOOL_DELAY_SECONDS) / SCHOOL_FADE_SECONDS, 0, 1);
+        if (arrival <= 0) {
+            return;
         }
+        Graphics2D school = (Graphics2D) g.create();
+        school.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) arrival));
+        for (int i = 0; i < SCHOOL_SIZE; i++) {
+            // Each fish has its own speed, depth and colour, worked out from its number.
+            double speed = 30 + (i * 7) % 25;
+            int x = (int) ((time * speed + i * 37.0) % (GameConstants.WORLD_WIDTH + 80)) - 40;
+            int y = 170 + (i * 53) % 190 + (int) (6 * Math.sin(time * 2 + i));
+            school.setColor(SCHOOL_COLORS[i % SCHOOL_COLORS.length]);
+            school.fillOval(x - 8, y - 4, 16, 8);
+            school.fillPolygon(new int[] {x - 7, x - 14, x - 14}, new int[] {y, y - 5, y + 5}, 3);
+        }
+        school.dispose();
     }
 
     private void drawReport(Graphics2D g) {

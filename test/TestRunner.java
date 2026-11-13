@@ -18,6 +18,7 @@ public final class TestRunner {
         run("ChapterFlowTest", ChapterFlowTest::run);
         run("DangerousFishTest", DangerousFishTest::run);
         run("DiagramTest", DiagramTest::run);
+        run("EffectsTest", EffectsTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);

@@ -2,6 +2,7 @@ package ui;
 
 import game.GameState;
 import java.awt.Graphics2D;
+import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
 import ui.render.TextDraw;
@@ -13,6 +14,7 @@ import util.StoryText;
 public final class MainMenu implements Screen {
 
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
+    private static final int BOAT_X = 170;   // the boat idles to the left of the title
 
     private final ScreenManager screens;
     private final SceneRenderer backdrop;
@@ -43,7 +45,7 @@ public final class MainMenu implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        backdrop.paintBackground(g);
+        backdrop.paintBackdropWithBoat(g, ChapterPalette.MENU, BOAT_X);
         g.setColor(UiPalette.LIGHT_SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 

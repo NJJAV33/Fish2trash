@@ -3,7 +3,6 @@ package ui.render;
 import game.ChapterStatus;
 import game.GameView;
 import java.awt.AlphaComposite;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import util.GameConstants;
 import util.Mathx;
@@ -28,8 +27,6 @@ public final class HudPainter {
     private static final double TOAST_FADE_SECONDS = 0.4;
     public static final double TOAST_SECONDS = 4.0;   // how long a tip stays, in total
 
-    private static final Color KEY_HINT = new Color(70, 55, 30);
-
     /** @param time seconds, used to make the timer pulse when it runs low */
     public void paint(Graphics2D g, GameView game, double time) {
         g.setColor(UiPalette.PANEL);
@@ -53,8 +50,12 @@ public final class HudPainter {
         g.setColor(UiPalette.TEXT);
         TextDraw.centered(g, String.valueOf(game.getScore()), 747, 48);
 
+        // The key reminder sits on a dark strip, so it reads on any sea floor.
+        g.setColor(UiPalette.PANEL);
+        g.fillRect(0, GameConstants.SEABED_Y, GameConstants.WORLD_WIDTH,
+                GameConstants.WORLD_HEIGHT - GameConstants.SEABED_Y);
         g.setFont(Fonts.SMALL);
-        g.setColor(KEY_HINT);
+        g.setColor(UiPalette.DIM_TEXT);
         TextDraw.centered(g, StoryText.PLAY_HINT, GameConstants.WORLD_WIDTH / 2, 597);
     }
 
