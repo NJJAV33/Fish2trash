@@ -42,7 +42,8 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       already cleared stay cleared.
 - [ ] **Figure 1:** replace the mockup with a real screenshot. Ready-made ones are in
       `docs/screenshots/` (`chapter1.png`, `chapter2.png`, `chapter3.png`, `menu.png`, `story.png`,
-      `ending.png`). Change the caption from "Concept mockup" to "The game in chapter 1".
+      `ending.png`, `cleared.png`, `report.png`). Change the caption from "Concept mockup"
+      to "The game in chapter 1".
 - [ ] **2.2 Objects in Water:** the first column header "Objective" should be "Category".
       Add two rows under Marine Wildlife: "Pufferfish (dangerous)" and "Barracuda (dangerous)".
 - [ ] **2.3 Levels:** rename to "Story chapters" and use this table:
@@ -55,10 +56,14 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 
 - [ ] **2.4 Scoring:** the points are right (10, 20, 50). Add: "Reaching the quota stops
       the clock; the chapter is cleared when that catch reaches the boat."
-- [ ] **2.4 Optional extras:** sound effects, a tool for each kind of trash, and hints
-      after repeated mistakes are in: list them as "Included extras". Badges and a
-      high-score list are planned.
-      **(later)** Move each one to the "Included extras" line when it is merged.
+- [ ] **2.4 Optional extras:** sound effects, a tool for each kind of trash, hints
+      after repeated mistakes and a badge per chapter are in: list them as "Included
+      extras". A high-score list is planned.
+      **(later)** Move it to the "Included extras" line when it is merged.
+- [ ] **2.4 Scoring:** add the badges. "Eco Rookie: clear chapter 1. Sorter: clear
+      chapter 2 with at most 1 slip and at least 60% of throws bringing up trash.
+      Champion: clear chapter 3 with at least 40% of the time left and at most 1
+      health lost."
 - [ ] **2.5 Penalties:** "Accidentally catch a fish: -1 health" stays. Add a row:
       "Catch a pufferfish or barracuda: -2 health". Add that the fish swims away.
 - [ ] **2.5 Penalties:** add a row "Wrong tool for the trash: the trash slips off, the
@@ -80,7 +85,7 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] **3.1 Abstraction:** add the interfaces `GameView`, `ObjectView`, `Screen` and
       `GameListener`.
 - [ ] **3.1 Other Java concepts:** remove "//double check". Replace `enum (BinType)` with
-      `enum (ObjectKind, EquipmentType, EventType, ChapterStatus, GameState, CatchOutcome)`.
+      `enum (ObjectKind, EquipmentType, EventType, ChapterStatus, GameState, CatchOutcome, Badge)`.
       Replace `BinFullException` with `EquipmentLockedException` (thrown when the player
       asks for a tool the crew does not have yet). **(later:** a second one arrives with
       the high-score file). `ArrayList` and `HashMap` are used;

@@ -12,6 +12,7 @@ three chapters and the reef comes back to life.
 | ![Main menu](docs/screenshots/menu.png) | ![A story page](docs/screenshots/story.png) |
 | ![Chapter 1](docs/screenshots/chapter1.png) | ![Chapter 2](docs/screenshots/chapter2.png) |
 | ![Chapter 3](docs/screenshots/chapter3.png) | ![The ending](docs/screenshots/ending.png) |
+| ![A cleared chapter and its badge](docs/screenshots/cleared.png) | ![The shift report](docs/screenshots/report.png) |
 
 Team project for CIS 2103 (Object Oriented Programming), University of San Carlos.
 
@@ -84,6 +85,14 @@ What each tool does:
   two slips off the wrong tool, twelve seconds without dropping the line, little time
   with less than half the quota, or your last health. At most three hints per chapter,
   at least 20 seconds apart.
+- Each chapter has a badge. The chapter report shows it, earned or missed, and the
+  shift report at the end shows all three.
+
+| Badge | Chapter | How to earn it |
+|---|---|---|
+| Eco Rookie (bronze) | 1 | Clear the chapter |
+| Sorter (silver) | 2 | Clear it with at most 1 slip off the wrong tool, and at least 6 of every 10 throws bringing up trash |
+| Champion (gold) | 3 | Clear it with at least 40% of the time left and at most 1 health lost |
 
 ## Folder structure
 
@@ -108,9 +117,10 @@ FISH2TRASH/
 │   │   └── Level, ChapterData, SpawnRule, TutorialPrompt   the chapters as data
 │   ├── game/                the rules
 │   │   ├── GameManager      one chapter attempt: collisions, quota, win/lose
-│   │   ├── GameSession      the whole run: current chapter, cleared chapters, retries
+│   │   ├── GameSession      the whole run: current chapter, cleared chapters, badges, retries
 │   │   ├── GameView         what the screen may read from a game
 │   │   ├── ChapterResult, ChapterStatus, FailCause, SessionStats, GameState
+│   │   ├── Badge            enum: one badge per chapter, each with its own rule
 │   │   ├── GameEvent, EventType, GameListener   (observer pattern)
 │   │   ├── HintEngine       decides when the player gets a hint
 │   │   └── HintRule         interface, one small class per reason for a hint:
@@ -123,7 +133,7 @@ FISH2TRASH/
 │   │   ├── MainMenu, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
 │   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
-│   │                        water, one painter per object kind and per tool
+│   │                        water, one painter per object kind and per tool, BadgePainter
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
@@ -160,8 +170,9 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
    (the stats counter, the effects, the sounds, and the screen that shows tips).
    The `HintEngine` reads the stats and, when a `HintRule` is triggered, a hint goes out
    as one more event.
-9. When the chapter ends, the session records a `ChapterResult` and the screens move on:
-   report card and next chapter after a clear, pink slip and retry after a fail.
+9. When the chapter ends, the session records a `ChapterResult`, asks the chapter's
+   `Badge` whether that result earns it, and the screens move on: report card and next
+   chapter after a clear, pink slip and retry after a fail.
 
 ### OOP concepts, and where to point at them
 
@@ -170,13 +181,13 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 | Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. Lists are handed out read-only. |
 | Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`. `Equipment` → `PlainHook`, `Magnet`, `NetCutter`. |
 | Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver`, `HintRule`, `ObjectPainter`, `ToolPainter` and `AudioPlayer` are interfaces that hide what is behind them. |
-| Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `rule.isTriggered(stats, game)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
+| Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `rule.isTriggered(stats, game)`, `badge.isEarnedBy(result)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
 | Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
 | Custom exception | `Loadout.select()` throws the checked `EquipmentLockedException` for a tool the crew does not have yet. `GameManager.selectTool()` catches it and turns it into a message on screen. |
-| Enums with behaviour | `ObjectKind.create()` and `EquipmentType.create()` build their own objects; `CatchOutcome.resolve()` calls the right method. No `switch` over types. |
+| Enums with behaviour | `ObjectKind.create()` and `EquipmentType.create()` build their own objects; `CatchOutcome.resolve()` calls the right method; each `Badge` constant carries its own rule. No `switch` over types. |
 
 Patterns used: observer (`GameListener`), template method (`OceanObject.update`,
-`Equipment.attempt`), strategy (`HintRule`: the engine runs a list of interchangeable
+`Equipment.attempt`, `Badge.isEarnedBy`), strategy (`HintRule`: the engine runs a list of interchangeable
 rules), a state machine per screen (`ScreenManager`) and inside
 `Hook` and `Barracuda`, null object (`SilentAudioPlayer` stands in when there is no
 sound device or in tests).
@@ -199,10 +210,11 @@ no test library is needed. The script exits with an error if any check fails.
 | `EquipmentMatrixTest` | Every cell of the tool table above: three tools against seven kinds of object |
 | `EquipmentTest`, `LoadoutTest` | How a slip plays out; which tools each chapter has; the swap rules (locked tool, wait, not while the line is out) |
 | `HintTest` | Each hint rule fires exactly at its threshold; the most urgent hint goes first; 20 seconds between hints; three per chapter at most |
+| `BadgeTest` | Each badge just inside and just outside its limits; the badges a clean, a sloppy and a retried run collect; the medal and its chime on the chapter report |
 | `GameEventTest`, `ChapterFlowTest` | The events the game announces; winning, the frozen clock, and both ways to lose |
 | `LevelSpawnTest` | Spawn tables: timing, counts, distance from the hook, and enough trash to finish |
 | `SessionTest` | Moving on after a clear, retrying after a fail |
-| `BalanceBotTest` | A simple computer player, changing tools as needed, must be able to win every chapter at least half the time |
+| `BalanceBotTest` | A simple computer player, changing tools as needed, must be able to win every chapter at least half the time, and to earn each badge |
 | `StoryTextTest` | Every story page, fail message and tip fits its box |
 | `ScreenFlowTest` | Key presses lead to the right screens: menu, story, pause, fired screen, retry |
 | `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
@@ -263,6 +275,14 @@ The tests cannot judge how the game feels or sounds. Use the checklist below for
 - [ ] On the last health: "Last health! ..."
 - [ ] `H` shows the last tip or hint again.
 - [ ] Never more than three hints in one chapter attempt.
+
+**Badges**
+- [ ] Clearing chapter 1 always shows the bronze Eco Rookie medal: it pops in with
+      sparkles and a two-note chime.
+- [ ] Chapter 2 with two or more slips, or mostly missed throws: grey medal, "BADGE MISSED".
+- [ ] Chapter 2 played cleanly: the silver Sorter medal.
+- [ ] Chapter 3 cleared fast with at most 1 health lost: the gold Champion medal.
+- [ ] The shift report at the end shows the three medals, the missed ones in grey.
 
 **Sound**
 - [ ] Dropping the hook, each kind of trash, a fish hit, reaching the quota, clearing
