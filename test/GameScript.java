@@ -3,7 +3,9 @@ import game.GameEvent;
 import game.GameManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import model.Hook;
+import model.ObjectKind;
 import model.OceanObject;
 
 /**
@@ -26,15 +28,35 @@ final class GameScript {
      * so this plays on until one is ready.
      */
     static OceanObject firstCatchable(GameManager game, boolean trash) {
+        return firstCatchable(game, object -> object.getKind().isTrash() == trash, "trash=" + trash);
+    }
+
+    /** The first object of one kind that can be caught, playing on until there is one. */
+    static OceanObject firstCatchable(GameManager game, ObjectKind kind) {
+        return firstCatchable(game, object -> object.getKind() == kind, kind.toString());
+    }
+
+    private static OceanObject firstCatchable(GameManager game, Predicate<OceanObject> wanted, String what) {
         for (int i = 0; i < MAX_STEPS && game.isPlaying(); i++) {
             for (OceanObject object : game.getObjects()) {
-                if (object.getKind().isTrash() == trash && object.isCatchable()) {
+                if (wanted.test(object) && object.isCatchable()) {
                     return object;
                 }
             }
             game.update(STEP);
         }
-        throw new IllegalStateException("no catchable object with trash=" + trash);
+        throw new IllegalStateException("no catchable object with " + what);
+    }
+
+    /**
+     * Wins the chapter without a single mistake: lifts the chapter's main
+     * kind of trash, one piece after another, with whatever tool is on the line.
+     */
+    static void clearChapter(GameManager game) {
+        ObjectKind kind = game.getChapter().getPrimaryKind();
+        for (int i = 0; i < 100 && game.isPlaying(); i++) {
+            hookOnto(game, firstCatchable(game, kind));
+        }
     }
 
     /** Moves every object far below the screen, so the hook cannot touch any of them. */

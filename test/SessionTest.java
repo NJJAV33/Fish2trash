@@ -28,7 +28,7 @@ public final class SessionTest {
 
             GameManager game = session.startChapter();
             Check.assertEquals("chapter " + n + " quota", quotas[n - 1], game.getQuota());
-            clearChapter(game);
+            GameScript.clearChapter(game);
             ChapterResult result = session.onChapterEnded(game);
 
             Check.assertTrue("chapter " + n + " cleared", result.isCleared());
@@ -56,7 +56,7 @@ public final class SessionTest {
     private static void aFailedChapterIsRetriedAndKeepsEarlierWins() {
         GameSession session = new GameSession(new Random(4));
         GameManager first = session.startChapter();
-        clearChapter(first);
+        GameScript.clearChapter(first);
         session.onChapterEnded(first);
         int bankedPoints = session.getTotalPoints();
 
@@ -78,7 +78,7 @@ public final class SessionTest {
         GameManager retry = session.startChapter();
         Check.assertEquals("retry starts at zero points", 0, retry.getPlayer().getScore());
         Check.assertEquals("retry has the full clock", retry.getTimeTotal(), retry.getTimeLeft(), 1e-9);
-        clearChapter(retry);
+        GameScript.clearChapter(retry);
         session.onChapterEnded(retry);
         Check.assertEquals("moves on to chapter 3 after the retry", 3, session.getChapterNumber());
     }
@@ -94,12 +94,5 @@ public final class SessionTest {
         }
         Check.assertTrue("a running chapter has no result yet", refused);
         Check.assertEquals("nothing was recorded", 0, session.getRetries());
-    }
-
-    /** Hooks trash, one piece after another, until the chapter is over. */
-    private static void clearChapter(GameManager game) {
-        for (int i = 0; i < 100 && game.isPlaying(); i++) {
-            GameScript.hookOnto(game, GameScript.firstCatchable(game, true));
-        }
     }
 }

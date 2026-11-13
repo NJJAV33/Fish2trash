@@ -1,3 +1,4 @@
+import game.Badge;
 import model.ChapterData;
 import model.EquipmentType;
 import util.StoryText;
@@ -15,6 +16,8 @@ public final class StoryTextTest {
     private static final int FAIL_LINE_LENGTH = 48;
     private static final int TIP_LENGTH = 60;        // tips are a single line
     private static final int TITLE_LENGTH = 30;
+    private static final int BADGE_NAME_LENGTH = 16;
+    private static final int BADGE_TEXT_LENGTH = 45; // one small line under the medal
 
     private StoryTextTest() {
         // only static methods
@@ -67,6 +70,14 @@ public final class StoryTextTest {
             }
             checkPage("locked message for the " + tool.getDisplayName(),
                     String.format(StoryText.TOOL_LOCKED, tool.getDisplayName(), tool.getUnlockChapter()), 1, TIP_LENGTH);
+        }
+
+        for (Badge badge : Badge.values()) {
+            String name = "badge " + badge;
+            Check.assertTrue(name + " has a short name",
+                    !badge.getDisplayName().isEmpty() && badge.getDisplayName().length() <= BADGE_NAME_LENGTH);
+            checkPage(name + " earned line", badge.getEarnedText(), 1, BADGE_TEXT_LENGTH);
+            checkPage(name + " how-to-earn line", badge.getLockedText(), 1, BADGE_TEXT_LENGTH);
         }
 
         // The quota in the chapter 1 tip must be the real quota.

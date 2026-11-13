@@ -1,3 +1,5 @@
+import game.Badge;
+import game.ChapterResult;
 import game.ChapterStatus;
 import game.GameManager;
 import java.util.EnumMap;
@@ -52,6 +54,7 @@ public final class BalanceBotTest {
             int outOfTime = 0;
             int slips = 0;
             int toolChanges = 0;
+            int badges = 0;
             double timeLeftTotal = 0;
             for (long seed = 1; seed <= RUNS; seed++) {
                 GameManager game = new GameManager(
@@ -61,6 +64,9 @@ public final class BalanceBotTest {
                 if (game.getStatus() == ChapterStatus.CLEARED) {
                     cleared++;
                     timeLeftTotal += game.getTimeLeft();
+                    if (Badge.forChapter(chapter).isEarnedBy(ChapterResult.from(game))) {
+                        badges++;
+                    }
                 } else if (game.getStatus() == ChapterStatus.FAILED_TIME) {
                     outOfTime++;
                 }
@@ -71,12 +77,14 @@ public final class BalanceBotTest {
             System.out.println("  chapter " + chapter + ": bot cleared " + cleared + " of " + RUNS
                     + ", ran out of time " + outOfTime + " times, average "
                     + averageLeft + " s left of " + (int) timeLimit
-                    + ", " + toolChanges + " tool changes, " + slips + " slips");
+                    + ", " + toolChanges + " tool changes, " + slips + " slips, "
+                    + badges + " badges");
 
             Check.assertTrue("chapter " + chapter + " can be won: bot cleared " + cleared + " of " + RUNS,
                     cleared >= MUST_CLEAR);
             Check.assertTrue("chapter " + chapter + " leaves the bot enough time",
                     outOfTime <= RUNS / 4);
+            Check.assertTrue("the badge of chapter " + chapter + " can be earned", badges > 0);
             totalToolChanges += toolChanges;
         }
         // Proof that the bot plays by the tool rules: it has to change tools to lift mixed trash.

@@ -155,6 +155,19 @@ public final class StoryText {
     public static final String CLEAR_FISH = "Fish hooked";
     public static final String CONTINUE_PROMPT = "ENTER: continue";
 
+    // ---- Badges: a name, the line shown when earned, and how to earn it ----
+    public static final String BADGE_1_NAME = "Eco Rookie";
+    public static final String BADGE_1_EARNED = "Cleared the shallows. Welcome aboard!";
+    public static final String BADGE_1_LOCKED = "Clear Chapter 1.";
+    public static final String BADGE_2_NAME = "Sorter";
+    public static final String BADGE_2_EARNED = "Right gear for every piece of trash.";
+    public static final String BADGE_2_LOCKED = "Clear Chapter 2 with few mistakes.";
+    public static final String BADGE_3_NAME = "Champion";
+    public static final String BADGE_3_EARNED = "Freed the deep from its ghost nets.";
+    public static final String BADGE_3_LOCKED = "Clear fast and keep your health.";
+    public static final String BADGE_EARNED_LABEL = "BADGE EARNED";
+    public static final String BADGE_MISSED_LABEL = "BADGE MISSED";
+
     // ---- Fired ----
     public static final String FAIL_TITLE = "YOU'RE FIRED!";
     public static final String FAIL_SUB = "...for now.";
@@ -208,6 +221,7 @@ public final class StoryText {
     public static final String RECAP_FISH = "Fish hooked";
     public static final String RECAP_CHAPTERS = "Chapters cleared";
     public static final String RECAP_SCORE = "Total points";
+    public static final String RECAP_BADGES = "Badges";
 
     // ---- Pause ----
     public static final String PAUSE_TITLE = "PAUSED";

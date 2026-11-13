@@ -97,6 +97,12 @@ public final class GameConstants {
     public static final double HINT_LOW_TIME_S = 15;       // seconds left, with less than half the quota
     public static final int HINT_LOW_HEALTH = 1;
 
+    // ---- Badges: one per chapter, for clearing it well ----
+    public static final int SORTER_MAX_SLIPS = 1;               // wrong-tool touches allowed
+    public static final double SORTER_MIN_ACCURACY = 0.60;      // share of throws that must bring up trash
+    public static final double CHAMPION_TIME_FRACTION = 0.40;   // share of the clock that must be left
+    public static final int CHAMPION_MAX_HP_LOST = 1;
+
     // ---- Spawning (the tables themselves are in model.ChapterData) ----
     public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
     public static final double MIN_SPAWN_Y = 210;          // default spawn depth range

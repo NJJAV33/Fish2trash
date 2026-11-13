@@ -66,6 +66,11 @@ public enum SoundEffect {
             Tone.of(Wave.SINE, 659).from(360).gain(0.10).shape(4, 50, 0.6, 300),
             Tone.of(Wave.SINE, 784).from(360).gain(0.10).shape(4, 50, 0.6, 300)),
 
+    /** A badge is pinned on: two high, bell-like notes. */
+    BADGE(390, false,
+            Tone.of(Wave.SINE, 1319).lasting(160).gain(0.24).shape(1, 30, 0.25, 100),
+            Tone.of(Wave.SINE, 1760).from(130).gain(0.24).shape(1, 30, 0.25, 120)),
+
     /** Chapter failed: four gentle notes going down. */
     CHAPTER_FAIL(1160, false,
             Tone.of(Wave.SINE, 440).lasting(200).gain(0.28).shape(8, 80, 0.5, 60),

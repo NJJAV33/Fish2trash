@@ -344,10 +344,12 @@ classDiagram
     class GameSession {
         -chapterNumber int
         -retries int
+        -badges Set
         +startChapter() GameManager
         +onChapterEnded(game) ChapterResult
         +isFinished() boolean
         +getTotalPoints() int
+        +hasBadge(badge) boolean
     }
 
     class GameManager {
@@ -477,9 +479,26 @@ classDiagram
         -points int
         -timeLeft double
         -healthLeft int
+        -launches int
         -catches int
+        -slips int
         -fishHits int
         +from(game)$ ChapterResult
+        +getAccuracy() double
+        +getTimeFractionLeft() double
+        +getHealthLost() int
+    }
+
+    class Badge {
+        <<enumeration>>
+        ECO_ROOKIE
+        SORTER
+        CHAMPION
+        -chapter int
+        +forChapter(chapter)$ Badge
+        +isEarnedBy(result) boolean
+        ~meetsRule(result)* boolean
+        +getDisplayName() String
     }
 
     class GameState {
@@ -502,6 +521,8 @@ classDiagram
 
     GameSession ..> GameManager : creates
     GameSession *-- ChapterResult : cleared chapters
+    GameSession o-- Badge : earned, 0 to 3
+    Badge ..> ChapterResult : judges
     GameSession ..> Loadout : picks per chapter
     GameView <|.. GameManager
     CatchResolver <|.. GameManager
@@ -612,6 +633,11 @@ classDiagram
         +paintToast(g, text, age)
     }
 
+    class BadgePainter {
+        -looks Map
+        +paint(g, badge, x, y, radius, earned)
+    }
+
     class BackgroundPainter {
         -cache Map
         +paint(g, palette)
@@ -711,6 +737,8 @@ classDiagram
     ToolPainter <|.. CutterPainter
     HookPainter --> PainterRegistry : draws the tool with
     HudPainter --> PainterRegistry : draws tool icons with
+    ChapterClearScreen *-- BadgePainter
+    VictoryScreen *-- BadgePainter
 ```
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
