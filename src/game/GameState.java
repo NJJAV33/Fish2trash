@@ -10,5 +10,8 @@ public enum GameState {
     CHAPTER_CLEAR,
     GAME_OVER,
     /** The ending and the run recap, after chapter 3. */
-    ENDING
+    ENDING,
+    /** Typing a name for a run that made the high-score list. */
+    NAME_ENTRY,
+    HIGH_SCORES
 }

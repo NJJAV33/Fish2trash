@@ -122,6 +122,16 @@ public final class ScreenFlowTest {
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
         expect("ENTER returns to the menu", GameState.MENU);
+
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        expect("third menu item opens the high scores", GameState.HIGH_SCORES);
+
+        press(KeyEvent.VK_ESCAPE);
+        play(SCREEN_CHANGE);
+        expect("ESC returns to the menu", GameState.MENU);
     }
 
     private static void storyPagesLeadIntoTheGame() {
@@ -218,7 +228,7 @@ public final class ScreenFlowTest {
 
     private static void startGame() {
         audio = new RecordingAudioPlayer();
-        panel = new GamePanel(audio);
+        panel = new GamePanel(audio, TempScores.newTable());
         panel.setSize(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
         clock = 1000;
         play(0.1);

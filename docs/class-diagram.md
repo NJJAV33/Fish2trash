@@ -512,6 +512,8 @@ classDiagram
         CHAPTER_CLEAR
         GAME_OVER
         ENDING
+        NAME_ENTRY
+        HIGH_SCORES
     }
 
     class Player
@@ -582,6 +584,8 @@ classDiagram
         +resume()
         +startNewRun()
         +getSession() GameSession
+        +getHighScores() HighScoreTable
+        +afterRun(otherwise) GameState
     }
 
     class Screen {
@@ -591,6 +595,8 @@ classDiagram
         +update(dt)
         +paint(g)*
         +keyPressed(keyCode)
+        +keyTyped(character)
+        +isTakingText() boolean
     }
 
     class MainMenu
@@ -600,6 +606,8 @@ classDiagram
     class ChapterClearScreen
     class GameOverScreen
     class VictoryScreen
+    class NameEntryScreen
+    class HighScoreScreen
     class PauseOverlay
     class MenuList
     class TextPager
@@ -710,6 +718,8 @@ classDiagram
     Screen <|.. ChapterClearScreen
     Screen <|.. GameOverScreen
     Screen <|.. VictoryScreen
+    Screen <|.. NameEntryScreen
+    Screen <|.. HighScoreScreen
     Screen <|.. PauseOverlay
     MainMenu *-- MenuList
     PauseOverlay *-- MenuList
@@ -741,6 +751,7 @@ classDiagram
     HudPainter --> PainterRegistry : draws tool icons with
     ChapterClearScreen *-- BadgePainter
     VictoryScreen *-- BadgePainter
+    HighScoreScreen *-- BadgePainter
 ```
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
@@ -867,6 +878,9 @@ classDiagram
     class GameSession
     class ChapterResult
     class Badge
+    class ScreenManager
+    class NameEntryScreen
+    class HighScoreScreen
 
     GameSession ..> ScoreCalculator : asks for the run score
     ScoreCalculator ..> ChapterResult : scores
@@ -877,6 +891,9 @@ classDiagram
     HighScoreTable *-- ScoreEntry : best 10, sorted
     HighScoreTable --> HighScoreStore : loads and saves through
     HighScoreStore ..> HighScoreException : throws
+    ScreenManager --> HighScoreTable
+    NameEntryScreen ..> ScoreEntry : creates
+    HighScoreScreen ..> HighScoreTable : draws
 ```
 
 ## Classes without a box

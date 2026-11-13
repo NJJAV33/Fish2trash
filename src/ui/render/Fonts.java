@@ -18,5 +18,6 @@ public final class Fonts {
     public static final Font SMALL = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
     public static final Font TIMER = new Font(Font.MONOSPACED, Font.BOLD, 24);
     public static final Font MONO = new Font(Font.MONOSPACED, Font.PLAIN, 15);
+    public static final Font SCORE = new Font(Font.MONOSPACED, Font.BOLD, 18);
     public static final Font STAMP = new Font(Font.SANS_SERIF, Font.BOLD, 54);
 }

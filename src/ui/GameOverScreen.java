@@ -52,7 +52,8 @@ public final class GameOverScreen implements Screen {
             screens.getAudio().play(SoundEffect.MENU_SELECT);
             screens.go(GameState.STORY);   // the session is still on the failed chapter
         } else if (keyCode == KeyEvent.VK_ESCAPE) {
-            screens.go(GameState.MENU);
+            // The run ends here. If it still made the high-score list, a name is asked for.
+            screens.go(screens.afterRun(GameState.MENU));
         }
     }
 

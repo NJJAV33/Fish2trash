@@ -3,6 +3,7 @@ package ui;
 import game.Badge;
 import game.ChapterResult;
 import game.GameState;
+import game.ScoreCalculator;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
@@ -92,10 +93,13 @@ public final class ChapterClearScreen implements Screen {
         g.setColor(UiPalette.DIM_TEXT);
         TextDraw.centered(g, StoryText.chapterTitle(result.getChapter()), CENTER_X, 174);
 
-        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(result.getPoints()), 216);
-        drawRow(g, StoryText.CLEAR_TIME, (int) result.getTimeLeft() + " s", 242);
-        drawRow(g, StoryText.CLEAR_HEALTH, result.getHealthLeft() + " / " + result.getMaxHealth(), 268);
-        drawRow(g, StoryText.CLEAR_FISH, String.valueOf(result.getFishHits()), 294);
+        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(result.getPoints()), 208);
+        drawRow(g, StoryText.CLEAR_TIME, (int) result.getTimeLeft() + " s", 231);
+        drawRow(g, StoryText.CLEAR_HEALTH, result.getHealthLeft() + " / " + result.getMaxHealth(), 254);
+        drawRow(g, StoryText.CLEAR_FISH, String.valueOf(result.getFishHits()), 277);
+        g.setColor(UiPalette.PANEL_EDGE);
+        g.drawLine(LABEL_X, 285, VALUE_X, 285);
+        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(ScoreCalculator.chapterScore(result)), 306);
 
         drawBadge(g);
 

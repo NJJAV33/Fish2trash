@@ -71,7 +71,7 @@ public final class VictoryScreen implements Screen {
         }
         screens.getAudio().play(SoundEffect.MENU_SELECT);
         if (showingReport) {
-            screens.go(GameState.MENU);
+            screens.go(screens.afterRun(GameState.HIGH_SCORES));
         } else if (pager.advance()) {
             showingReport = true;   // the story is told; show the numbers
         }
@@ -131,7 +131,7 @@ public final class VictoryScreen implements Screen {
         drawRow(g, StoryText.RECAP_TRASH, session.getTotalTrash(), 250);
         drawRow(g, StoryText.RECAP_FISH, session.getTotalFishHits(), 284);
         drawRow(g, StoryText.RECAP_CHAPTERS, session.getChaptersCleared(), 318);
-        drawRow(g, StoryText.RECAP_SCORE, session.getTotalPoints(), 352);
+        drawRow(g, StoryText.RECAP_SCORE, session.getRunScore(), 352);
 
         // The badges of the run: earned ones in colour, the others in grey.
         g.setFont(Fonts.SUBHEADING);
@@ -145,7 +145,7 @@ public final class VictoryScreen implements Screen {
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
-        TextDraw.centered(g, StoryText.BACK_PROMPT, CENTER_X, 450);
+        TextDraw.centered(g, StoryText.CONTINUE_PROMPT, CENTER_X, 450);
     }
 
     private void drawRow(Graphics2D g, String label, int value, int y) {
