@@ -4,18 +4,20 @@ import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.util.EnumMap;
 import java.util.Map;
+import model.EquipmentType;
 import model.ObjectKind;
 import model.ObjectView;
 
 /**
- * Knows which painter draws which kind of object.
+ * Knows which painter draws which kind of object and which tool.
  *
- * The lookup is a map from ObjectKind to painter, so drawing needs no
+ * Each lookup is a map from an enum to a painter, so drawing needs no
  * if/else chain and no type checks.
  */
 public final class PainterRegistry {
 
     private final Map<ObjectKind, ObjectPainter> painters = new EnumMap<>(ObjectKind.class);
+    private final Map<EquipmentType, ToolPainter> toolPainters = new EnumMap<>(EquipmentType.class);
 
     public PainterRegistry() {
         painters.put(ObjectKind.PLASTIC_BOTTLE, new BottlePainter());
@@ -26,11 +28,20 @@ public final class PainterRegistry {
         painters.put(ObjectKind.PUFFERFISH, new PufferPainter());
         painters.put(ObjectKind.BARRACUDA, new BarracudaPainter());
 
-        // Fail at startup, not in the middle of a game, if a new kind was
-        // added without a painter.
+        toolPainters.put(EquipmentType.HOOK, new HookClawPainter());
+        toolPainters.put(EquipmentType.MAGNET, new MagnetPainter());
+        toolPainters.put(EquipmentType.NET_CUTTER, new CutterPainter());
+
+        // Fail at startup, not in the middle of a game, if a new kind or tool
+        // was added without a painter.
         for (ObjectKind kind : ObjectKind.values()) {
             if (!painters.containsKey(kind)) {
                 throw new IllegalStateException("No painter registered for " + kind);
+            }
+        }
+        for (EquipmentType type : EquipmentType.values()) {
+            if (!toolPainters.containsKey(type)) {
+                throw new IllegalStateException("No painter registered for " + type);
             }
         }
     }
@@ -47,5 +58,15 @@ public final class PainterRegistry {
         faded.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
         painter.paint(faded, object, time);
         faded.dispose();
+    }
+
+    /**
+     * Draws a tool hanging down from (0, 0). The caller moves and turns the
+     * graphics to where the tool should be.
+     */
+    public void paintTool(Graphics2D g, EquipmentType type, double time, boolean working) {
+        Graphics2D g2 = (Graphics2D) g.create();   // a copy, so the painter's strokes and colours do not leak out
+        toolPainters.get(type).paint(g2, time, working);
+        g2.dispose();
     }
 }

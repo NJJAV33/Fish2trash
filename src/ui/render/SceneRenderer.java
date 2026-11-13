@@ -21,7 +21,7 @@ public final class SceneRenderer {
     private double time;   // seconds of animation so far
     private final PainterRegistry painters = new PainterRegistry();
     private final BoatPainter boatPainter = new BoatPainter();
-    private final HookPainter hookPainter = new HookPainter();
+    private final HookPainter hookPainter = new HookPainter(painters);
 
     /**
      * Moves the animation forward. Called every frame, also on menus and
@@ -30,6 +30,11 @@ public final class SceneRenderer {
     public void update(double dt) {
         time += dt;
         bubbles.update(dt);
+    }
+
+    /** The painters for objects and tools, for screens that draw one on its own. */
+    public PainterRegistry getPainters() {
+        return painters;
     }
 
     /** Seconds of animation so far. */
@@ -48,7 +53,7 @@ public final class SceneRenderer {
         for (ObjectView object : game.getObjects()) {
             painters.paint(g, object, time);   // the registry picks the painter for this kind
         }
-        hookPainter.paintHead(g, boat.getHook());
+        hookPainter.paintHead(g, boat.getHook(), time);
 
         paintWaterOnTop(g, palette);
     }

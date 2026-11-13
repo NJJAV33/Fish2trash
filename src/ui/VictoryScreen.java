@@ -1,11 +1,13 @@
 package ui;
 
+import game.Badge;
 import game.GameSession;
 import game.GameState;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import ui.render.BadgePainter;
 import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
@@ -26,6 +28,8 @@ public final class VictoryScreen implements Screen {
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
     private static final int VALUE_X = 570;
+    private static final int BADGE_RADIUS = 15;
+    private static final int BADGE_SPACING = 42;
     private static final int SCHOOL_SIZE = 24;
     private static final double SCHOOL_DELAY_SECONDS = 2.0;
     private static final double SCHOOL_FADE_SECONDS = 1.5;
@@ -36,6 +40,7 @@ public final class VictoryScreen implements Screen {
     private final ScreenManager screens;
     private final SceneRenderer backdrop;
     private final StoryBoxPainter box = new StoryBoxPainter();
+    private final BadgePainter badgePainter = new BadgePainter();
     private final TextPager pager = new TextPager();
     private boolean showingReport;
     private double time;
@@ -121,12 +126,22 @@ public final class VictoryScreen implements Screen {
 
         g.setFont(Fonts.HEADING);
         g.setColor(UiPalette.ACCENT);
-        TextDraw.centered(g, StoryText.RECAP_TITLE, CENTER_X, 205);
+        TextDraw.centered(g, StoryText.RECAP_TITLE, CENTER_X, 200);
 
-        drawRow(g, StoryText.RECAP_TRASH, session.getTotalTrash(), 270);
-        drawRow(g, StoryText.RECAP_FISH, session.getTotalFishHits(), 310);
-        drawRow(g, StoryText.RECAP_CHAPTERS, session.getChaptersCleared(), 350);
-        drawRow(g, StoryText.RECAP_SCORE, session.getTotalPoints(), 390);
+        drawRow(g, StoryText.RECAP_TRASH, session.getTotalTrash(), 250);
+        drawRow(g, StoryText.RECAP_FISH, session.getTotalFishHits(), 284);
+        drawRow(g, StoryText.RECAP_CHAPTERS, session.getChaptersCleared(), 318);
+        drawRow(g, StoryText.RECAP_SCORE, session.getTotalPoints(), 352);
+
+        // The badges of the run: earned ones in colour, the others in grey.
+        g.setFont(Fonts.SUBHEADING);
+        g.setColor(UiPalette.DIM_TEXT);
+        g.drawString(StoryText.RECAP_BADGES, LABEL_X, 396);
+        Badge[] badges = Badge.values();
+        for (int i = 0; i < badges.length; i++) {
+            int x = VALUE_X - BADGE_RADIUS - (badges.length - 1 - i) * BADGE_SPACING;
+            badgePainter.paint(g, badges[i], x, 386, BADGE_RADIUS, session.hasBadge(badges[i]));
+        }
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);

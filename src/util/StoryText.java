@@ -27,14 +27,39 @@ public final class StoryText {
             "A / D or arrow keys   Move the boat (while the hook swings)\n"
             + "SPACE                 Drop the hook\n"
             + "SPACE again           Pull the hook back early\n"
+            + "1 2 3  or  Q / E      Change tool (while the hook swings)\n"
+            + "H                     Show the last tip again\n"
             + "P or ESC              Pause\n"
             + "M                     Sound on or off\n"
             + "\n"
-            + "Hook trash to earn points: bottle 10, can 20, net 50.\n"
+            + "Each kind of trash needs its own tool:\n"
+            + "Hook - bottle 10.   Magnet - can 20.   Net Cutter - net 50.\n"
             + "Hooking a fish costs health. Some fish cost double.\n"
             + "Fill the quota before the time runs out.\n"
             + "Run out of time or health and you are fired.";
     public static final String BACK_PROMPT = "ENTER: back to menu";
+
+    // ---- Tools ----
+    public static final String TOOL_HOOK = "Hook";
+    public static final String TOOL_MAGNET = "Magnet";
+    public static final String TOOL_CUTTER = "Net Cutter";
+    /** Filled in with the tool's name and the chapter it arrives in. */
+    public static final String TOOL_LOCKED = "The %s arrives in chapter %d.";
+    /** The label of a tool slot the crew does not have yet. Filled in with the chapter. */
+    public static final String TOOL_LOCKED_SHORT = "Chapter %d";
+    public static final String GEAR_TITLE = "NEW GEAR";
+    public static final String GEAR_MAGNET =
+            "Santos hands Nico a heavy red horseshoe.\n"
+            + "The Magnet. It is on the line already.\n"
+            + "Cans stick to it. Fish and plastic do not.\n"
+            + "Press 1 for the Hook, 2 for the Magnet.\n"
+            + "Tools change only while the hook swings.";
+    public static final String GEAR_CUTTER =
+            "Dolor unlocks the last box on deck.\n"
+            + "The Net Cutter. It is on the line already.\n"
+            + "It cuts ghost nets free. Cans and bottles slip off.\n"
+            + "Careful: its blades still hurt fish.\n"
+            + "Press 1 Hook, 2 Magnet, 3 Net Cutter.";
 
     // ---- Opening ----
     public static final String CRAWL =
@@ -69,12 +94,12 @@ public final class StoryText {
     public static final String CH2_INTRO_1 =
             "The Old Pier wreck. Cans and scrap pile up\n"
             + "between the corals and cut the reef.\n"
-            + "Santos: \"Metal sinks. Look deep, by the wreck.\"\n"
-            + "Nico: \"Right. Cans are worth double. Got it.\"";
+            + "Santos: \"Metal sinks. The Magnet is your answer.\"\n"
+            + "Nico: \"Right gear, right trash. Got it.\"";
     public static final String CH2_INTRO_2 =
             "QUOTA: 200 points. Big fish patrol here.\n"
             + "They are fast. Time your drops carefully.\n"
-            + "Migo: \"Wait for a gap, boss. Then drop!\"";
+            + "Migo: \"Magnets ignore fish, boss. Use that!\"";
     public static final String CH2_OUTRO =
             "Quota met! The wreck can breathe again.\n"
             + "Pink and orange coral peek out where cans sat.\n"
@@ -88,7 +113,7 @@ public final class StoryText {
             "Past the drop-off the water turns dark and cold.\n"
             + "Ghost nets drift here, trapping fish and coral\n"
             + "long after the fishers are gone.\n"
-            + "Santos: \"Pull them out. Carefully.\"";
+            + "Santos: \"Cut them free. Carefully.\"";
     public static final String CH3_INTRO_2 =
             "QUOTA: 350 points. Spiky pufferfish and fast\n"
             + "barracuda lurk here. Each costs 2 health.\n"
@@ -104,13 +129,23 @@ public final class StoryText {
     public static final String TUT_AIM = "Time the swing, then press SPACE to drop the hook.";
     public static final String TUT_FISH = "Fish are not trash! Each one you hook costs 1 health.";
     public static final String TUT_QUOTA = "Reach 100 points before time or health runs out.";
-    public static final String TUT_MAGNET = "Press 2 for the Magnet. Cans stick to it.";
+    public static final String TUT_MAGNET = "The Magnet is on: cans stick to it. 1 = Hook for bottles.";
     public static final String TUT_MAGNET_ALT = "Cans are worth 20 points. Hook them!";
     public static final String TUT_BIGFISH = "Big fish are fast. Wait for a gap before you drop.";
-    public static final String TUT_CUTTER = "Press 3 for the Net Cutter. It frees nets.";
+    public static final String TUT_CUTTER = "The Net Cutter is on: it frees nets. 1 Hook, 2 Magnet.";
     public static final String TUT_CUTTER_ALT = "Nets are worth 50 points. Hook them!";
     public static final String TUT_PUFFER = "Pufferfish swell up near the hook. Steer clear!";
     public static final String TUT_BARRACUDA = "Barracuda flash, then charge. Dodge or recall!";
+
+    // ---- Hints after repeated mistakes ----
+    public static final String HINT_FISH_STREAK = "Those are fish! Lift only trash. Watch the shapes.";
+    public static final String HINT_SLIP = "Wrong tool! Hook = bottles, Magnet = cans, Cutter = nets.";
+    public static final String HINT_GEAR_PLASTIC = "Plastic bottles: use the Hook (1).";
+    public static final String HINT_GEAR_CAN = "Metal cans: use the Magnet (2).";
+    public static final String HINT_GEAR_NET = "Fishing nets: use the Net Cutter (3).";
+    public static final String HINT_IDLE = "Still there? Drop the line. Trash won't wait.";
+    public static final String HINT_LOW_TIME = "Time is low. Go for the big pieces!";
+    public static final String HINT_LOW_HEALTH = "Last health! Skip anything that swims.";
 
     // ---- Chapter cleared ----
     public static final String CLEAR_TITLE = "CHAPTER CLEARED";
@@ -119,6 +154,19 @@ public final class StoryText {
     public static final String CLEAR_HEALTH = "Health left";
     public static final String CLEAR_FISH = "Fish hooked";
     public static final String CONTINUE_PROMPT = "ENTER: continue";
+
+    // ---- Badges: a name, the line shown when earned, and how to earn it ----
+    public static final String BADGE_1_NAME = "Eco Rookie";
+    public static final String BADGE_1_EARNED = "Cleared the shallows. Welcome aboard!";
+    public static final String BADGE_1_LOCKED = "Clear Chapter 1.";
+    public static final String BADGE_2_NAME = "Sorter";
+    public static final String BADGE_2_EARNED = "Right gear for every piece of trash.";
+    public static final String BADGE_2_LOCKED = "Clear Chapter 2 with few mistakes.";
+    public static final String BADGE_3_NAME = "Champion";
+    public static final String BADGE_3_EARNED = "Freed the deep from its ghost nets.";
+    public static final String BADGE_3_LOCKED = "Clear fast and keep your health.";
+    public static final String BADGE_EARNED_LABEL = "BADGE EARNED";
+    public static final String BADGE_MISSED_LABEL = "BADGE MISSED";
 
     // ---- Fired ----
     public static final String FAIL_TITLE = "YOU'RE FIRED!";
@@ -173,6 +221,7 @@ public final class StoryText {
     public static final String RECAP_FISH = "Fish hooked";
     public static final String RECAP_CHAPTERS = "Chapters cleared";
     public static final String RECAP_SCORE = "Total points";
+    public static final String RECAP_BADGES = "Badges";
 
     // ---- Pause ----
     public static final String PAUSE_TITLE = "PAUSED";
@@ -186,7 +235,7 @@ public final class StoryText {
     // ---- Small prompts ----
     public static final String NEXT_PROMPT = "ENTER";
     public static final String SKIP_PROMPT = "ESC: skip";
-    public static final String PLAY_HINT = "A / D: move     SPACE: drop or recall hook     P: pause     M: sound";
+    public static final String PLAY_HINT = "A / D: move    SPACE: drop or recall    1 2 3: tool    H: last tip    P: pause    M: sound";
     public static final String HUD_OBJECTIVE = "Hook trash, spare the fish";
     public static final String HUD_SCORE = "SCORE";
 
@@ -198,6 +247,7 @@ public final class StoryText {
         {CH3_INTRO_1, CH3_INTRO_2}
     };
     private static final String[] OUTROS = {CH1_OUTRO, CH2_OUTRO, CH3_OUTRO};
+    private static final String[] GEAR_PAGES = {"", GEAR_MAGNET, GEAR_CUTTER};   // chapter 1 has no new tool
     private static final String[] FAIL_TIME = {CH1_FAIL_TIME, CH2_FAIL_TIME, CH3_FAIL_TIME};
     private static final String[] FAIL_HEALTH = {CH1_FAIL_HEALTH, CH2_FAIL_HEALTH, CH3_FAIL_HEALTH};
 
@@ -214,6 +264,11 @@ public final class StoryText {
     /** The page shown after chapter 1, 2 or 3 is cleared. */
     public static String outro(int chapter) {
         return OUTROS[chapter - 1];
+    }
+
+    /** The page about the tool the crew receives in chapter 1, 2 or 3. Empty if there is none. */
+    public static String gearPage(int chapter) {
+        return GEAR_PAGES[chapter - 1];
     }
 
     /** What Captain Dolor says when a chapter is lost. */

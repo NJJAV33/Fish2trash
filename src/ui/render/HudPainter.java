@@ -3,7 +3,9 @@ package ui.render;
 import game.ChapterStatus;
 import game.GameView;
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Graphics2D;
+import model.EquipmentType;
 import util.GameConstants;
 import util.Mathx;
 import util.SoundState;
@@ -11,7 +13,8 @@ import util.StoryText;
 
 /**
  * Draws the heads-up display over the game: chapter name, quota bar, hearts,
- * timer and score along the top, and tips in a toast near the bottom.
+ * timer and score along the top, the tools along the bottom, and tips in a
+ * toast above them.
  * It reads everything from the GameView and changes nothing.
  */
 public final class HudPainter {
@@ -23,9 +26,24 @@ public final class HudPainter {
     private static final int HEARTS_X = 470;
     private static final int HEART_SPACING = 26;
 
+    // The tool bar is kept low and flat, so it hides as little of the deep water as possible.
+    private static final int TOOL_Y = 553;
+    private static final int TOOL_WIDTH = 124;
+    private static final int TOOL_HEIGHT = 30;
+    private static final int TOOL_GAP = 8;
+    private static final double TOOL_ICON_SCALE = 0.55;
+    private static final BasicStroke THIN = new BasicStroke(1);
+    private static final BasicStroke SELECTED_EDGE = new BasicStroke(2);
+
     private static final double TOAST_SLIDE_SECONDS = 0.25;
     private static final double TOAST_FADE_SECONDS = 0.4;
     public static final double TOAST_SECONDS = 4.0;   // how long a tip stays, in total
+
+    private final PainterRegistry painters;   // draws the tool icons
+
+    public HudPainter(PainterRegistry painters) {
+        this.painters = painters;
+    }
 
     /**
      * @param time  seconds, used to make the timer pulse when it runs low
@@ -54,6 +72,9 @@ public final class HudPainter {
         TextDraw.centered(g, String.valueOf(game.getScore()), 747, 48);
 
         drawSpeaker(g, sound);
+        if (GameConstants.EQUIPMENT_ENABLED) {
+            drawToolBar(g, game, time);
+        }
 
         // The key reminder sits on a dark strip, so it reads on any sea floor.
         g.setColor(UiPalette.PANEL);
@@ -82,6 +103,52 @@ public final class HudPainter {
             g.drawLine(x + 15, y + 5, x + 22, y + 13);
             g.drawLine(x + 22, y + 5, x + 15, y + 13);
         }
+    }
+
+    /** One slot per tool along the bottom: its key, its picture and its name. */
+    private void drawToolBar(Graphics2D g, GameView game, double time) {
+        EquipmentType[] tools = EquipmentType.values();
+        int totalWidth = tools.length * TOOL_WIDTH + (tools.length - 1) * TOOL_GAP;
+        int left = (GameConstants.WORLD_WIDTH - totalWidth) / 2;
+        for (int i = 0; i < tools.length; i++) {
+            drawToolSlot(g, game, tools[i], i + 1, left + i * (TOOL_WIDTH + TOOL_GAP), time);
+        }
+    }
+
+    private void drawToolSlot(Graphics2D g, GameView game, EquipmentType tool, int keyNumber, int x, double time) {
+        boolean selected = (tool == game.getSelectedTool());
+        boolean unlocked = game.isToolUnlocked(tool);
+
+        g.setColor(selected ? UiPalette.PANEL_SOLID : UiPalette.PANEL);
+        g.fillRoundRect(x, TOOL_Y, TOOL_WIDTH, TOOL_HEIGHT, 12, 12);
+        if (unlocked && !selected && game.getSwapCooldownFraction() > 0) {
+            // Right after a change the other tools are greyed out; the shade shrinks as the wait runs down.
+            int waiting = (int) (TOOL_WIDTH * game.getSwapCooldownFraction());
+            g.setColor(UiPalette.SHADE);
+            g.fillRoundRect(x, TOOL_Y, waiting, TOOL_HEIGHT, 12, 12);
+        }
+        g.setColor(selected ? UiPalette.ACCENT : UiPalette.PANEL_EDGE);
+        g.setStroke(selected ? SELECTED_EDGE : THIN);
+        g.drawRoundRect(x, TOOL_Y, TOOL_WIDTH, TOOL_HEIGHT, 12, 12);
+        g.setStroke(THIN);
+
+        Graphics2D icon = (Graphics2D) g.create();
+        icon.translate(x + 30, TOOL_Y + TOOL_HEIGHT / 2 + 1);
+        icon.scale(TOOL_ICON_SCALE, TOOL_ICON_SCALE);
+        if (!unlocked) {
+            icon.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+        }
+        painters.paintTool(icon, tool, time, false);
+        icon.dispose();
+
+        g.setFont(Fonts.SMALL);
+        g.setColor(UiPalette.DIM_TEXT);
+        g.drawString(String.valueOf(keyNumber), x + 8, TOOL_Y + 19);
+        g.setFont(selected ? Fonts.LABEL : Fonts.SMALL);
+        g.setColor(selected ? UiPalette.TEXT : UiPalette.DIM_TEXT);
+        String label = unlocked ? tool.getDisplayName()
+                : String.format(StoryText.TOOL_LOCKED_SHORT, tool.getUnlockChapter());
+        g.drawString(label, x + 46, TOOL_Y + 20);
     }
 
     private void drawQuotaBar(Graphics2D g, GameView game) {

@@ -9,6 +9,7 @@ import model.CatchOutcome;
 import model.CatchResolver;
 import model.ChapterData;
 import model.Equipment;
+import model.EquipmentType;
 import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
@@ -83,7 +84,8 @@ public final class EquipmentTest {
     }
 
     private static void aSlipCostsNothingButTheThrow() {
-        GameManager game = new GameManager(ChapterData.forChapter(2), new Loadout(new PlainHook(false)), new Random(7));
+        GameManager game = new GameManager(ChapterData.forChapter(2), Loadout.forChapter(2), new Random(7));
+        game.selectTool(EquipmentType.HOOK);   // the wrong tool for a can
         List<GameEvent> events = GameScript.record(game);
         OceanObject slippery = firstCanOrNet(game);
 

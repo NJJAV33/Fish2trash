@@ -19,19 +19,23 @@ public final class ChapterResult {
     private final int slips;
     private final int fishHits;
 
-    private ChapterResult(GameManager game) {
-        this.chapter = game.getChapter().getNumber();
-        this.cleared = game.getStatus() == ChapterStatus.CLEARED;
-        this.failCause = game.getStatus().getFailCause();
-        this.points = game.getPlayer().getScore();
-        this.timeLeft = game.getTimeLeft();
-        this.timeTotal = game.getTimeTotal();
-        this.healthLeft = game.getPlayer().getHealth();
-        this.maxHealth = game.getPlayer().getMaxHealth();
-        this.launches = game.getStats().getLaunches();
-        this.catches = game.getStats().getCatches();
-        this.slips = game.getStats().getSlips();
-        this.fishHits = game.getStats().getFishHits();
+    /**
+     * @param failCause why the attempt was lost, or FailCause.NONE for a cleared chapter
+     */
+    public ChapterResult(int chapter, FailCause failCause, int points, double timeLeft, double timeTotal,
+            int healthLeft, int maxHealth, int launches, int catches, int slips, int fishHits) {
+        this.chapter = chapter;
+        this.cleared = failCause == FailCause.NONE;
+        this.failCause = failCause;
+        this.points = points;
+        this.timeLeft = timeLeft;
+        this.timeTotal = timeTotal;
+        this.healthLeft = healthLeft;
+        this.maxHealth = maxHealth;
+        this.launches = launches;
+        this.catches = catches;
+        this.slips = slips;
+        this.fishHits = fishHits;
     }
 
     /** Writes down how a finished attempt went. */
@@ -39,7 +43,11 @@ public final class ChapterResult {
         if (!game.getStatus().isOver()) {
             throw new IllegalStateException("The chapter is still being played");
         }
-        return new ChapterResult(game);
+        return new ChapterResult(game.getChapter().getNumber(), game.getStatus().getFailCause(),
+                game.getPlayer().getScore(), game.getTimeLeft(), game.getTimeTotal(),
+                game.getPlayer().getHealth(), game.getPlayer().getMaxHealth(),
+                game.getStats().getLaunches(), game.getStats().getCatches(),
+                game.getStats().getSlips(), game.getStats().getFishHits());
     }
 
     public int getChapter() {
@@ -88,6 +96,20 @@ public final class ChapterResult {
 
     public int getFishHits() {
         return fishHits;
+    }
+
+    /** The share of throws that brought up trash, from 0 to 1. */
+    public double getAccuracy() {
+        return launches == 0 ? 0 : (double) catches / launches;
+    }
+
+    /** The share of the clock that was left, from 0 to 1. */
+    public double getTimeFractionLeft() {
+        return timeLeft / timeTotal;
+    }
+
+    public int getHealthLost() {
+        return maxHealth - healthLeft;
     }
 
     @Override

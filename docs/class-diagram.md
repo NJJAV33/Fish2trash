@@ -174,20 +174,53 @@ classDiagram
     }
 
     class Loadout {
-        -selected int
-        +standard()$ Loadout
+        -tools Map
+        -selected EquipmentType
+        -cooldown double
+        +forChapter(chapter)$ Loadout
         +getSelected() Equipment
+        +select(type) boolean
+        +next(direction) EquipmentType
+        +isUnlocked(type) boolean
+        +canSwap() boolean
+        +tick(dt)
+    }
+
+    class EquipmentType {
+        <<enumeration>>
+        HOOK
+        MAGNET
+        NET_CUTTER
+        -unlockChapter int
+        -displayName String
+        +create()* Equipment
+        +newestIn(chapter)$ EquipmentType
+    }
+
+    class EquipmentLockedException {
+        <<exception>>
+        -type EquipmentType
+        +getType() EquipmentType
     }
 
     class Equipment {
         <<abstract>>
-        -displayName String
+        -type EquipmentType
         -tipRadius double
         +attempt(object) CatchOutcome
         #outcomeFor(kind)* CatchOutcome
     }
 
     class PlainHook {
+        -outcomes Map
+        #outcomeFor(kind) CatchOutcome
+    }
+
+    class Magnet {
+        #outcomeFor(kind) CatchOutcome
+    }
+
+    class NetCutter {
         -outcomes Map
         #outcomeFor(kind) CatchOutcome
     }
@@ -224,8 +257,13 @@ classDiagram
     HookSensor <|.. Hook
     Hook o-- Loadout : carries
     Hook o-- OceanObject : caught, 0 or 1
-    Loadout *-- Equipment : tools, 1 or more
+    Loadout *-- Equipment : tools, 1 to 3
+    Loadout ..> EquipmentLockedException : throws
     Equipment <|-- PlainHook
+    Equipment <|-- Magnet
+    Equipment <|-- NetCutter
+    Equipment --> EquipmentType : is of
+    EquipmentType ..> Equipment : creates
     Equipment ..> CatchOutcome : answers with
     CatchOutcome ..> CatchResolver : calls back
     OceanObject ..> Player : onCaught
@@ -306,10 +344,12 @@ classDiagram
     class GameSession {
         -chapterNumber int
         -retries int
+        -badges Set
         +startChapter() GameManager
         +onChapterEnded(game) ChapterResult
         +isFinished() boolean
         +getTotalPoints() int
+        +hasBadge(badge) boolean
     }
 
     class GameManager {
@@ -319,6 +359,8 @@ classDiagram
         +update(dt)
         +spaceAction()
         +setBoatDirection(direction)
+        +selectTool(type)
+        +cycleTool(direction)
         +addListener(listener)
         +onCatch(object)
         +onSlip(object)
@@ -335,6 +377,9 @@ classDiagram
         +getHealth() int
         +getTimeLeft() double
         +getStatus() ChapterStatus
+        +getSelectedTool() EquipmentType
+        +isToolUnlocked(type) boolean
+        +getSwapCooldownFraction() double
     }
 
     class CatchResolver {
@@ -348,12 +393,39 @@ classDiagram
 
     class SessionStats {
         -counts Map
+        -fishStreak int
+        -slipStreak int
+        -secondsSinceLaunch double
         +onGameEvent(event)
+        +tick(dt)
         +getLaunches() int
         +getCatches() int
         +getSlips() int
         +getFishHits() int
+        +getFishStreak() int
+        +getSlipStreak() int
     }
+
+    class HintEngine {
+        -rules List
+        -spoken Set
+        -cooldown double
+        -shown int
+        +update(dt, stats, game) String
+    }
+
+    class HintRule {
+        <<interface>>
+        +isTriggered(stats, game) boolean
+        +getPriority() int
+        +getText(stats) String
+    }
+
+    class FishStreakRule
+    class SlipStreakRule
+    class IdleRule
+    class LowTimeRule
+    class LowHealthRule
 
     class GameEvent {
         -x double
@@ -372,9 +444,13 @@ classDiagram
         OBJECT_CAUGHT
         HEALTH_LOST
         SLIPPED
+        TOOL_SWITCHED
+        SWAP_DENIED
         MISSED
         DELIVERED
+        LOW_TIME_TICK
         TUTORIAL_PROMPT
+        HINT_SHOWN
         QUOTA_REACHED
         CHAPTER_CLEARED
         CHAPTER_FAILED
@@ -403,9 +479,26 @@ classDiagram
         -points int
         -timeLeft double
         -healthLeft int
+        -launches int
         -catches int
+        -slips int
         -fishHits int
         +from(game)$ ChapterResult
+        +getAccuracy() double
+        +getTimeFractionLeft() double
+        +getHealthLost() int
+    }
+
+    class Badge {
+        <<enumeration>>
+        ECO_ROOKIE
+        SORTER
+        CHAMPION
+        -chapter int
+        +forChapter(chapter)$ Badge
+        +isEarnedBy(result) boolean
+        ~meetsRule(result)* boolean
+        +getDisplayName() String
     }
 
     class GameState {
@@ -428,7 +521,9 @@ classDiagram
 
     GameSession ..> GameManager : creates
     GameSession *-- ChapterResult : cleared chapters
-    GameSession *-- Loadout : crew tools
+    GameSession o-- Badge : earned, 0 to 3
+    Badge ..> ChapterResult : judges
+    GameSession ..> Loadout : picks per chapter
     GameView <|.. GameManager
     CatchResolver <|.. GameManager
     GameManager *-- Player
@@ -436,6 +531,14 @@ classDiagram
     GameManager *-- Level
     GameManager *-- TimeLimit
     GameManager *-- SessionStats
+    GameManager *-- HintEngine
+    HintEngine *-- HintRule : 5 rules
+    HintEngine ..> SessionStats : reads
+    HintRule <|.. FishStreakRule
+    HintRule <|.. SlipStreakRule
+    HintRule <|.. IdleRule
+    HintRule <|.. LowTimeRule
+    HintRule <|.. LowHealthRule
     GameManager --> ChapterData : plays
     GameManager o-- GameListener : listeners, 0 or more
     GameListener <|.. SessionStats
@@ -506,8 +609,19 @@ classDiagram
 
     class PainterRegistry {
         -painters Map
-        +paint(g, object)
+        -toolPainters Map
+        +paint(g, object, time)
+        +paintTool(g, type, time, working)
     }
+
+    class ToolPainter {
+        <<interface>>
+        +paint(g, time, working)
+    }
+
+    class HookClawPainter
+    class MagnetPainter
+    class CutterPainter
 
     class ObjectPainter {
         <<interface>>
@@ -517,6 +631,11 @@ classDiagram
     class HudPainter {
         +paint(g, game, time)
         +paintToast(g, text, age)
+    }
+
+    class BadgePainter {
+        -looks Map
+        +paint(g, badge, x, y, radius, earned)
     }
 
     class BackgroundPainter {
@@ -542,7 +661,7 @@ classDiagram
 
     class HookPainter {
         +paintRope(g, hook, time)
-        +paintHead(g, hook)
+        +paintHead(g, hook, time)
     }
 
     class WaterPainter {
@@ -612,6 +731,14 @@ classDiagram
     SceneRenderer *-- BoatPainter
     SceneRenderer *-- HookPainter
     PainterRegistry o-- ObjectPainter : one per ObjectKind
+    PainterRegistry o-- ToolPainter : one per EquipmentType
+    ToolPainter <|.. HookClawPainter
+    ToolPainter <|.. MagnetPainter
+    ToolPainter <|.. CutterPainter
+    HookPainter --> PainterRegistry : draws the tool with
+    HudPainter --> PainterRegistry : draws tool icons with
+    ChapterClearScreen *-- BadgePainter
+    VictoryScreen *-- BadgePainter
 ```
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,

@@ -40,6 +40,17 @@ public enum SoundEffect {
     WRONG_TOOL(100, true,
             Tone.of(Wave.TRIANGLE, 300, 240).gain(0.28).shape(1, 35, 0.1, 55).overtone(2.4, 0.3)),
 
+    /** Another tool goes on the line: two quick clicks, the second higher. */
+    TOOL_SWITCH(100, false,
+            Tone.of(Wave.TRIANGLE, 523).lasting(45).gain(0.22).shape(2, 20, 0.2, 12),
+            Tone.of(Wave.TRIANGLE, 698).from(45).gain(0.22).shape(2, 25, 0.2, 12)),
+
+    /** The crew gets a new tool: three bright notes going up. */
+    TOOL_UNLOCK(270, false,
+            Tone.of(Wave.SINE, 1047).lasting(110).gain(0.25).shape(2, 40, 0.3, 50),
+            Tone.of(Wave.SINE, 1319).from(70).lasting(110).gain(0.25).shape(2, 40, 0.3, 50),
+            Tone.of(Wave.SINE, 1568).from(140).gain(0.25).shape(2, 40, 0.3, 60)),
+
     /** The quota is reached: two bright notes going up. */
     QUOTA(330, false,
             Tone.of(Wave.SINE, 784).lasting(150).gain(0.32).shape(3, 60, 0.4, 60),
@@ -54,6 +65,11 @@ public enum SoundEffect {
             Tone.of(Wave.SINE, 523).from(360).gain(0.10).shape(4, 50, 0.6, 300),
             Tone.of(Wave.SINE, 659).from(360).gain(0.10).shape(4, 50, 0.6, 300),
             Tone.of(Wave.SINE, 784).from(360).gain(0.10).shape(4, 50, 0.6, 300)),
+
+    /** A badge is pinned on: two high, bell-like notes. */
+    BADGE(390, false,
+            Tone.of(Wave.SINE, 1319).lasting(160).gain(0.24).shape(1, 30, 0.25, 100),
+            Tone.of(Wave.SINE, 1760).from(130).gain(0.24).shape(1, 30, 0.25, 120)),
 
     /** Chapter failed: four gentle notes going down. */
     CHAPTER_FAIL(1160, false,

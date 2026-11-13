@@ -12,6 +12,10 @@ public enum EventType {
     HEALTH_LOST,
     /** Wrong tool: the object slipped off the hook. */
     SLIPPED,
+    /** Another tool was put on the line. The event's text is the tool's name. */
+    TOOL_SWITCHED,
+    /** A tool change was refused: line out, too soon, or (with a text saying so) not unlocked yet. */
+    SWAP_DENIED,
     /** The hook went all the way out and came back with nothing. */
     MISSED,
     /** A caught object reached the boat. */
@@ -20,6 +24,8 @@ public enum EventType {
     LOW_TIME_TICK,
     /** A tip should be shown. The event's text is the tip. */
     TUTORIAL_PROMPT,
+    /** The player keeps making a mistake and gets a hint. The event's text is the hint. */
+    HINT_SHOWN,
     /** The score reached the chapter's quota. The clock stops here. */
     QUOTA_REACHED,
     /** The chapter was won: the catch that met the quota reached the boat. */

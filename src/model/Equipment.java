@@ -10,11 +10,11 @@ package model;
  */
 public abstract class Equipment {
 
-    private final String displayName;
+    private final EquipmentType type;
     private final double tipRadius;   // size of the tool for collisions
 
-    protected Equipment(String displayName, double tipRadius) {
-        this.displayName = displayName;
+    protected Equipment(EquipmentType type, double tipRadius) {
+        this.type = type;
         this.tipRadius = tipRadius;
     }
 
@@ -29,8 +29,12 @@ public abstract class Equipment {
     /** What this tool does to an object of the given kind. Each tool decides. */
     protected abstract CatchOutcome outcomeFor(ObjectKind kind);
 
+    public EquipmentType getType() {
+        return type;
+    }
+
     public String getDisplayName() {
-        return displayName;
+        return type.getDisplayName();
     }
 
     public double getTipRadius() {
@@ -39,6 +43,6 @@ public abstract class Equipment {
 
     @Override
     public String toString() {
-        return displayName;
+        return type.getDisplayName();
     }
 }

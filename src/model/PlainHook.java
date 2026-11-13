@@ -19,7 +19,7 @@ public class PlainHook extends Equipment {
      *                        (used while the other tools are switched off)
      */
     public PlainHook(boolean catchesAllTrash) {
-        super("Hook", GameConstants.RADIUS_HOOK);
+        super(EquipmentType.HOOK, GameConstants.RADIUS_HOOK);
         for (ObjectKind kind : ObjectKind.values()) {
             outcomes.put(kind, CatchOutcome.CATCH);
         }

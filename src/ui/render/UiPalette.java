@@ -13,6 +13,8 @@ public final class UiPalette {
     public static final Color DIM_TEXT = new Color(184, 196, 204);
     public static final Color ACCENT = new Color(79, 209, 197);
     public static final Color GOLD = new Color(255, 215, 0);
+    public static final Color SILVER = new Color(192, 199, 208);
+    public static final Color BRONZE = new Color(205, 127, 50);
     public static final Color GOOD = new Color(120, 230, 120);
     public static final Color DANGER = new Color(255, 90, 77);
     public static final Color HEART = new Color(255, 77, 109);

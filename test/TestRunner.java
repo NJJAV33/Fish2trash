@@ -14,15 +14,19 @@ public final class TestRunner {
     public static void main(String[] args) {
         run("ArchitectureTest", ArchitectureTest::run);
         run("AudioEventTest", AudioEventTest::run);
+        run("BadgeTest", BadgeTest::run);
         run("BalanceBotTest", BalanceBotTest::run);
         run("BoatHookTest", BoatHookTest::run);
         run("ChapterFlowTest", ChapterFlowTest::run);
         run("DangerousFishTest", DangerousFishTest::run);
         run("DiagramTest", DiagramTest::run);
         run("EffectsTest", EffectsTest::run);
+        run("EquipmentMatrixTest", EquipmentMatrixTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
+        run("HintTest", HintTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);
+        run("LoadoutTest", LoadoutTest::run);
         run("MathxTest", MathxTest::run);
         run("ModelCatchTest", ModelCatchTest::run);
         run("OceanObjectTest", OceanObjectTest::run);

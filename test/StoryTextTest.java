@@ -1,4 +1,6 @@
+import game.Badge;
 import model.ChapterData;
+import model.EquipmentType;
 import util.StoryText;
 
 /**
@@ -14,6 +16,8 @@ public final class StoryTextTest {
     private static final int FAIL_LINE_LENGTH = 48;
     private static final int TIP_LENGTH = 60;        // tips are a single line
     private static final int TITLE_LENGTH = 30;
+    private static final int BADGE_NAME_LENGTH = 16;
+    private static final int BADGE_TEXT_LENGTH = 45; // one small line under the medal
 
     private StoryTextTest() {
         // only static methods
@@ -46,10 +50,34 @@ public final class StoryTextTest {
         String[] tips = {
             StoryText.TUT_AIM, StoryText.TUT_FISH, StoryText.TUT_QUOTA,
             StoryText.TUT_MAGNET, StoryText.TUT_MAGNET_ALT, StoryText.TUT_BIGFISH,
-            StoryText.TUT_CUTTER, StoryText.TUT_CUTTER_ALT, StoryText.TUT_PUFFER, StoryText.TUT_BARRACUDA
+            StoryText.TUT_CUTTER, StoryText.TUT_CUTTER_ALT, StoryText.TUT_PUFFER, StoryText.TUT_BARRACUDA,
+            StoryText.HINT_FISH_STREAK, StoryText.HINT_SLIP, StoryText.HINT_GEAR_PLASTIC, StoryText.HINT_GEAR_CAN,
+            StoryText.HINT_GEAR_NET, StoryText.HINT_IDLE, StoryText.HINT_LOW_TIME, StoryText.HINT_LOW_HEALTH
         };
         for (String tip : tips) {
             checkPage("tip \"" + tip + "\"", tip, 1, TIP_LENGTH);
+        }
+
+        // Every tool but the first comes with a page that presents it, and a
+        // "not yet" message short enough for the tip box.
+        for (EquipmentType tool : EquipmentType.values()) {
+            String page = StoryText.gearPage(tool.getUnlockChapter());
+            if (tool.getUnlockChapter() == 1) {
+                Check.assertTrue("chapter 1 has no new-tool page", page.isEmpty());
+            } else {
+                checkPage("new-tool page for the " + tool.getDisplayName(), page, STORY_LINES, STORY_LINE_LENGTH);
+                Check.assertTrue("the page names the " + tool.getDisplayName(), page.contains(tool.getDisplayName()));
+            }
+            checkPage("locked message for the " + tool.getDisplayName(),
+                    String.format(StoryText.TOOL_LOCKED, tool.getDisplayName(), tool.getUnlockChapter()), 1, TIP_LENGTH);
+        }
+
+        for (Badge badge : Badge.values()) {
+            String name = "badge " + badge;
+            Check.assertTrue(name + " has a short name",
+                    !badge.getDisplayName().isEmpty() && badge.getDisplayName().length() <= BADGE_NAME_LENGTH);
+            checkPage(name + " earned line", badge.getEarnedText(), 1, BADGE_TEXT_LENGTH);
+            checkPage(name + " how-to-earn line", badge.getLockedText(), 1, BADGE_TEXT_LENGTH);
         }
 
         // The quota in the chapter 1 tip must be the real quota.

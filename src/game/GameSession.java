@@ -2,14 +2,16 @@ package game;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import model.ChapterData;
 import model.Loadout;
 
 /**
  * One run through the story: which chapter the player is on, the chapters
- * already cleared, and how many attempts failed.
+ * already cleared, the badges earned, and how many attempts failed.
  *
  * A GameManager only lives for one chapter attempt. The session is the memory
  * that lasts across them.
@@ -17,15 +19,14 @@ import model.Loadout;
 public final class GameSession {
 
     private final Random random;
-    private final Loadout loadout;   // the crew keeps its tools from chapter to chapter
     private final List<ChapterResult> clearedChapters = new ArrayList<>();
+    private final Set<Badge> badges = EnumSet.noneOf(Badge.class);
     private int chapterNumber;
     private int retries;
     private ChapterResult lastResult;
 
     public GameSession(Random random) {
         this.random = random;
-        this.loadout = Loadout.standard();
         this.chapterNumber = 1;
     }
 
@@ -34,18 +35,23 @@ public final class GameSession {
         if (isFinished()) {
             throw new IllegalStateException("The story is already finished");
         }
-        return new GameManager(ChapterData.forChapter(chapterNumber), loadout, random);
+        // Each chapter starts with the tools the crew has by then.
+        return new GameManager(ChapterData.forChapter(chapterNumber), Loadout.forChapter(chapterNumber), random);
     }
 
     /**
-     * Records how an attempt ended. A cleared chapter is banked and the story
-     * moves on; a failed one only counts as a retry, so nothing already won
-     * is ever lost.
+     * Records how an attempt ended. A cleared chapter is banked, may earn
+     * its badge, and the story moves on; a failed one only counts as a
+     * retry, so nothing already won is ever lost.
      */
     public ChapterResult onChapterEnded(GameManager game) {
         lastResult = ChapterResult.from(game);
         if (lastResult.isCleared()) {
             clearedChapters.add(lastResult);
+            Badge badge = Badge.forChapter(chapterNumber);
+            if (badge.isEarnedBy(lastResult)) {
+                badges.add(badge);
+            }
             chapterNumber++;
         } else {
             retries++;
@@ -77,6 +83,15 @@ public final class GameSession {
 
     public int getChaptersCleared() {
         return clearedChapters.size();
+    }
+
+    public boolean hasBadge(Badge badge) {
+        return badges.contains(badge);
+    }
+
+    /** The badges earned so far, as a read-only set. */
+    public Set<Badge> getBadges() {
+        return Collections.unmodifiableSet(badges);
     }
 
     /** Points from every cleared chapter. */
