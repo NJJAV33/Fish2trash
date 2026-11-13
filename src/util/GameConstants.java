@@ -79,7 +79,7 @@ public final class GameConstants {
     public static final int QUOTA_CH1 = 100;
     public static final int QUOTA_CH2 = 200;
     public static final int QUOTA_CH3 = 350;
-    public static final double TIME_CH1_S = 65;
+    public static final double TIME_CH1_S = 80;      // chapter 1 needs the most catches, so about 8 s per bottle
     public static final double TIME_CH2_S = 90;
     public static final double TIME_CH3_S = 105;
     public static final int HEALTH_CH1 = 3;

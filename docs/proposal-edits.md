@@ -4,9 +4,8 @@ The proposal ("OOP_Game Proposal.pdf") was written before the game became a stor
 with chapters, and it still carries text from an earlier idea (a sorting game with
 bins). This page lists what to change so the proposal matches the game.
 
-Tick each line off as you edit the document. Items marked **(later)** describe
-features that are planned but not in the game yet; change those lines when the
-feature is merged, or move the feature to "Future work" if it is dropped.
+Tick each line off as you edit the document. Everything listed here is in the game
+now; nothing on this page is still planned.
 
 ## Whole document
 
@@ -40,17 +39,22 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       and recalling the hook (Space while it is going out).
 - [ ] **2.1 Advance:** failing a chapter lets the player retry that chapter; chapters
       already cleared stay cleared.
+- [ ] **2.1 How to Play:** add the tools. "Bottles need the Hook, cans the Magnet, nets
+      the Net Cutter. Keys 1, 2, 3 (or Q / E) change the tool while the line swings.
+      The Magnet ignores fish; the Hook and the Net Cutter do not." The full table is
+      in the README under "How to play".
 - [ ] **Figure 1:** replace the mockup with a real screenshot. Ready-made ones are in
-      `docs/screenshots/` (`chapter1.png`, `chapter2.png`, `chapter3.png`, `menu.png`, `story.png`,
-      `ending.png`, `cleared.png`, `report.png`, `name.png`, `highscores.png`). Change the caption from "Concept mockup"
-      to "The game in chapter 1".
+      `docs/screenshots/` (`chapter1.png`, `chapter2.png`, `chapter3.png`, `menu.png`,
+      `story.png`, `ending.png`, `cleared.png`, `report.png`, `name.png`,
+      `highscores.png`). Change the caption from "Concept mockup" to "The game in
+      chapter 1".
 - [ ] **2.2 Objects in Water:** the first column header "Objective" should be "Category".
       Add two rows under Marine Wildlife: "Pufferfish (dangerous)" and "Barracuda (dangerous)".
 - [ ] **2.3 Levels:** rename to "Story chapters" and use this table:
 
   | Chapter | Main trash | Tool | Quota | Time | Health | What is new |
   |---|---|---|---|---|---|---|
-  | 1. Plastic Shallows | Plastic bottles | Hook | 100 | 65 s | 3 | Basic fish and trash |
+  | 1. Plastic Shallows | Plastic bottles | Hook | 100 | 80 s | 3 | Basic fish and trash |
   | 2. Old Pier Wreck | Cans | Magnet | 200 | 90 s | 4 | Big, fast fish |
   | 3. Ghost Net Deep | Fishing nets | Net Cutter | 350 | 105 s | 5 | Pufferfish and barracuda |
 
@@ -71,10 +75,6 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       "Catch a pufferfish or barracuda: -2 health". Add that the fish swims away.
 - [ ] **2.5 Penalties:** add a row "Wrong tool for the trash: the trash slips off, the
       throw is wasted, no health lost".
-- [ ] **2.1 How to Play:** add the tools. "Bottles need the Hook, cans the Magnet, nets
-      the Net Cutter. Keys 1, 2, 3 (or Q / E) change the tool while the line swings.
-      The Magnet ignores fish; the Hook and the Net Cutter do not." The full table is
-      in the README under "How to play".
 
 ## 3. Object-Oriented Design
 
@@ -85,8 +85,10 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       `Fish`, and `PlainHook`, `Magnet`, `NetCutter` under `Equipment`.
 - [ ] **3.1 Polymorphism example:** name the real call, `object.onCaught(player, hook)`,
       and add `move()` and `sense()` (a pufferfish weaves and swells, a barracuda charges).
-- [ ] **3.1 Abstraction:** add the interfaces `GameView`, `ObjectView`, `Screen` and
-      `GameListener`.
+      Two more examples: `rule.isTriggered(...)` (five `HintRule` classes) and
+      `badge.isEarnedBy(result)` (each `Badge` has its own rule).
+- [ ] **3.1 Abstraction:** add the interfaces `GameView`, `ObjectView`, `Screen`,
+      `GameListener`, `HintRule`, `ObjectPainter` and `AudioPlayer`.
 - [ ] **3.1 Other Java concepts:** remove "//double check". Replace `enum (BinType)` with
       `enum (ObjectKind, EquipmentType, EventType, ChapterStatus, GameState, CatchOutcome, Badge)`.
       Replace `BinFullException` with `EquipmentLockedException` (thrown when the player
@@ -116,8 +118,8 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] **3.3 Package Layout:**
   - `model`: add `ObjectKind`, `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`,
     `ChapterData`, `SpawnRule`, `Equipment`, `PlainHook`, `Magnet`, `NetCutter`,
-    `EquipmentType`, `Loadout`. Change "No JavaFX imports" to
-    "No Swing or AWT imports".
+    `EquipmentType`, `Loadout`, `CatchOutcome`, `EquipmentLockedException`. Change
+    "No JavaFX imports" to "No Swing or AWT imports".
   - `game`: remove `GameController`. Add `GameSession`, `GameEvent`, `GameListener`,
     `HintEngine` (with its `HintRule`s), `Badge`, `ScoreCalculator`, `ScoreEntry` and
     `HighScoreTable`.
@@ -157,10 +159,10 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] Update the weekly deliverables to what was built: (1) project setup, packages,
       tests; (2) core rework and the three story chapters; (3) polish, sound and
       extras; (4) balancing, documents and the presentation.
-- [ ] **Team Roles:** add the new classes to each member's list: chapters, session and
-      story screens (Llenos); tools, screens and key handling (Marata); the fish
-      subclasses, `ObjectKind` and the painters (Villarito). Remove "Lore master" or
-      rename it "Story text".
+- [ ] **Team Roles:** add the new classes to each member's list: chapters, session,
+      story screens, hints, badges and high scores (Llenos); tools, screens, key handling
+      and sound (Marata); the fish subclasses, `ObjectKind`, the painters and the tests
+      (Villarito). Remove "Lore master" or rename it "Story text".
 
 ## 5. Deliverables and Evaluation
 
@@ -175,7 +177,9 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 
 - [ ] "game assets will be made by the team using simple shapes and sprites or obtained
       from free-license sources with proper credits" becomes "everything on screen is
-      drawn in code with Java2D; the game uses no external images, fonts or libraries".
+      drawn in code with Java2D and every sound is built in code with
+      `javax.sound.sampled`; the game uses no external images, fonts, sound files or
+      libraries".
 - [ ] The line already says Java Swing. Keep it.
 
 ## 7. Risks and Mitigation
@@ -184,7 +188,10 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       Plan: "Each object has its own small painter class, tested by drawing off-screen".
       Remove "develop the console version first".
 - [ ] Add a risk: "The chapters are too hard or too easy". Plan: "A test bot plays each
-      chapter 100 times; all numbers are in one constants class and are tuned in week 4".
+      chapter 100 times; all numbers are in one constants class and are tuned from
+      playtests (`docs/playtest.md`)".
+- [ ] Add a risk: "No working sound on the demo computer". Plan: "The game checks for a
+      sound device when it starts and runs silent without one".
 
 ## Notes at the end of the document
 

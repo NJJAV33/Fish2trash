@@ -614,7 +614,8 @@ classDiagram
 
     class SceneRenderer {
         +paint(g, game)
-        +paintBackground(g)
+        +paintBackdrop(g, palette)
+        +paintBackdropBlend(g, from, to, amount)
     }
 
     class PainterRegistry {
@@ -774,9 +775,20 @@ classDiagram
         CATCH_CAN
         CATCH_NET
         FISH_HIT
+        WRONG_TOOL
+        TOOL_SWITCH
+        TOOL_UNLOCK
         QUOTA
         CHAPTER_CLEAR
+        BADGE
         CHAPTER_FAIL
+        LOW_TICK
+        LOW_TICK_URGENT
+        HINT
+        MENU_MOVE
+        MENU_SELECT
+        HIGH_SCORE
+        ENDING
         +render(pitch) short[]
         +isVaried() boolean
     }

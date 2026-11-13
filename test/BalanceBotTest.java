@@ -24,6 +24,11 @@ import util.GameConstants;
  * will be, and drops the line when it hangs straight down. It never looks at
  * the fish. If this bot cannot win a chapter at least
  * half the time, the chapter is too hard and its numbers need changing.
+ *
+ * A second, careless bot plays like a beginner: it pauses between throws and
+ * its aim is off, so it misses often. It shows whether the clock is fair to
+ * a slow player. Because it also never looks at the fish it loses a lot of
+ * health, so only its time is judged.
  */
 public final class BalanceBotTest {
 
@@ -33,6 +38,8 @@ public final class BalanceBotTest {
     private static final double CLOSE_ENOUGH = 6;        // pixels: the boat is "over" the target
     private static final double STRAIGHT_DOWN = Math.toRadians(2.5);
     private static final int MAX_STEPS = 20000;          // safety limit, longer than any chapter
+    private static final double CARELESS_PAUSE_S = 2.0;  // the careless bot waits this long after every throw
+    private static final double CARELESS_AIM_ERROR = 40; // and is up to this many pixels off target
 
     // One of each tool, only used to ask "would this tool lift that object?".
     private static final Map<EquipmentType, Equipment> SAMPLE_TOOLS = new EnumMap<>(EquipmentType.class);
@@ -43,6 +50,26 @@ public final class BalanceBotTest {
         }
     }
 
+    /** What happened over the 100 runs of one chapter. */
+    private static final class Tally {
+        private int cleared;
+        private int outOfTime;
+        private int slips;
+        private int toolChanges;
+        private int badges;
+        private double timeLeftTotal;
+
+        private String describe(String who, int chapter) {
+            double timeLimit = ChapterData.forChapter(chapter).getTimeLimit();
+            int averageLeft = (cleared == 0) ? 0 : (int) (timeLeftTotal / cleared);
+            return "  chapter " + chapter + ": " + who + " cleared " + cleared + " of " + RUNS
+                    + ", ran out of time " + outOfTime + " times, average "
+                    + averageLeft + " s left of " + (int) timeLimit
+                    + ", " + toolChanges + " tool changes, " + slips + " slips, "
+                    + badges + " badges";
+        }
+    }
+
     private BalanceBotTest() {
         // only static methods
     }
@@ -50,62 +77,74 @@ public final class BalanceBotTest {
     public static void run() {
         int totalToolChanges = 0;
         for (int chapter = 1; chapter <= ChapterData.CHAPTER_COUNT; chapter++) {
-            int cleared = 0;
-            int outOfTime = 0;
-            int slips = 0;
-            int toolChanges = 0;
-            int badges = 0;
-            double timeLeftTotal = 0;
-            for (long seed = 1; seed <= RUNS; seed++) {
-                GameManager game = new GameManager(
-                        ChapterData.forChapter(chapter), Loadout.forChapter(chapter), new Random(seed));
-                toolChanges += play(game);
-                slips += game.getStats().getSlips();
-                if (game.getStatus() == ChapterStatus.CLEARED) {
-                    cleared++;
-                    timeLeftTotal += game.getTimeLeft();
-                    if (Badge.forChapter(chapter).isEarnedBy(ChapterResult.from(game))) {
-                        badges++;
-                    }
-                } else if (game.getStatus() == ChapterStatus.FAILED_TIME) {
-                    outOfTime++;
-                }
-            }
-
-            double timeLimit = ChapterData.forChapter(chapter).getTimeLimit();
-            int averageLeft = (cleared == 0) ? 0 : (int) (timeLeftTotal / cleared);
-            System.out.println("  chapter " + chapter + ": bot cleared " + cleared + " of " + RUNS
-                    + ", ran out of time " + outOfTime + " times, average "
-                    + averageLeft + " s left of " + (int) timeLimit
-                    + ", " + toolChanges + " tool changes, " + slips + " slips, "
-                    + badges + " badges");
-
-            Check.assertTrue("chapter " + chapter + " can be won: bot cleared " + cleared + " of " + RUNS,
-                    cleared >= MUST_CLEAR);
+            Tally bot = playChapter(chapter, 0, 0);
+            System.out.println(bot.describe("bot", chapter));
+            Check.assertTrue("chapter " + chapter + " can be won: bot cleared " + bot.cleared + " of " + RUNS,
+                    bot.cleared >= MUST_CLEAR);
             Check.assertTrue("chapter " + chapter + " leaves the bot enough time",
-                    outOfTime <= RUNS / 4);
-            Check.assertTrue("the badge of chapter " + chapter + " can be earned", badges > 0);
-            totalToolChanges += toolChanges;
+                    bot.outOfTime <= RUNS / 4);
+            Check.assertTrue("the badge of chapter " + chapter + " can be earned", bot.badges > 0);
+            totalToolChanges += bot.toolChanges;
+
+            Tally careless = playChapter(chapter, CARELESS_PAUSE_S, CARELESS_AIM_ERROR);
+            System.out.println(careless.describe("careless bot", chapter));
+            Check.assertTrue("chapter " + chapter + " gives a slow, sloppy player enough time: ran out "
+                    + careless.outOfTime + " times of " + RUNS, careless.outOfTime <= RUNS / 10);
         }
         // Proof that the bot plays by the tool rules: it has to change tools to lift mixed trash.
         Check.assertTrue("the bot changes tools when the trash calls for it", totalToolChanges > 0);
     }
 
+    /** Plays one chapter 100 times, each time with a different (but repeatable) game and aim. */
+    private static Tally playChapter(int chapter, double pauseSeconds, double aimError) {
+        Tally tally = new Tally();
+        for (long seed = 1; seed <= RUNS; seed++) {
+            GameManager game = new GameManager(
+                    ChapterData.forChapter(chapter), Loadout.forChapter(chapter), new Random(seed));
+            tally.toolChanges += play(game, pauseSeconds, aimError, new Random(seed * 31));
+            tally.slips += game.getStats().getSlips();
+            if (game.getStatus() == ChapterStatus.CLEARED) {
+                tally.cleared++;
+                tally.timeLeftTotal += game.getTimeLeft();
+                if (Badge.forChapter(chapter).isEarnedBy(ChapterResult.from(game))) {
+                    tally.badges++;
+                }
+            } else if (game.getStatus() == ChapterStatus.FAILED_TIME) {
+                tally.outOfTime++;
+            }
+        }
+        return tally;
+    }
+
     /**
      * Plays one chapter attempt to its end.
      *
+     * @param pauseSeconds how long the bot does nothing after each throw
+     * @param aimError     how far off target the bot may steer, in pixels
+     * @param aim          picks the error of each throw
      * @return how many times the bot changed tools
      */
-    private static int play(GameManager game) {
+    private static int play(GameManager game, double pauseSeconds, double aimError, Random aim) {
         Hook hook = game.getBoat().getHook();
         OceanObject target = null;
+        double miss = 0;       // how far off this throw is aimed
+        double pause = 0;      // time left of the pause after the last throw
+        boolean lineWasOut = false;
         int toolChanges = 0;
 
         for (int i = 0; i < MAX_STEPS && game.isPlaying(); i++) {
             int steer = 0;
-            if (hook.isSwinging()) {
+            if (lineWasOut && hook.isSwinging()) {
+                pause = pauseSeconds;   // the line just came back
+            }
+            lineWasOut = hook.isLineOut();
+
+            if (pause > 0) {
+                pause -= STEP;
+            } else if (hook.isSwinging()) {
                 if (target == null || !target.isCatchable() || !game.getObjects().contains(target)) {
                     target = pickTarget(game);
+                    miss = (aim.nextDouble() * 2 - 1) * aimError;
                 }
                 if (target != null && game.getSelectedTool() != toolFor(game, target)) {
                     // Wrong tool on the line: change it (the game refuses while the last change is too recent).
@@ -114,7 +153,7 @@ public final class BalanceBotTest {
                         toolChanges++;
                     }
                 } else if (target != null) {
-                    double offset = aimX(target) - game.getBoat().getX();
+                    double offset = aimX(target) + miss - game.getBoat().getX();
                     if (Math.abs(offset) > CLOSE_ENOUGH) {
                         steer = (offset > 0) ? 1 : -1;
                     } else if (Math.abs(hook.getAngle()) < STRAIGHT_DOWN) {

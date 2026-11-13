@@ -54,7 +54,7 @@ public final class LevelSpawnTest {
 
     private static void chapterNumbersMatchThePlan() {
         int[] quotas = {100, 200, 350};
-        double[] seconds = {65, 90, 105};
+        double[] seconds = {80, 90, 105};
         int[] health = {3, 4, 5};
         for (int n = 1; n <= ChapterData.CHAPTER_COUNT; n++) {
             ChapterData chapter = ChapterData.forChapter(n);

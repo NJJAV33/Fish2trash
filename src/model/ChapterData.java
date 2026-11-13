@@ -80,7 +80,7 @@ public final class ChapterData {
                         SpawnRule.of(ObjectKind.BIG_FISH).count(3, 3).speed(70, 190).y(170, 500).start(12).build()),
                 List.of(
                         TutorialPrompt.aboutGear(1, StoryText.TUT_MAGNET, StoryText.TUT_MAGNET_ALT),
-                        TutorialPrompt.at(13, StoryText.TUT_BIGFISH)));
+                        TutorialPrompt.aboutGear(13, StoryText.TUT_BIGFISH, StoryText.TUT_BIGFISH_ALT)));
     }
 
     /** Chapter 3: big, slow ghost nets deep down, guarded by dangerous fish. */

@@ -37,7 +37,8 @@ public final class StoryText {
             + "Hook - bottle 10.   Magnet - can 20.   Net Cutter - net 50.\n"
             + "Hooking a fish costs health. Some fish cost double.\n"
             + "Fill the quota before the time runs out.\n"
-            + "Run out of time or health and you are fired.";
+            + "Run out of time or health and you are fired.\n"
+            + "Clear well for a badge. Fast, healthy runs score higher.";
     public static final String BACK_PROMPT = "ENTER: back to menu";
 
     // ---- Tools ----
@@ -132,7 +133,8 @@ public final class StoryText {
     public static final String TUT_QUOTA = "Reach 100 points before time or health runs out.";
     public static final String TUT_MAGNET = "The Magnet is on: cans stick to it. 1 = Hook for bottles.";
     public static final String TUT_MAGNET_ALT = "Cans are worth 20 points. Hook them!";
-    public static final String TUT_BIGFISH = "Big fish are fast. Wait for a gap before you drop.";
+    public static final String TUT_BIGFISH = "Big fish: the Magnet ignores them, the Hook does not.";
+    public static final String TUT_BIGFISH_ALT = "Big fish are fast. Wait for a gap before you drop.";
     public static final String TUT_CUTTER = "The Net Cutter is on: it frees nets. 1 Hook, 2 Magnet.";
     public static final String TUT_CUTTER_ALT = "Nets are worth 50 points. Hook them!";
     public static final String TUT_PUFFER = "Pufferfish swell up near the hook. Steer clear!";
