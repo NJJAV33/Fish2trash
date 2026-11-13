@@ -349,6 +349,7 @@ classDiagram
         +onChapterEnded(game) ChapterResult
         +isFinished() boolean
         +getTotalPoints() int
+        +getRunScore() int
         +hasBadge(badge) boolean
     }
 
@@ -498,6 +499,7 @@ classDiagram
         +forChapter(chapter)$ Badge
         +isEarnedBy(result) boolean
         ~meetsRule(result)* boolean
+        +getBonus() int
         +getDisplayName() String
     }
 
@@ -808,6 +810,73 @@ classDiagram
     AudioPlayer ..> SoundState : reports
     AudioEventListener --> AudioPlayer : plays through
     SynthAudioPlayer ..> SoundEffect : renders all at start
+```
+
+## 7. Scores (packages `game` and `util`)
+
+When a run ends, `ScoreCalculator` turns it into one number. If that number makes
+the list, the player types a name and a `ScoreEntry` goes into the `HighScoreTable`,
+which keeps itself on disk through `HighScoreStore`. `ScoreEntry` implements Java's
+own `Comparable` interface, which is how the list gets sorted.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class ScoreCalculator {
+        +chapterScore(result)$ int
+        +retryPenalty(retries)$ int
+        +runScore(chapters, badges, retries)$ int
+    }
+
+    class ScoreEntry {
+        <<Comparable>>
+        -name String
+        -score int
+        -chaptersCleared int
+        -badges Set
+        -retries int
+        -date LocalDate
+        +forRun(name, session, date)$ ScoreEntry
+        +cleanName(typed)$ String
+        +toLine() String
+        +parse(line)$ ScoreEntry
+        +compareTo(other) int
+    }
+
+    class HighScoreTable {
+        -entries List
+        -latest ScoreEntry
+        +qualifies(score) boolean
+        +add(entry) int
+        +getEntries() List
+        +isSaved() boolean
+    }
+
+    class HighScoreStore {
+        -file Path
+        +inUserHome()$ HighScoreStore
+        +readLines() List
+        +writeLines(lines)
+    }
+
+    class HighScoreException {
+        +HighScoreException(message, cause)
+    }
+
+    class GameSession
+    class ChapterResult
+    class Badge
+
+    GameSession ..> ScoreCalculator : asks for the run score
+    ScoreCalculator ..> ChapterResult : scores
+    ScoreCalculator ..> Badge : adds the bonus of
+    ScoreEntry ..> GameSession : is made from
+    ScoreEntry o-- Badge : 0 to 3
+    ScoreEntry ..> HighScoreException : parse throws
+    HighScoreTable *-- ScoreEntry : best 10, sorted
+    HighScoreTable --> HighScoreStore : loads and saves through
+    HighScoreStore ..> HighScoreException : throws
 ```
 
 ## Classes without a box

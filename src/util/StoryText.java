@@ -18,6 +18,7 @@ public final class StoryText {
     public static final String CREDITS = "Made by team LangoyLaban for CIS 2103, University of San Carlos.";
     public static final String MENU_START = "Start";
     public static final String MENU_HOW_TO = "How to Play";
+    public static final String MENU_SCORES = "High Scores";
     public static final String MENU_QUIT = "Quit";
     public static final String MENU_HINT = "UP / DOWN: choose     ENTER: select";
 
@@ -153,6 +154,7 @@ public final class StoryText {
     public static final String CLEAR_TIME = "Time left";
     public static final String CLEAR_HEALTH = "Health left";
     public static final String CLEAR_FISH = "Fish hooked";
+    public static final String CLEAR_SCORE = "Chapter score";
     public static final String CONTINUE_PROMPT = "ENTER: continue";
 
     // ---- Badges: a name, the line shown when earned, and how to earn it ----
@@ -220,8 +222,23 @@ public final class StoryText {
     public static final String RECAP_TRASH = "Trash collected";
     public static final String RECAP_FISH = "Fish hooked";
     public static final String RECAP_CHAPTERS = "Chapters cleared";
-    public static final String RECAP_SCORE = "Total points";
+    public static final String RECAP_SCORE = "Run score";
     public static final String RECAP_BADGES = "Badges";
+
+    // ---- High scores ----
+    public static final String PLAYER_NAME = "NICO";   // used when no name is typed
+    public static final String NAME_TITLE = "NEW HIGH SCORE";
+    public static final String NAME_LABEL = "Your name";
+    public static final String NAME_PROMPT = "Type a name, up to %d letters.     ENTER: save";
+    public static final String SCORES_TITLE = "HIGH SCORES";
+    public static final String SCORES_RANK = "#";
+    public static final String SCORES_NAME = "NAME";
+    public static final String SCORES_SCORE = "SCORE";
+    public static final String SCORES_CHAPTERS = "CLEARED";
+    public static final String SCORES_BADGES = "BADGES";
+    public static final String SCORES_DATE = "DATE";
+    public static final String SCORES_EMPTY = "No scores yet. Finish a run to get on the list.";
+    public static final String SCORES_NOT_SAVED = "The scores could not be saved. They last until the game closes.";
 
     // ---- Pause ----
     public static final String PAUSE_TITLE = "PAUSED";
