@@ -25,6 +25,7 @@ public final class GameScreen implements Screen {
     private final SceneRenderer renderer;
     private final HudPainter hud = new HudPainter();
     private final EffectsSystem effects = new EffectsSystem();
+    private final AudioEventListener sounds;
     private final PauseOverlay pauseOverlay;
     private GameManager game;
     private String tip;          // the tip on screen, or null
@@ -38,6 +39,7 @@ public final class GameScreen implements Screen {
         this.input = input;
         this.renderer = renderer;
         this.pauseOverlay = new PauseOverlay(screens);
+        this.sounds = new AudioEventListener(screens.getAudio());
     }
 
     @Override
@@ -45,7 +47,8 @@ public final class GameScreen implements Screen {
         game = screens.getSession().startChapter();
         game.addListener(this::onGameEvent);   // this screen listens for tips to show
         effects.reset(game);
-        game.addListener(effects);             // and the effects listen for catches and hits
+        game.addListener(effects);             // the effects listen for catches and hits
+        game.addListener(sounds);              // and so do the sounds
         tip = null;
         time = 0;
         secondsSinceEnd = 0;
@@ -112,7 +115,7 @@ public final class GameScreen implements Screen {
         world.dispose();
         effects.paintFlash(g);
 
-        hud.paint(g, game, time);
+        hud.paint(g, game, time, screens.getAudio().getState());
         hud.paintToast(g, tip, tipAge);
     }
 }

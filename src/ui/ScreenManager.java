@@ -7,12 +7,13 @@ import java.awt.Graphics2D;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Random;
+import util.AudioPlayer;
 import util.GameConstants;
 
 /**
  * Knows which screen is showing and moves between screens with a short fade.
- * It also holds the run in progress (the GameSession), because every screen
- * needs to read it.
+ * It also holds what every screen needs: the run in progress (the
+ * GameSession) and the sound player.
  */
 public final class ScreenManager {
 
@@ -25,6 +26,16 @@ public final class ScreenManager {
     private double darkness;    // 0 = screen fully visible, 1 = fully black
     private Screen overlay;     // drawn on top while the game is paused, or null
     private GameSession session;
+    private final AudioPlayer audio;
+
+    public ScreenManager(AudioPlayer audio) {
+        this.audio = audio;
+    }
+
+    /** The sound player every screen shares. */
+    public AudioPlayer getAudio() {
+        return audio;
+    }
 
     public void register(GameState state, Screen screen) {
         screens.put(state, screen);

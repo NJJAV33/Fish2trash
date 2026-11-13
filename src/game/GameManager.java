@@ -36,6 +36,7 @@ public final class GameManager implements GameView, CatchResolver {
     private int boatDirection;
     private ChapterStatus status;
     private boolean quotaReached;
+    private int lastAnnouncedSecond;   // the last "seconds left" that was announced as a low-time tick
 
     // True once the current launch has touched something or was recalled.
     // A launch that comes back with this still false was a miss.
@@ -108,6 +109,7 @@ public final class GameManager implements GameView, CatchResolver {
             fail(ChapterStatus.FAILED_TIME);
             return;
         }
+        announceLowTime();
 
         boat.moveBy(boatDirection, dt);
         Hook hook = boat.getHook();
@@ -121,6 +123,15 @@ public final class GameManager implements GameView, CatchResolver {
         checkHookCollision(hook);
         if (lineWasOut && hook.isSwinging()) {
             onHookReturned(hook);
+        }
+    }
+
+    /** In the last seconds, announces each new second once, so the screen and sound can warn. */
+    private void announceLowTime() {
+        int secondsLeft = (int) Math.ceil(timeLimit.getRemaining());
+        if (!timeLimit.isFrozen() && secondsLeft <= GameConstants.LOW_TIME_S && secondsLeft != lastAnnouncedSecond) {
+            lastAnnouncedSecond = secondsLeft;
+            emit(GameEvent.withValue(EventType.LOW_TIME_TICK, secondsLeft));
         }
     }
 

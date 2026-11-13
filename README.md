@@ -42,7 +42,8 @@ java -cp out Main
 |---|---|
 | `A` / `D` or arrow keys | Move the boat (only while the hook is swinging) |
 | `Space` | Drop the hook. Press again while it is going out to pull it back |
-| `P` or `Esc` | Pause (resume, restart the chapter, or quit to the menu) |
+| `P` or `Esc` | Pause (resume, sound on or off, restart the chapter, or quit to the menu) |
+| `M` | Sound on or off, on any screen |
 | `Enter` | Confirm, next story page |
 | `Esc` on a story page | Skip the story |
 | `Up` / `Down` | Move in menus |
@@ -90,6 +91,7 @@ FISH2TRASH/
 │   │   ├── GamePanel        frame timer and keyboard
 │   │   ├── ScreenManager    which screen is showing, fades between them
 │   │   ├── Screen           interface every screen implements
+│   │   ├── AudioEventListener   picks the sound for each game event
 │   │   ├── MainMenu, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
 │   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
@@ -97,7 +99,10 @@ FISH2TRASH/
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
-│       └── Mathx            clamp, lerp, easing
+│       ├── Mathx            clamp, lerp, easing
+│       ├── ToneSynth        turns a recipe of tones into sound samples
+│       ├── SoundEffect      enum: one recipe per sound in the game
+│       └── AudioPlayer      interface: SynthAudioPlayer (real), SilentAudioPlayer (no sound)
 ├── test/                    tests, run by scripts/test
 ├── docs/                    class diagram, screenshots, proposal notes
 ├── scripts/                 build, run and test (.sh and .bat)
@@ -124,7 +129,7 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
    attaches itself to the hook; a fish costs health and swims away. The manager never
    checks which one it was.
 8. The manager announces what happened as `GameEvent`s to its `GameListener`s
-   (the stats counter, and the screen that shows tips).
+   (the stats counter, the effects, the sounds, and the screen that shows tips).
 9. When the chapter ends, the session records a `ChapterResult` and the screens move on:
    report card and next chapter after a clear, pink slip and retry after a fail.
 
@@ -134,13 +139,14 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 |---|---|
 | Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. Lists are handed out read-only. |
 | Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`. `Equipment` → `PlainHook`. |
-| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver` and `ObjectPainter` are interfaces that hide what is behind them. |
+| Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver`, `ObjectPainter` and `AudioPlayer` are interfaces that hide what is behind them. |
 | Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
 | Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
 
 Patterns used: observer (`GameListener`), template method (`OceanObject.update`,
 `Equipment.attempt`), a state machine per screen (`ScreenManager`) and inside
-`Hook` and `Barracuda`.
+`Hook` and `Barracuda`, null object (`SilentAudioPlayer` stands in when there is no
+sound device or in tests).
 
 Design rules, checked by `ArchitectureTest` on every test run: `model` and `game` have
 no drawing, window or sound imports; nothing uses `instanceof`; no public fields
@@ -164,9 +170,11 @@ no test library is needed. The script exits with an error if any check fails.
 | `BalanceBotTest` | A simple computer player must be able to win every chapter at least half the time |
 | `StoryTextTest` | Every story page, fail message and tip fits its box |
 | `ScreenFlowTest` | Key presses lead to the right screens: menu, story, pause, fired screen, retry |
+| `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
+| `AudioEventTest` | The right sound for each game event; ten clock ticks in the last ten seconds |
 | `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the math helpers |
 
-The tests cannot judge how the game feels to play. Use the checklist below for that.
+The tests cannot judge how the game feels or sounds. Use the checklist below for that.
 
 ## Manual testing checklist
 
@@ -206,6 +214,13 @@ The tests cannot judge how the game feels to play. Use the checklist below for t
 - [ ] `P` or `Esc` pauses. Resume, Restart chapter and Quit to menu all work.
 - [ ] Clicking another window pauses the game.
 
+**Sound**
+- [ ] Dropping the hook, each kind of trash, a fish hit, reaching the quota, clearing
+      and failing a chapter each make their own sound.
+- [ ] The clock ticks during the last 10 seconds, higher in the last 5.
+- [ ] `M` turns sound off and on at once; the speaker icon under the score follows.
+- [ ] With no speakers or headphones the game still runs, silent.
+
 ## Team
 
 LangoyLaban, BSIT 2.
@@ -218,8 +233,9 @@ LangoyLaban, BSIT 2.
 
 ## Credits
 
-Everything on screen is drawn in code with Java2D, and all text is written by the
-team. The game uses no external images, fonts, sounds or libraries.
+Everything on screen is drawn in code with Java2D, every sound is built from sine,
+triangle and square waves in code (`javax.sound.sampled`), and all text is written by
+the team. The game uses no external images, fonts, sound files or libraries.
 
 ## Contributing
 

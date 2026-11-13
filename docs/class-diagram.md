@@ -567,6 +567,12 @@ classDiagram
         +getCleaned() ChapterPalette
     }
 
+    class AudioEventListener {
+        -soundForEvent Map
+        -soundForCatch Map
+        +onGameEvent(event)
+    }
+
     class StoryBoxPainter
     class PortraitPainter
     class GameSession
@@ -594,6 +600,7 @@ classDiagram
     GameScreen *-- PauseOverlay
     GameScreen *-- HudPainter
     GameScreen *-- EffectsSystem
+    GameScreen *-- AudioEventListener
     GameScreen --> GameManager : plays
     GameScreen --> SceneRenderer
     GameScreen --> InputState : reads
@@ -610,6 +617,71 @@ classDiagram
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
 `CanPainter`, `NetPainter`, `SmallFishPainter`, `BigFishPainter`, `PufferPainter`
 and `BarracudaPainter`.
+
+## 6. Sound (package `util`)
+
+No sound is loaded from a file. `ToneSynth` makes the samples from recipes, and
+`SynthAudioPlayer` mixes and plays them on its own thread.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class SoundEffect {
+        <<enumeration>>
+        HOOK_LAUNCH
+        CATCH_PLASTIC
+        CATCH_CAN
+        CATCH_NET
+        FISH_HIT
+        QUOTA
+        CHAPTER_CLEAR
+        CHAPTER_FAIL
+        +render(pitch) short[]
+        +isVaried() boolean
+    }
+
+    class ToneSynth {
+        +SAMPLE_RATE int$
+        +render(lengthMs, pitch, tones)$ short[]
+    }
+
+    class AudioPlayer {
+        <<interface>>
+        +play(effect)
+        +setMuted(muted)
+        +isMuted() boolean
+        +getState() SoundState
+    }
+
+    class SynthAudioPlayer {
+        -requests BlockingQueue
+        -muted boolean
+        -unavailable boolean
+        +play(effect)
+    }
+
+    class SilentAudioPlayer {
+        +play(effect)
+    }
+
+    class AudioEventListener
+
+    class SoundState {
+        <<enumeration>>
+        ON
+        MUTED
+        UNAVAILABLE
+    }
+
+    SoundEffect ..> ToneSynth : is rendered by
+    AudioPlayer <|.. SynthAudioPlayer
+    AudioPlayer <|.. SilentAudioPlayer
+    AudioPlayer ..> SoundEffect : plays
+    AudioPlayer ..> SoundState : reports
+    AudioEventListener --> AudioPlayer : plays through
+    SynthAudioPlayer ..> SoundEffect : renders all at start
+```
 
 ## Classes without a box
 

@@ -13,6 +13,7 @@ import ui.render.TextDraw;
 import ui.render.UiPalette;
 import util.GameConstants;
 import util.Mathx;
+import util.SoundEffect;
 import util.StoryText;
 
 /** "You're fired": the pink slip after a lost chapter, with a retry. */
@@ -48,6 +49,7 @@ public final class GameOverScreen implements Screen {
     @Override
     public void keyPressed(int keyCode) {
         if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_R) {
+            screens.getAudio().play(SoundEffect.MENU_SELECT);
             screens.go(GameState.STORY);   // the session is still on the failed chapter
         } else if (keyCode == KeyEvent.VK_ESCAPE) {
             screens.go(GameState.MENU);

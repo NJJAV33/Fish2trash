@@ -28,6 +28,7 @@ public final class StoryText {
             + "SPACE                 Drop the hook\n"
             + "SPACE again           Pull the hook back early\n"
             + "P or ESC              Pause\n"
+            + "M                     Sound on or off\n"
             + "\n"
             + "Hook trash to earn points: bottle 10, can 20, net 50.\n"
             + "Hooking a fish costs health. Some fish cost double.\n"
@@ -178,11 +179,14 @@ public final class StoryText {
     public static final String PAUSE_RESUME = "Resume";
     public static final String PAUSE_RESTART = "Restart chapter";
     public static final String PAUSE_QUIT = "Quit to menu";
+    public static final String PAUSE_SOUND_ON = "Sound: on";
+    public static final String PAUSE_SOUND_OFF = "Sound: off";
+    public static final String PAUSE_SOUND_NONE = "Sound: not available";
 
     // ---- Small prompts ----
     public static final String NEXT_PROMPT = "ENTER";
     public static final String SKIP_PROMPT = "ESC: skip";
-    public static final String PLAY_HINT = "A / D: move     SPACE: drop or recall hook     P: pause";
+    public static final String PLAY_HINT = "A / D: move     SPACE: drop or recall hook     P: pause     M: sound";
     public static final String HUD_OBJECTIVE = "Hook trash, spare the fish";
     public static final String HUD_SCORE = "SCORE";
 
