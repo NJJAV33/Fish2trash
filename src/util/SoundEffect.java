@@ -99,6 +99,15 @@ public enum SoundEffect {
             Tone.of(Wave.SINE, 660).lasting(70).gain(0.25).shape(2, 30, 0.4, 25),
             Tone.of(Wave.SINE, 880).from(60).gain(0.25).shape(2, 30, 0.4, 35)),
 
+    /** The run made the high-score list: five quick notes up to a bright last one. */
+    HIGH_SCORE(600, false,
+            Tone.of(Wave.SINE, 523).lasting(100).gain(0.24).shape(2, 35, 0.3, 40),
+            Tone.of(Wave.SINE, 659).from(70).lasting(100).gain(0.24).shape(2, 35, 0.3, 40),
+            Tone.of(Wave.SINE, 784).from(140).lasting(100).gain(0.24).shape(2, 35, 0.3, 40),
+            Tone.of(Wave.SINE, 1047).from(210).lasting(100).gain(0.24).shape(2, 35, 0.3, 40),
+            Tone.of(Wave.SINE, 1319).from(280).lasting(100).gain(0.24).shape(2, 35, 0.3, 40),
+            Tone.of(Wave.SINE, 1568).from(350).gain(0.24).shape(2, 35, 0.3, 150)),
+
     /** The ending: a rising run of notes that opens into a long chord. */
     ENDING(1880, false,
             Tone.of(Wave.TRIANGLE, 262).lasting(180).gain(0.26).shape(5, 60, 0.5, 60),

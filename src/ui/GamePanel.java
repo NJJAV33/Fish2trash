@@ -1,6 +1,7 @@
 package ui;
 
 import game.GameState;
+import game.HighScoreTable;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -40,10 +41,13 @@ public final class GamePanel extends JPanel {
     private final Timer timer;
     private long lastTickNanos;
 
-    /** @param audio how the game makes sound; tests pass a silent player */
-    public GamePanel(AudioPlayer audio) {
+    /**
+     * @param audio      how the game makes sound; tests pass a silent player
+     * @param highScores the high-score list; tests pass one kept in a temporary folder
+     */
+    public GamePanel(AudioPlayer audio, HighScoreTable highScores) {
         this.audio = audio;
-        this.screens = new ScreenManager(audio);
+        this.screens = new ScreenManager(audio, highScores);
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
         setBackground(Color.BLACK);   // shows at the edges when the scene shakes
         setFocusable(true);   // a panel only receives keys if it can have the focus
@@ -69,6 +73,8 @@ public final class GamePanel extends JPanel {
         screens.register(GameState.CHAPTER_CLEAR, new ChapterClearScreen(screens, renderer));
         screens.register(GameState.GAME_OVER, new GameOverScreen(screens, renderer));
         screens.register(GameState.ENDING, new VictoryScreen(screens, renderer));
+        screens.register(GameState.NAME_ENTRY, new NameEntryScreen(screens, renderer));
+        screens.register(GameState.HIGH_SCORES, new HighScoreScreen(screens, renderer));
         screens.start(GameState.MENU);
 
         timer = new Timer(FRAME_DELAY_MS, e -> tick());
@@ -132,9 +138,6 @@ public final class GamePanel extends JPanel {
             boolean fresh = input.press(e.getKeyCode(), e.getWhen());
             if (!fresh) {
                 return;   // repeats of a held key are not passed on
-            }
-            if (e.getKeyCode() == KeyEvent.VK_M) {
-                audio.setMuted(!audio.isMuted());   // M switches the sound on any screen
             }
             screens.keyPressed(e.getKeyCode());
         }

@@ -2,8 +2,10 @@ package ui;
 
 import game.GameSession;
 import game.GameState;
+import game.HighScoreTable;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Random;
@@ -13,7 +15,7 @@ import util.GameConstants;
 /**
  * Knows which screen is showing and moves between screens with a short fade.
  * It also holds what every screen needs: the run in progress (the
- * GameSession) and the sound player.
+ * GameSession), the high-score list and the sound player.
  */
 public final class ScreenManager {
 
@@ -27,9 +29,11 @@ public final class ScreenManager {
     private Screen overlay;     // drawn on top while the game is paused, or null
     private GameSession session;
     private final AudioPlayer audio;
+    private final HighScoreTable highScores;
 
-    public ScreenManager(AudioPlayer audio) {
+    public ScreenManager(AudioPlayer audio, HighScoreTable highScores) {
         this.audio = audio;
+        this.highScores = highScores;
     }
 
     /** The sound player every screen shares. */
@@ -90,6 +94,9 @@ public final class ScreenManager {
     }
 
     public void keyPressed(int keyCode) {
+        if (keyCode == KeyEvent.VK_M && !isTakingText()) {
+            audio.setMuted(!audio.isMuted());   // M switches the sound on any screen
+        }
         if (isFading()) {
             return;   // no input in the middle of a screen change
         }
@@ -104,6 +111,11 @@ public final class ScreenManager {
         if (!isFading() && overlay == null) {
             screens.get(current).keyTyped(character);
         }
+    }
+
+    /** True while the screen in front is a text field, where M is just a letter. */
+    private boolean isTakingText() {
+        return overlay == null && screens.get(current).isTakingText();
     }
 
     private boolean isFading() {
@@ -141,5 +153,17 @@ public final class ScreenManager {
 
     public GameSession getSession() {
         return session;
+    }
+
+    public HighScoreTable getHighScores() {
+        return highScores;
+    }
+
+    /**
+     * Where to go when the run is over: to the name entry if its score
+     * makes the high-score list, otherwise to the screen given here.
+     */
+    public GameState afterRun(GameState otherwise) {
+        return highScores.qualifies(session.getRunScore()) ? GameState.NAME_ENTRY : otherwise;
     }
 }

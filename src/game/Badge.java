@@ -13,7 +13,8 @@ import util.StoryText;
 public enum Badge {
 
     /** Chapter 1: clearing it is enough. */
-    ECO_ROOKIE(1, StoryText.BADGE_1_NAME, StoryText.BADGE_1_EARNED, StoryText.BADGE_1_LOCKED) {
+    ECO_ROOKIE(1, GameConstants.BADGE_BONUS_1,
+            StoryText.BADGE_1_NAME, StoryText.BADGE_1_EARNED, StoryText.BADGE_1_LOCKED) {
         @Override
         boolean meetsRule(ChapterResult result) {
             return true;
@@ -21,7 +22,8 @@ public enum Badge {
     },
 
     /** Chapter 2: the right tool nearly every time, and most throws on target. */
-    SORTER(2, StoryText.BADGE_2_NAME, StoryText.BADGE_2_EARNED, StoryText.BADGE_2_LOCKED) {
+    SORTER(2, GameConstants.BADGE_BONUS_2,
+            StoryText.BADGE_2_NAME, StoryText.BADGE_2_EARNED, StoryText.BADGE_2_LOCKED) {
         @Override
         boolean meetsRule(ChapterResult result) {
             return result.getSlips() <= GameConstants.SORTER_MAX_SLIPS
@@ -30,7 +32,8 @@ public enum Badge {
     },
 
     /** Chapter 3: plenty of time left, and hardly any health lost. */
-    CHAMPION(3, StoryText.BADGE_3_NAME, StoryText.BADGE_3_EARNED, StoryText.BADGE_3_LOCKED) {
+    CHAMPION(3, GameConstants.BADGE_BONUS_3,
+            StoryText.BADGE_3_NAME, StoryText.BADGE_3_EARNED, StoryText.BADGE_3_LOCKED) {
         @Override
         boolean meetsRule(ChapterResult result) {
             return result.getTimeFractionLeft() >= GameConstants.CHAMPION_TIME_FRACTION
@@ -39,12 +42,14 @@ public enum Badge {
     };
 
     private final int chapter;
+    private final int bonus;
     private final String displayName;
     private final String earnedText;
     private final String lockedText;
 
-    Badge(int chapter, String displayName, String earnedText, String lockedText) {
+    Badge(int chapter, int bonus, String displayName, String earnedText, String lockedText) {
         this.chapter = chapter;
+        this.bonus = bonus;
         this.displayName = displayName;
         this.earnedText = earnedText;
         this.lockedText = lockedText;
@@ -70,6 +75,11 @@ public enum Badge {
 
     public int getChapter() {
         return chapter;
+    }
+
+    /** What the badge adds to the run score. */
+    public int getBonus() {
+        return bonus;
     }
 
     public String getDisplayName() {

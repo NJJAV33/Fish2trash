@@ -103,6 +103,19 @@ public final class GameConstants {
     public static final double CHAMPION_TIME_FRACTION = 0.40;   // share of the clock that must be left
     public static final int CHAMPION_MAX_HP_LOST = 1;
 
+    // ---- Run score: what a cleared chapter is worth, and what a failed attempt costs ----
+    public static final int SCORE_POINT_MULT = 10;          // per point of trash
+    public static final int TIME_BONUS_PER_S = 20;          // per whole second left on the clock
+    public static final int HEALTH_BONUS_PER_HP = 100;      // per health left
+    public static final int BADGE_BONUS_1 = 300;
+    public static final int BADGE_BONUS_2 = 500;
+    public static final int BADGE_BONUS_3 = 1000;
+    public static final int RETRY_PENALTY_BASE = 500;       // the 1st failed attempt costs 500, the 2nd 1000 more, ...
+
+    // ---- High scores ----
+    public static final int HIGHSCORE_MAX_ENTRIES = 10;
+    public static final int HIGHSCORE_NAME_MAX_LEN = 12;
+
     // ---- Spawning (the tables themselves are in model.ChapterData) ----
     public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
     public static final double MIN_SPAWN_Y = 210;          // default spawn depth range

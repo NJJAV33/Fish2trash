@@ -1,6 +1,8 @@
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import game.HighScoreTable;
 import ui.GamePanel;
+import util.HighScoreStore;
 import util.SynthAudioPlayer;
 
 /**
@@ -16,7 +18,8 @@ public class Main {
 
     private static void createAndShowWindow() {
         JFrame frame = new JFrame("FISH2TRASH");
-        GamePanel panel = new GamePanel(new SynthAudioPlayer());
+        HighScoreTable highScores = new HighScoreTable(HighScoreStore.inUserHome());
+        GamePanel panel = new GamePanel(new SynthAudioPlayer(), highScores);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(panel);

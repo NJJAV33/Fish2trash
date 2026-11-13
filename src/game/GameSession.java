@@ -103,6 +103,11 @@ public final class GameSession {
         return total;
     }
 
+    /** The score of the whole run so far: cleared chapters, badges and failed attempts. */
+    public int getRunScore() {
+        return ScoreCalculator.runScore(clearedChapters, badges, retries);
+    }
+
     /** Pieces of trash collected in the cleared chapters. */
     public int getTotalTrash() {
         int total = 0;

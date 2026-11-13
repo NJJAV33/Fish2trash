@@ -24,6 +24,8 @@ public final class TestRunner {
         run("EquipmentMatrixTest", EquipmentMatrixTest::run);
         run("EquipmentTest", EquipmentTest::run);
         run("GameEventTest", GameEventTest::run);
+        run("HighScoreScreenTest", HighScoreScreenTest::run);
+        run("HighScoreStoreTest", HighScoreStoreTest::run);
         run("HintTest", HintTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);
         run("LoadoutTest", LoadoutTest::run);
@@ -32,6 +34,7 @@ public final class TestRunner {
         run("OceanObjectTest", OceanObjectTest::run);
         run("PlayerTest", PlayerTest::run);
         run("RenderTest", RenderTest::run);
+        run("ScoreFlowTest", ScoreFlowTest::run);
         run("ScreenFlowTest", ScreenFlowTest::run);
         run("SessionTest", SessionTest::run);
         run("StoryTextTest", StoryTextTest::run);

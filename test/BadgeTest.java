@@ -173,7 +173,7 @@ public final class BadgeTest {
 
     private static void theClearScreenPresentsAnEarnedBadgeOnce() {
         RecordingAudioPlayer audio = new RecordingAudioPlayer();
-        ScreenManager screens = new ScreenManager(audio);
+        ScreenManager screens = new ScreenManager(audio, TempScores.newTable());
         screens.startNewRun();
         clearCleanly(screens.getSession());
 
@@ -195,7 +195,7 @@ public final class BadgeTest {
 
     private static void theClearScreenStaysQuietForAMissedBadge() {
         RecordingAudioPlayer audio = new RecordingAudioPlayer();
-        ScreenManager screens = new ScreenManager(audio);
+        ScreenManager screens = new ScreenManager(audio, TempScores.newTable());
         screens.startNewRun();
         clearCleanly(screens.getSession());
         GameManager second = screens.getSession().startChapter();

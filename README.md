@@ -13,6 +13,7 @@ three chapters and the reef comes back to life.
 | ![Chapter 1](docs/screenshots/chapter1.png) | ![Chapter 2](docs/screenshots/chapter2.png) |
 | ![Chapter 3](docs/screenshots/chapter3.png) | ![The ending](docs/screenshots/ending.png) |
 | ![A cleared chapter and its badge](docs/screenshots/cleared.png) | ![The shift report](docs/screenshots/report.png) |
+| ![Typing a name for the list](docs/screenshots/name.png) | ![The high-score list](docs/screenshots/highscores.png) |
 
 Team project for CIS 2103 (Object Oriented Programming), University of San Carlos.
 
@@ -49,7 +50,8 @@ java -cp out Main
 | `Q` / `E` | Previous / next tool |
 | `H` | Show the last tip or hint again |
 | `P` or `Esc` | Pause (resume, sound on or off, restart the chapter, or quit to the menu) |
-| `M` | Sound on or off, on any screen |
+| `M` | Sound on or off, on any screen (except while typing a name) |
+| Letters, `Backspace`, `Enter` | Type and save your name when a run makes the high-score list |
 | `Enter` | Confirm, next story page |
 | `Esc` on a story page | Skip the story |
 | `Up` / `Down` | Move in menus |
@@ -94,6 +96,27 @@ What each tool does:
 | Sorter (silver) | 2 | Clear it with at most 1 slip off the wrong tool, and at least 6 of every 10 throws bringing up trash |
 | Champion (gold) | 3 | Clear it with at least 40% of the time left and at most 1 health lost |
 
+### Score and high scores
+
+When a run ends (the story is finished, or you are fired and press `Esc`), it gets a
+run score:
+
+| What | Worth |
+|---|---|
+| Each point of trash in a cleared chapter | 10 |
+| Each whole second left on the clock of a cleared chapter | 20 |
+| Each health left at the end of a cleared chapter | 100 |
+| Badges | Eco Rookie 300, Sorter 500, Champion 1000 |
+| Failed attempts | minus 500 for the first, 1000 more for the second, 1500 more for the third, ... |
+
+The score never goes below zero. The chapter report shows what the chapter was worth.
+
+The ten best runs are kept on the High Scores page of the menu. A run that makes the
+list asks for a name (up to 12 letters; leave it empty for "NICO"). The list is saved
+in `.fish2trash/highscores.txt` in your home folder; delete that file to start a new
+list. If the file cannot be written the game still works, and the list then lasts
+until the game closes.
+
 ## Folder structure
 
 ```
@@ -121,6 +144,8 @@ FISH2TRASH/
 │   │   ├── GameView         what the screen may read from a game
 │   │   ├── ChapterResult, ChapterStatus, FailCause, SessionStats, GameState
 │   │   ├── Badge            enum: one badge per chapter, each with its own rule
+│   │   ├── ScoreCalculator  the run score: chapters, badges, failed attempts
+│   │   ├── ScoreEntry, HighScoreTable   one line of the high-score list, and the list
 │   │   ├── GameEvent, EventType, GameListener   (observer pattern)
 │   │   ├── HintEngine       decides when the player gets a hint
 │   │   └── HintRule         interface, one small class per reason for a hint:
@@ -131,13 +156,15 @@ FISH2TRASH/
 │   │   ├── Screen           interface every screen implements
 │   │   ├── AudioEventListener   picks the sound for each game event
 │   │   ├── MainMenu, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
-│   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen
+│   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen, NameEntryScreen,
+│   │   │   HighScoreScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
 │   │                        water, one painter per object kind and per tool, BadgePainter
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
 │       ├── Mathx            clamp, lerp, easing
+│       ├── HighScoreStore, HighScoreException   the score file, and what goes wrong with it
 │       ├── ToneSynth        turns a recipe of tones into sound samples
 │       ├── SoundEffect      enum: one recipe per sound in the game
 │       └── AudioPlayer      interface: SynthAudioPlayer (real), SilentAudioPlayer (no sound)
@@ -173,6 +200,9 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 9. When the chapter ends, the session records a `ChapterResult`, asks the chapter's
    `Badge` whether that result earns it, and the screens move on: report card and next
    chapter after a clear, pink slip and retry after a fail.
+10. When the run ends, `ScoreCalculator` works out the run score. If the
+    `HighScoreTable` has room for it, `NameEntryScreen` asks for a name and adds a
+    `ScoreEntry`; the table sorts itself and saves through `HighScoreStore`.
 
 ### OOP concepts, and where to point at them
 
@@ -183,7 +213,9 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 | Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver`, `HintRule`, `ObjectPainter`, `ToolPainter` and `AudioPlayer` are interfaces that hide what is behind them. |
 | Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges), `tool.attempt(object)`, `outcome.resolve(...)`, `rule.isTriggered(stats, game)`, `badge.isEarnedBy(result)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
 | Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
-| Custom exception | `Loadout.select()` throws the checked `EquipmentLockedException` for a tool the crew does not have yet. `GameManager.selectTool()` catches it and turns it into a message on screen. |
+| Custom exception | `Loadout.select()` throws the checked `EquipmentLockedException` for a tool the crew does not have yet. `GameManager.selectTool()` catches it and turns it into a message on screen. `HighScoreStore` and `ScoreEntry.parse()` throw the checked `HighScoreException` (it wraps the `IOException`); `HighScoreTable` catches it, skips a damaged line or carries on without the file. |
+| Comparable and collections | `ScoreEntry implements Comparable<ScoreEntry>`, so `Collections.sort` orders the list. `ArrayList` for lists, `EnumMap` and `EnumSet` for lookups and sets keyed by an enum. |
+| File I/O | `HighScoreStore` reads and writes the score file with `java.nio.file`, writing a draft first and swapping it in. |
 | Enums with behaviour | `ObjectKind.create()` and `EquipmentType.create()` build their own objects; `CatchOutcome.resolve()` calls the right method; each `Badge` constant carries its own rule. No `switch` over types. |
 
 Patterns used: observer (`GameListener`), template method (`OceanObject.update`,
@@ -214,6 +246,9 @@ no test library is needed. The script exits with an error if any check fails.
 | `GameEventTest`, `ChapterFlowTest` | The events the game announces; winning, the frozen clock, and both ways to lose |
 | `LevelSpawnTest` | Spawn tables: timing, counts, distance from the hook, and enough trash to finish |
 | `SessionTest` | Moving on after a clear, retrying after a fail |
+| `ScoreFlowTest` | What a chapter, a badge and a failed attempt do to the run score, checked against the numbers in `GameConstants` |
+| `HighScoreStoreTest` | Tidy names; the line format of the score file; the order and length of the list; a restart, a damaged file and a failed save. Uses temporary folders, never your real list |
+| `HighScoreScreenTest` | When a name is asked for, what can be typed, and that the run lands on the list and in the file |
 | `BalanceBotTest` | A simple computer player, changing tools as needed, must be able to win every chapter at least half the time, and to earn each badge |
 | `StoryTextTest` | Every story page, fail message and tip fits its box |
 | `ScreenFlowTest` | Key presses lead to the right screens: menu, story, pause, fired screen, retry |
@@ -259,12 +294,13 @@ The tests cannot judge how the game feels or sounds. Use the checklist below for
 - [ ] `Q` and `E` step through all three tools.
 - [ ] A pufferfish swells when the hook is near. Hooking it costs 2.
 - [ ] A barracuda flashes, then charges. Hooking it costs 2.
-- [ ] Clearing it shows the ending, then the shift report, then the menu.
+- [ ] Clearing it shows the ending, then the shift report, then the name entry.
 
 **Losing and pausing**
 - [ ] Time running out shows the pink slip with a "tide" or "time" message.
 - [ ] Health reaching 0 shows the pink slip with a "fish" message.
-- [ ] Enter retries the same chapter; Esc returns to the menu.
+- [ ] Enter retries the same chapter; Esc ends the run (menu, or the name entry if the
+      run scored enough for the list).
 - [ ] `P` or `Esc` pauses. Resume, Restart chapter and Quit to menu all work.
 - [ ] Clicking another window pauses the game.
 
@@ -283,6 +319,18 @@ The tests cannot judge how the game feels or sounds. Use the checklist below for
 - [ ] Chapter 2 played cleanly: the silver Sorter medal.
 - [ ] Chapter 3 cleared fast with at most 1 health lost: the gold Champion medal.
 - [ ] The shift report at the end shows the three medals, the missed ones in grey.
+
+**High scores**
+- [ ] The menu's High Scores page opens; with no file yet it says "No scores yet".
+- [ ] The chapter report shows a chapter score.
+- [ ] Finish the story: the shift report shows the run score, then the name entry appears
+      with a short fanfare.
+- [ ] Typing shows capital letters; `Backspace` deletes; no more than 12 fit; typing an
+      `M` does not switch the sound.
+- [ ] `Enter` saves and shows the list with your run picked out. Empty name: "NICO".
+- [ ] Close the game and start it again: the run is still on the list.
+- [ ] Clear chapter 1, get fired in chapter 2 and press `Esc`: the name entry appears too.
+- [ ] Get fired in chapter 1 without clearing anything and press `Esc`: straight to the menu.
 
 **Sound**
 - [ ] Dropping the hook, each kind of trash, a fish hit, reaching the quota, clearing

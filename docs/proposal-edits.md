@@ -42,7 +42,7 @@ feature is merged, or move the feature to "Future work" if it is dropped.
       already cleared stay cleared.
 - [ ] **Figure 1:** replace the mockup with a real screenshot. Ready-made ones are in
       `docs/screenshots/` (`chapter1.png`, `chapter2.png`, `chapter3.png`, `menu.png`, `story.png`,
-      `ending.png`, `cleared.png`, `report.png`). Change the caption from "Concept mockup"
+      `ending.png`, `cleared.png`, `report.png`, `name.png`, `highscores.png`). Change the caption from "Concept mockup"
       to "The game in chapter 1".
 - [ ] **2.2 Objects in Water:** the first column header "Objective" should be "Category".
       Add two rows under Marine Wildlife: "Pufferfish (dangerous)" and "Barracuda (dangerous)".
@@ -57,9 +57,12 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] **2.4 Scoring:** the points are right (10, 20, 50). Add: "Reaching the quota stops
       the clock; the chapter is cleared when that catch reaches the boat."
 - [ ] **2.4 Optional extras:** sound effects, a tool for each kind of trash, hints
-      after repeated mistakes and a badge per chapter are in: list them as "Included
-      extras". A high-score list is planned.
-      **(later)** Move it to the "Included extras" line when it is merged.
+      after repeated mistakes, a badge per chapter and a high-score list are all in:
+      list them as "Included extras".
+- [ ] **2.4 Scoring:** add the run score. "Each cleared chapter is worth 10 per point,
+      20 per second left and 100 per health left. Badges add 300, 500 and 1000. Failed
+      attempts cost 500, then 1000 more, then 1500 more. The ten best runs are kept in
+      a high-score list that is saved to a file."
 - [ ] **2.4 Scoring:** add the badges. "Eco Rookie: clear chapter 1. Sorter: clear
       chapter 2 with at most 1 slip and at least 60% of throws bringing up trash.
       Champion: clear chapter 3 with at least 40% of the time left and at most 1
@@ -87,9 +90,11 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] **3.1 Other Java concepts:** remove "//double check". Replace `enum (BinType)` with
       `enum (ObjectKind, EquipmentType, EventType, ChapterStatus, GameState, CatchOutcome, Badge)`.
       Replace `BinFullException` with `EquipmentLockedException` (thrown when the player
-      asks for a tool the crew does not have yet). **(later:** a second one arrives with
-      the high-score file). `ArrayList` and `HashMap` are used;
-      add `EnumMap`, which the game uses for lookups by enum.
+      asks for a tool the crew does not have yet) and `HighScoreException` (thrown when
+      the high-score file cannot be read or written, or a line of it is damaged).
+      `ArrayList` and `HashMap` are used; add `EnumMap` and `EnumSet`, which the game
+      uses for lookups and sets by enum, `Comparable` (`ScoreEntry`, to sort the
+      high-score list) and file reading and writing (`HighScoreStore`).
 - [ ] **3.2 Main Classes, Player:** remove "and quota". The quota belongs to the chapter
       (`ChapterData`), not the player.
 - [ ] **3.2 Fish:** kind is "abstract class", with the four concrete fish under it.
@@ -100,6 +105,8 @@ feature is merged, or move the feature to "Future work" if it is dropped.
 - [ ] **3.2 add rows:** `ChapterData` (a chapter's numbers as data), `GameSession` (the
       run across chapters), `ScreenManager` and `Screen` (the screens), `Equipment`
       (the tool on the line), `GameEvent` and `GameListener` (the observer pattern).
+      Also `Badge` (one per chapter), `ScoreCalculator` (the run score), `ScoreEntry`
+      and `HighScoreTable` (the high-score list).
 - [ ] **Figure 2:** redraw it from `docs/class-diagram.md`. The current figure shows
       methods that do not exist (`collectTrash`, `collectFish`, `onHookHit`, `getType`)
       and a `gameState: String`; the code uses `onCaught`, `ObjectKind` and enums.
@@ -111,11 +118,15 @@ feature is merged, or move the feature to "Future work" if it is dropped.
     `ChapterData`, `SpawnRule`, `Equipment`, `PlainHook`, `Magnet`, `NetCutter`,
     `EquipmentType`, `Loadout`. Change "No JavaFX imports" to
     "No Swing or AWT imports".
-  - `game`: remove `GameController`. Add `GameSession`, `GameEvent`, `GameListener`.
+  - `game`: remove `GameController`. Add `GameSession`, `GameEvent`, `GameListener`,
+    `HintEngine` (with its `HintRule`s), `Badge`, `ScoreCalculator`, `ScoreEntry` and
+    `HighScoreTable`.
   - `ui`: the screens are `MainMenu`, `StoryScreen`, `GameScreen`, `ChapterClearScreen`,
-    `GameOverScreen`, `VictoryScreen`, `HowToScreen`, `PauseOverlay`. Change "JavaFX
-    screens" to "Swing screens".
-  - `util`: `GameConstants`, `StoryText` (all in-game text) and `Mathx`.
+    `GameOverScreen`, `VictoryScreen`, `NameEntryScreen`, `HighScoreScreen`,
+    `HowToScreen`, `PauseOverlay`. Change "JavaFX screens" to "Swing screens".
+  - `util`: `GameConstants`, `StoryText` (all in-game text), `Mathx`, the sound classes
+    (`SoundEffect`, `ToneSynth`, `AudioPlayer`), `HighScoreStore` and
+    `HighScoreException`.
 - [ ] **3.4 Illustrative Code:** remove "// to update" and replace the sample
       (`WasteItem`, `BinType`, `GameController`) with real code, for example:
 

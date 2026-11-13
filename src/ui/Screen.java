@@ -32,4 +32,9 @@ public interface Screen {
     /** A character was typed. For screens that take text. */
     default void keyTyped(char character) {
     }
+
+    /** True while the screen wants letters as text, so that M (sound) is a letter there and not a command. */
+    default boolean isTakingText() {
+        return false;
+    }
 }
