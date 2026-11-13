@@ -60,7 +60,7 @@ java -cp out Main
 
 | Chapter | Trash to look for | New tool | Quota | Time | Health |
 |---|---|---|---|---|---|
-| 1. Plastic Shallows | bottles (10 points) | Hook | 100 | 65 s | 3 |
+| 1. Plastic Shallows | bottles (10 points) | Hook | 100 | 80 s | 3 |
 | 2. Old Pier Wreck | cans (20), bottles | Magnet | 200 | 90 s | 4 |
 | 3. Ghost Net Deep | fishing nets (50), cans, bottles | Net Cutter | 350 | 105 s | 5 |
 
@@ -169,7 +169,7 @@ FISH2TRASH/
 │       ├── SoundEffect      enum: one recipe per sound in the game
 │       └── AudioPlayer      interface: SynthAudioPlayer (real), SilentAudioPlayer (no sound)
 ├── test/                    tests, run by scripts/test
-├── docs/                    class diagram, screenshots, proposal notes
+├── docs/                    class diagram, screenshots, playtest sheet, proposal notes
 ├── scripts/                 build, run and test (.sh and .bat)
 ├── out/                     compiled game (created by the build, not in git)
 └── out-test/                compiled tests (not in git)
@@ -249,14 +249,15 @@ no test library is needed. The script exits with an error if any check fails.
 | `ScoreFlowTest` | What a chapter, a badge and a failed attempt do to the run score, checked against the numbers in `GameConstants` |
 | `HighScoreStoreTest` | Tidy names; the line format of the score file; the order and length of the list; a restart, a damaged file and a failed save. Uses temporary folders, never your real list |
 | `HighScoreScreenTest` | When a name is asked for, what can be typed, and that the run lands on the list and in the file |
-| `BalanceBotTest` | A simple computer player, changing tools as needed, must be able to win every chapter at least half the time, and to earn each badge |
+| `BalanceBotTest` | A simple computer player, changing tools as needed, must be able to win every chapter at least half the time, and to earn each badge. A second, careless one (slow, with poor aim) must hardly ever run out of time |
 | `StoryTextTest` | Every story page, fail message and tip fits its box |
-| `ScreenFlowTest` | Key presses lead to the right screens: menu, story, pause, fired screen, retry |
+| `ScreenFlowTest` | Key presses lead to the right screens: menu, how to play, high scores, story, pause, fired screen, retry |
 | `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
 | `AudioEventTest` | The right sound for each game event; ten clock ticks in the last ten seconds |
 | `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the math helpers |
 
-The tests cannot judge how the game feels or sounds. Use the checklist below for that.
+The tests cannot judge how the game feels or sounds. Use the checklist below for that,
+and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 
 ## Manual testing checklist
 
@@ -334,7 +335,8 @@ The tests cannot judge how the game feels or sounds. Use the checklist below for
 
 **Sound**
 - [ ] Dropping the hook, each kind of trash, a fish hit, reaching the quota, clearing
-      and failing a chapter each make their own sound.
+      and failing a chapter each make their own sound. So do changing a tool, a new
+      tool, a tip, a badge and a new high score.
 - [ ] The clock ticks during the last 10 seconds, higher in the last 5.
 - [ ] `M` turns sound off and on at once; the speaker icon under the score follows.
 - [ ] With no speakers or headphones the game still runs, silent.
@@ -345,9 +347,9 @@ LangoyLaban, BSIT 2.
 
 | Member | Area |
 |---|---|
-| Matthew Llenos | Player, chapters and levels, game manager and session, timer, win and lose, HUD, story |
-| Arjoe R. Marata | Boat, hook and tools, controls, collision, screens and animation |
-| Neil Villarito | Ocean objects, trash and fish classes, spawning, object painters |
+| Matthew Llenos | Player, chapters and levels, game manager and session, timer, win and lose, HUD, story, hints, badges, score and high scores |
+| Arjoe R. Marata | Boat, hook and tools, controls, collision, screens and animation, sound |
+| Neil Villarito | Ocean objects, trash and fish classes, spawning, object painters, the test suite and the balance bot |
 
 ## Credits
 
