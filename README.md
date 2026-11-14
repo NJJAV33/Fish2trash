@@ -32,6 +32,10 @@ JDK 17 or newer. Check yours with `java -version`. No libraries needed.
 The scripts work from any folder. They look for a JDK 17+ in `JAVA_HOME` first,
 then on the `PATH`, and stop with "Need JDK 17+" if there isn't one.
 
+The window can be resized, and `F11` switches to full screen. The game is laid out
+for 800 x 600 and enlarged to fit; because everything is drawn as shapes, it stays
+sharp at any size. A window of another shape gets black bars at the sides.
+
 To build by hand instead, from the project folder:
 
 ```bash
@@ -51,6 +55,7 @@ java -cp out Main
 | `H` | Show the last tip or hint again |
 | `P` or `Esc` | Pause (resume, sound on or off, restart the chapter, or quit to the menu) |
 | `M` | Sound on or off, on any screen (except while typing a name) |
+| `F11` | Full screen on or off |
 | Letters, `Backspace`, `Enter` | Type and save your name when a run makes the high-score list |
 | `Enter` | Confirm, next story page |
 | `Esc` on a story page | Skip the story |
@@ -79,6 +84,8 @@ What each tool does:
 - Hooking a fish costs 1 health and the fish swims away. Pufferfish and barracuda
   (chapter 3) cost 2. A pufferfish swells when the hook is near; a barracuda
   flashes, then charges.
+- The sea shows your progress: it starts murky and turns clearer with every tenth of
+  the quota. Things deep down look a little hazier than things near the surface.
 - Reaching the quota stops the clock. The chapter is cleared when that catch
   reaches the boat.
 - Run out of time or health and you are fired. You can retry the chapter;
@@ -151,7 +158,8 @@ FISH2TRASH/
 │   │   └── HintRule         interface, one small class per reason for a hint:
 │   │                        FishStreakRule, SlipStreakRule, IdleRule, LowTimeRule, LowHealthRule
 │   ├── ui/                  the screens
-│   │   ├── GamePanel        frame timer and keyboard
+│   │   ├── GameWindow       the window: starting size, resizing, full screen (F11)
+│   │   ├── GamePanel        frame timer and keyboard; enlarges the picture to fit the window
 │   │   ├── ScreenManager    which screen is showing, fades between them
 │   │   ├── Screen           interface every screen implements
 │   │   ├── AudioEventListener   picks the sound for each game event
@@ -159,7 +167,8 @@ FISH2TRASH/
 │   │   │   ChapterClearScreen, GameOverScreen, VictoryScreen, NameEntryScreen,
 │   │   │   HighScoreScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
-│   │                        water, one painter per object kind and per tool, BadgePainter
+│   │                        water, one painter per object kind and per tool, BadgePainter,
+│   │                        PixelImages (pictures drawn once and reused)
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
@@ -179,10 +188,12 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 
 ## How the classes work together
 
-1. `Main` builds a `JFrame` on the event-dispatch thread and adds a `GamePanel`.
+1. `Main` builds a `GamePanel` on the event-dispatch thread and hands it to a
+   `GameWindow`, which owns the `JFrame`.
 2. `GamePanel` runs a `javax.swing.Timer` (~60 fps). Every tick it measures the real
    time since the last tick (`dt`) and passes it, and any fresh key press, to the
-   `ScreenManager`. Painting only *reads* the game.
+   `ScreenManager`. Painting only *reads* the game. Each frame is drawn into an image
+   first, enlarged to fit the window, and then copied to the screen in one go.
 3. `ScreenManager` holds one `Screen` per `GameState` and the `GameSession` (the run).
 4. `GameScreen` asks the session for a `GameManager` for the current chapter.
 5. `GameManager` owns the `Player`, the `Boat` (which owns the `Hook`), a `TimeLimit`
@@ -255,6 +266,7 @@ no test library is needed. The script exits with an error if any check fails.
 | `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
 | `AudioEventTest` | The right sound for each game event; ten clock ticks in the last ten seconds |
 | `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the math helpers |
+| `ScalingTest` | The picture grows with the window and gets bars when the shape differs; the sea clears step by step as the quota fills; deep objects look hazier; only a few background pictures are kept |
 
 The tests cannot judge how the game feels or sounds. Use the checklist below for that,
 and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
@@ -263,6 +275,12 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 
 **Menus and story**
 - [ ] The game opens on the menu. Up/Down move, Enter selects.
+- [ ] Drag the window larger: the picture grows with it and stays sharp. A wide window
+      shows black bars left and right.
+- [ ] `F11` fills the screen; `F11` again brings the window back. In a chapter this
+      pauses the game.
+- [ ] The game runs smoothly at the largest size. (Tell the team if it does not, and
+      on which computer.)
 - [ ] How to Play opens and Enter returns.
 - [ ] Start shows the opening and chapter 1 story. Enter finishes a page, then turns it.
 - [ ] Esc skips the story.
@@ -279,6 +297,7 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 - [ ] A fish costs 1 health, gives no points, and swims away.
 - [ ] Tips appear at about 1, 8 and 16 seconds.
 - [ ] At 100 points the timer stops; the chapter clears when the catch reaches the boat.
+- [ ] The murky green water turns a little clearer and bluer with every bottle.
 
 **Chapter 2**
 - [ ] The story ends with a NEW GEAR page; the Magnet is on the line at the start.
