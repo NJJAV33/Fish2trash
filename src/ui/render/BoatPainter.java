@@ -2,7 +2,9 @@ package ui.render;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import util.GameConstants;
 
 /**
@@ -11,12 +13,17 @@ import util.GameConstants;
  */
 public final class BoatPainter {
 
-    private static final Color HULL = new Color(170, 60, 45);
+    private static final int DECK_Y = -GameConstants.BOAT_HEIGHT;   // y of the deck; the waterline is y = 0
+
+    // Lit from above: the hull, the cabin and the windows are brighter at the top.
+    private static final Paint HULL = new GradientPaint(0, DECK_Y, new Color(200, 78, 58), 0, 4, new Color(128, 40, 30));
     private static final Color HULL_OUTLINE = new Color(110, 35, 25);
     private static final Color HULL_STRIPE = new Color(245, 240, 230);
-    private static final Color CABIN = new Color(240, 240, 235);
+    private static final Paint CABIN = new GradientPaint(
+            0, DECK_Y - 22, new Color(250, 250, 246), 0, DECK_Y + 2, new Color(205, 208, 204));
     private static final Color CABIN_ROOF = new Color(110, 35, 25);
-    private static final Color WINDOW = new Color(110, 170, 210);
+    private static final Paint WINDOW = new GradientPaint(
+            0, DECK_Y - 16, new Color(160, 210, 240), 0, DECK_Y - 6, new Color(80, 135, 180));
     private static final Color MAST = new Color(70, 60, 55);
     private static final Color PENNANT = new Color(245, 200, 50);
     private static final Color SLICKER = new Color(245, 200, 50);
@@ -29,7 +36,7 @@ public final class BoatPainter {
     private static final double BOB_SPEED = 1.6;
 
     private static final int HALF = GameConstants.BOAT_WIDTH / 2;
-    private static final int DECK = -GameConstants.BOAT_HEIGHT;   // y of the deck; the waterline is y = 0
+    private static final int DECK = DECK_Y;
 
     // The hull: a trapezoid that sits slightly in the water.
     private static final int[] HULL_X = {-HALF, HALF, HALF - 18, -HALF + 18};
@@ -66,11 +73,11 @@ public final class BoatPainter {
         g2.fillPolygon(pennantX, pennantY, 3);
 
         // Cabin
-        g2.setColor(CABIN);
+        g2.setPaint(CABIN);
         g2.fillRect(-25, DECK - 22, 40, 24);
         g2.setColor(CABIN_ROOF);
         g2.fillRect(-28, DECK - 25, 46, 4);
-        g2.setColor(WINDOW);
+        g2.setPaint(WINDOW);
         g2.fillRect(-18, DECK - 16, 12, 10);
         g2.fillRect(-2, DECK - 16, 12, 10);
 
@@ -83,7 +90,7 @@ public final class BoatPainter {
         g2.fillArc(30, DECK - 28, 11, 9, 0, 180);   // hood
 
         // Hull
-        g2.setColor(HULL);
+        g2.setPaint(HULL);
         g2.fillPolygon(HULL_X, HULL_Y, 4);
         g2.setColor(HULL_STRIPE);
         g2.fillRect(-HALF + 4, DECK + 5, GameConstants.BOAT_WIDTH - 8, 3);

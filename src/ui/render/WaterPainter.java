@@ -1,9 +1,9 @@
 package ui.render;
 
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 import util.GameConstants;
@@ -20,9 +20,13 @@ public final class WaterPainter {
     private static final int WAVE_STEP = 16;        // pixels between points along a wave
     private static final int RAY_COUNT = 5;
     private static final int RAY_DEPTH = 380;       // how far down a sunbeam reaches
+    private static final int RAY_SLICES = 19;       // a beam fades out in this many steps
+    private static final int RAY_WIDTH = 64;
+    private static final double RAY_LEAN = 117.0 / RAY_DEPTH;   // pixels to the right per pixel down
 
     // One reusable outline, so no new shape object is made every frame.
     private final Path2D.Double shape = new Path2D.Double();
+    private final Rectangle2D.Double slab = new Rectangle2D.Double();
     // The wave colours of each look, worked out once.
     private final Map<ChapterPalette, Color[]> waveColors = new HashMap<>();
 
@@ -58,26 +62,37 @@ public final class WaterPainter {
         g.fill(shape);
     }
 
-    /** Sunbeams: slanted bands of light that sway slowly and fade out with depth. */
+    /**
+     * Sunbeams: slanted bands of light that sway slowly and fade out with depth.
+     *
+     * Each beam is a stack of thin slices, every slice a little fainter than
+     * the one above. A slice is a plain rectangle drawn on a slanted
+     * (sheared) graphics, which Java fills far faster than a free shape with
+     * a smooth fade; at this faintness the steps in brightness cannot be seen.
+     */
     public void paintRays(Graphics2D g, ChapterPalette palette, double time) {
+        Graphics2D rays = (Graphics2D) g.create();
+        rays.translate(0, WATER_Y);
+        rays.shear(RAY_LEAN, 0);   // everything drawn now leans to the right as it goes down
         Color light = palette.getRay();
-        Color clear = new Color(light.getRed(), light.getGreen(), light.getBlue(), 0);
+        double sliceHeight = (double) RAY_DEPTH / RAY_SLICES;
         for (int i = 0; i < RAY_COUNT; i++) {
             // Each beam sways and brightens on its own rhythm.
-            double topX = 60 + i * 165 + 22 * Math.sin(time * 0.3 + i * 1.7);
+            double leftX = 55 + i * 165 + 22 * Math.sin(time * 0.3 + i * 1.7);
             double strength = 0.7 + 0.3 * Math.sin(time * 0.5 + i * 2.1);
-            int alpha = (int) (palette.getRayAlpha() * strength);
-            Color bright = new Color(light.getRed(), light.getGreen(), light.getBlue(), alpha);
+            double alpha = palette.getRayAlpha() * strength;
 
-            g.setPaint(new GradientPaint(0, WATER_Y, bright, 0, WATER_Y + RAY_DEPTH, clear));
-            shape.reset();
-            shape.moveTo(topX, WATER_Y);
-            shape.lineTo(topX + 46, WATER_Y);
-            shape.lineTo(topX + 190, WATER_Y + RAY_DEPTH);
-            shape.lineTo(topX + 90, WATER_Y + RAY_DEPTH);
-            shape.closePath();
-            g.fill(shape);
+            for (int slice = 0; slice < RAY_SLICES; slice++) {
+                int sliceAlpha = (int) Math.round(alpha * (1 - (slice + 0.5) / RAY_SLICES));
+                if (sliceAlpha <= 0) {
+                    continue;
+                }
+                slab.setRect(leftX, slice * sliceHeight, RAY_WIDTH, sliceHeight);
+                rays.setColor(new Color(light.getRed(), light.getGreen(), light.getBlue(), sliceAlpha));
+                rays.fill(slab);
+            }
         }
+        rays.dispose();
     }
 
     /** [0] = far waves, [1] = near waves: the surface colour, lightened and see-through. */

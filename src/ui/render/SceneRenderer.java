@@ -43,7 +43,9 @@ public final class SceneRenderer {
     }
 
     public void paint(Graphics2D g, GameView game) {
-        ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber());
+        // The sea clears up as the quota fills: the look is picked by the score.
+        ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber())
+                .cleanedBy((double) game.getScore() / game.getQuota());
         background.paint(g, palette);
         water.paintBackWaves(g, palette, time);
 
@@ -71,13 +73,6 @@ public final class SceneRenderer {
         background.paint(g, palette);
         water.paintBackWaves(g, palette, time);
         paintWaterOnTop(g, palette);
-    }
-
-    /** A backdrop that fades from one look to another. amount: 0 = from, 1 = to. */
-    public void paintBackdropBlend(Graphics2D g, ChapterPalette from, ChapterPalette to, double amount) {
-        background.paintBlend(g, from, to, amount);
-        water.paintBackWaves(g, to, time);
-        paintWaterOnTop(g, to);
     }
 
     /** What lies in front of the boat and the objects: near waves, sunbeams and bubbles. */

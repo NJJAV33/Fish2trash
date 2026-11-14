@@ -2,7 +2,9 @@ package ui.render;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.geom.AffineTransform;
 import model.ObjectView;
 
@@ -10,7 +12,10 @@ import model.ObjectView;
 public final class BigFishPainter implements ObjectPainter {
 
     private static final Color BODY = new Color(61, 126, 191);
+    // Lit from above: the back is brighter than the underside.
+    private static final Paint BODY_SHADED = new GradientPaint(0, -12, new Color(96, 160, 222), 0, 12, new Color(40, 92, 155));
     private static final Color BELLY = new Color(170, 205, 235);
+    private static final Color SHINE = new Color(255, 255, 255, 80);
     private static final Color STRIPE = new Color(35, 80, 135);
     private static final Color SPEED_LINE = new Color(255, 255, 255, 90);
     private static final BasicStroke STRIPE_STROKE = new BasicStroke(2);
@@ -46,9 +51,12 @@ public final class BigFishPainter implements ObjectPainter {
         g2.setTransform(beforeTail);
 
         g2.fillPolygon(FIN_X, FIN_Y, 3);   // back fin
+        g2.setPaint(BODY_SHADED);
         g2.fillOval(-31, -12, 62, 24);
         g2.setColor(BELLY);
         g2.fillOval(-22, 0, 44, 10);
+        g2.setColor(SHINE);
+        g2.fillOval(-18, -10, 30, 4);   // light on its back
 
         g2.setColor(STRIPE);
         g2.setStroke(STRIPE_STROKE);
