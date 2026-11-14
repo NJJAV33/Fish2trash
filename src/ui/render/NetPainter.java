@@ -2,8 +2,12 @@ package ui.render;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import model.ObjectView;
 import util.GameConstants;
 
@@ -15,7 +19,8 @@ public final class NetPainter implements ObjectPainter {
 
     private static final Color FILL = new Color(210, 225, 200, 40);
     private static final Color ROPE = new Color(205, 215, 185, 200);
-    private static final Color FLOAT = new Color(240, 140, 40);
+    private static final Paint FLOAT = new GradientPaint(0, -31, new Color(255, 170, 70), 0, -20, new Color(215, 105, 20));
+    private static final Color FLOAT_SHINE = new Color(255, 255, 255, 150);
     private static final BasicStroke MESH_STROKE = new BasicStroke(1.2f);
     private static final BasicStroke EDGE_STROKE = new BasicStroke(2);
     private static final int MESH_GAP = 9;      // pixels between mesh lines
@@ -28,11 +33,37 @@ public final class NetPainter implements ObjectPainter {
     private static final int TOP = (int) (-R * 0.8);
     private static final int BOTTOM = (int) (R * 0.8);
 
+    // The mesh is slow to draw, and every net looks the same apart from its
+    // sway. So each sway step is drawn once into a small picture and copied
+    // from then on.
+    private static final int SWAY_STEPS = 9;                  // from fully squeezed to fully stretched
+    private static final int HALF_WIDTH = R + 8;              // the picture's size around the net's middle
+    private static final int ABOVE = R + 2;
+    private static final int BELOW = R + 12;
+
+    private final BufferedImage[] pictures = new BufferedImage[SWAY_STEPS];
+    private double pictureScale;   // the size the pictures were made for
+
     @Override
     public void paint(Graphics2D g, ObjectView object, double time) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.translate(object.getX(), object.getY());
-        double sway = SWAY * Math.sin(1.5 * time + object.getPhase());
+        double scale = PixelImages.scaleOf(g);
+        if (scale != pictureScale) {
+            Arrays.fill(pictures, null);   // the window shows the game at another size now
+            pictureScale = scale;
+        }
+        double sway = Math.sin(1.5 * time + object.getPhase());   // -1 to 1
+        int step = (int) Math.round((sway + 1) / 2 * (SWAY_STEPS - 1));
+        if (pictures[step] == null) {
+            pictures[step] = render(SWAY * (2.0 * step / (SWAY_STEPS - 1) - 1), scale);
+        }
+        PixelImages.paint(g, pictures[step], object.getX() - HALF_WIDTH, object.getY() - ABOVE, scale);
+    }
+
+    /** Draws the net once, stretched by the given sway, into a picture of its own. */
+    private static BufferedImage render(double sway, double scale) {
+        BufferedImage picture = PixelImages.create(2 * HALF_WIDTH, ABOVE + BELOW, scale, true);
+        Graphics2D g2 = PixelImages.draw(picture, scale);
+        g2.translate(HALF_WIDTH, ABOVE);
         g2.scale(1 + sway, 1 - sway);   // wider when flatter, like something soft
 
         // Frayed ends hanging below
@@ -58,10 +89,14 @@ public final class NetPainter implements ObjectPainter {
         g2.setStroke(EDGE_STROKE);
         g2.draw(BLOB);
 
-        g2.setColor(FLOAT);
+        g2.setPaint(FLOAT);
         g2.fillOval(-R / 2 - 5, TOP - 5, 10, 10);
         g2.fillOval(R / 2 - 5, TOP - 5, 10, 10);
+        g2.setColor(FLOAT_SHINE);
+        g2.fillOval(-R / 2 - 3, TOP - 4, 4, 3);
+        g2.fillOval(R / 2 - 3, TOP - 4, 4, 3);
 
         g2.dispose();
+        return picture;
     }
 }

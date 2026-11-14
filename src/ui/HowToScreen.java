@@ -47,7 +47,7 @@ public final class HowToScreen implements Screen {
 
         g.setFont(Fonts.MONO);
         g.setColor(UiPalette.TEXT);
-        TextDraw.lines(g, StoryText.HOW_TO_TEXT, 125, 174, 22);
+        TextDraw.lines(g, StoryText.HOW_TO_TEXT, 125, 168, 21);
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);

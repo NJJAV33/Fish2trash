@@ -11,6 +11,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import ui.render.SceneRenderer;
@@ -24,6 +25,10 @@ import util.SoundState;
  *
  * Updating and painting are kept apart: the timer updates the current screen,
  * and paintComponent() only draws it.
+ *
+ * The game is always laid out for 800 x 600. If the panel is bigger, the
+ * whole picture is enlarged to fit, with black bars where the shape of the
+ * panel does not match.
  */
 // Swing panels are Serializable by inheritance, but this game never saves one,
 // so the "field is not serializable" warning does not apply here.
@@ -41,6 +46,11 @@ public final class GamePanel extends JPanel {
     private final Timer timer;
     private long lastTickNanos;
 
+    // Each frame is drawn into this image first and then copied to the
+    // screen in one go. Drawing many smooth-edged shapes straight onto the
+    // screen is several times slower.
+    private BufferedImage frame;
+
     /**
      * @param audio      how the game makes sound; tests pass a silent player
      * @param highScores the high-score list; tests pass one kept in a temporary folder
@@ -49,7 +59,8 @@ public final class GamePanel extends JPanel {
         this.audio = audio;
         this.screens = new ScreenManager(audio, highScores);
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
-        setBackground(Color.BLACK);   // shows at the edges when the scene shakes
+        setBackground(Color.BLACK);   // the bars beside the picture when the window has another shape
+        setOpaque(true);              // every pixel is painted here, so nothing behind needs painting
         setFocusable(true);   // a panel only receives keys if it can have the focus
         addKeyListener(new KeyHandler());
         addFocusListener(new FocusAdapter() {
@@ -122,12 +133,47 @@ public final class GamePanel extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
+        // On a high-density display one panel unit is more than one screen
+        // pixel. The frame is made in real pixels so it is sharp there too.
+        double density = ((Graphics2D) g).getTransform().getScaleX();
+        int width = (int) Math.ceil(getWidth() * density);
+        int height = (int) Math.ceil(getHeight() * density);
+        if (frame == null || frame.getWidth() != width || frame.getHeight() != height) {
+            frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        }
+
+        // Enlarge the 800 x 600 picture to fit and put it in the middle.
+        // Everything is drawn as shapes, so it stays sharp at any size.
+        double scale = Math.min((double) width / GameConstants.WORLD_WIDTH,
+                (double) height / GameConstants.WORLD_HEIGHT);
+        long left = Math.round((width - GameConstants.WORLD_WIDTH * scale) / 2);
+        long top = Math.round((height - GameConstants.WORLD_HEIGHT * scale) / 2);
+
+        Graphics2D g2 = frame.createGraphics();
+        if (left > 0 || top > 0) {
+            g2.setColor(getBackground());   // the bars beside the picture
+            g2.fillRect(0, 0, width, height);
+        }
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.translate(left, top);
+        g2.scale(scale, scale);
+        g2.clipRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
         screens.paint(g2);
+        g2.dispose();
+
+        if (density == 1) {
+            g.drawImage(frame, 0, 0, null);   // a plain copy
+        } else {
+            g.drawImage(frame, 0, 0, getWidth(), getHeight(), null);
+        }
+    }
+
+    /** How much the 800 x 600 picture is enlarged to fit the panel: the largest size that fits whole. */
+    public double getViewScale() {
+        return Math.min((double) getWidth() / GameConstants.WORLD_WIDTH,
+                (double) getHeight() / GameConstants.WORLD_HEIGHT);
     }
 
     /** Turns raw keyboard events into held keys and fresh key presses. */
