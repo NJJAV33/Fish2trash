@@ -562,11 +562,18 @@ classDiagram
 classDiagram
     direction TB
 
+    class GameWindow {
+        -frame JFrame
+        +open()
+    }
+
     class GamePanel {
         -lastTickNanos long
+        -frame BufferedImage
         +start()
         +advance(dt)
         +getState() GameState
+        +getViewScale() double
     }
 
     class InputState {
@@ -615,7 +622,7 @@ classDiagram
     class SceneRenderer {
         +paint(g, game)
         +paintBackdrop(g, palette)
-        +paintBackdropBlend(g, from, to, amount)
+        +paintBackdropWithBoat(g, palette, boatX)
     }
 
     class PainterRegistry {
@@ -651,8 +658,15 @@ classDiagram
 
     class BackgroundPainter {
         -cache Map
+        -cacheScale double
         +paint(g, palette)
-        +paintBlend(g, from, to, amount)
+        +getCachedCount() int
+    }
+
+    class PixelImages {
+        ~scaleOf(target)$ double
+        ~create(width, height, scale, seeThrough)$ BufferedImage
+        ~paint(target, image, x, y, scale)$
     }
 
     class EffectsSystem {
@@ -693,7 +707,9 @@ classDiagram
         +WRECK ChapterPalette$
         +DEEP ChapterPalette$
         +REEF ChapterPalette$
+        +CLEAN_STEPS int$
         +forChapter(chapter)$ ChapterPalette
+        +cleanedBy(progress) ChapterPalette
         +getCleaned() ChapterPalette
     }
 
@@ -708,6 +724,7 @@ classDiagram
     class GameSession
     class GameManager
 
+    GameWindow o-- GamePanel : shows
     GamePanel *-- ScreenManager
     GamePanel *-- InputState
     ScreenManager o-- Screen : one per GameState
@@ -740,6 +757,9 @@ classDiagram
     SceneRenderer *-- WaterPainter
     SceneRenderer *-- ParticleSystem
     BackgroundPainter ..> ChapterPalette : one cached picture per look
+    BackgroundPainter ..> PixelImages : makes and copies pictures with
+    NetPainter ..> PixelImages : makes and copies pictures with
+    SceneRenderer ..> ChapterPalette : picks the look by the score
     SceneRenderer *-- PainterRegistry
     SceneRenderer *-- BoatPainter
     SceneRenderer *-- HookPainter
@@ -912,7 +932,7 @@ classDiagram
 
 These hold shared constants or helpers and have no relationships worth drawing:
 
-- `Main` opens the window and starts the `GamePanel`.
+- `Main` builds the `GamePanel` and hands it to a `GameWindow`.
 - `GameConstants` holds every tuning number, `StoryText` every line of text,
   and `Mathx` a few math helpers (package `util`).
 - `Fonts`, `UiPalette` and `TextDraw` hold the fonts, colours and text-placing

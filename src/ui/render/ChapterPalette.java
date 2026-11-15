@@ -1,14 +1,18 @@
 package ui.render;
 
 import java.awt.Color;
+import java.util.Arrays;
 
 /**
  * The colours and scenery of one place in the story. Each chapter has its own
  * look, so the sea visibly changes as the crew cleans it: murky green
  * shallows, a clearer wreck, the dark deep, and the bright reef at the end.
  *
- * There is one shared object per look (they are constants), so a palette can
- * be used as a key to find its cached background picture.
+ * While a chapter is played the sea clears up in steps, a little with every
+ * tenth of the quota. Each step is a palette of its own, made once.
+ *
+ * There is one shared object per look, so a palette can be used as a key to
+ * find its cached background picture.
  */
 public final class ChapterPalette {
 
@@ -37,6 +41,9 @@ public final class ChapterPalette {
 
     private static final ChapterPalette[] BY_CHAPTER = {SHALLOWS, WRECK, DEEP};
 
+    /** In how many steps a chapter's sea goes from dirty to clean. */
+    public static final int CLEAN_STEPS = 10;
+
     // How far a cleaned-up chapter moves toward the look of the recovered reef.
     private static final double CLEANED_AMOUNT = 0.6;
 
@@ -51,7 +58,7 @@ public final class ChapterPalette {
     private final Color ray;        // sunbeams through the water
     private final int rayAlpha;     // 0 to 255: how strong the sunbeams are
     private final Color accent;
-    private ChapterPalette cleaned; // made the first time it is asked for
+    private ChapterPalette[] cleanSteps;   // [0] is this look itself; the others are made when first asked for
 
     private ChapterPalette(Scenery scenery, Color skyTop, Color skyBottom, Color seaTop, Color seaMiddle,
                            Color seaBottom, Color seabed, Color sun, Color ray, int rayAlpha, Color accent) {
@@ -82,22 +89,45 @@ public final class ChapterPalette {
      * of the way toward the recovered reef. Shown when a chapter is cleared.
      */
     public ChapterPalette getCleaned() {
-        if (cleaned == null) {
-            cleaned = new ChapterPalette(scenery,
-                    mix(skyTop, REEF.skyTop), mix(skyBottom, REEF.skyBottom),
-                    mix(seaTop, REEF.seaTop), mix(seaMiddle, REEF.seaMiddle), mix(seaBottom, REEF.seaBottom),
-                    mix(seabed, REEF.seabed), mix(sun, REEF.sun), mix(ray, REEF.ray),
-                    (int) (rayAlpha + (REEF.rayAlpha - rayAlpha) * CLEANED_AMOUNT), mix(accent, REEF.accent));
-            cleaned.cleaned = cleaned;   // cleaning a clean place changes nothing
-        }
-        return cleaned;
+        return cleanedBy(1);
     }
 
-    private static Color mix(Color from, Color to) {
+    /**
+     * The same place, partly cleaned.
+     *
+     * @param progress 0 = as dirty as it starts, 1 = fully cleaned; rounded
+     *                 down to a whole step, so the look only changes when a
+     *                 step is completed
+     */
+    public ChapterPalette cleanedBy(double progress) {
+        if (cleanSteps == null) {
+            cleanSteps = new ChapterPalette[CLEAN_STEPS + 1];
+            cleanSteps[0] = this;
+        }
+        int step = (int) Math.floor(Math.max(0, Math.min(1, progress)) * CLEAN_STEPS + 1e-9);
+        if (cleanSteps[step] == null) {
+            double amount = CLEANED_AMOUNT * step / CLEAN_STEPS;
+            ChapterPalette mixed = new ChapterPalette(scenery,
+                    mix(skyTop, REEF.skyTop, amount), mix(skyBottom, REEF.skyBottom, amount),
+                    mix(seaTop, REEF.seaTop, amount), mix(seaMiddle, REEF.seaMiddle, amount),
+                    mix(seaBottom, REEF.seaBottom, amount), mix(seabed, REEF.seabed, amount),
+                    mix(sun, REEF.sun, amount), mix(ray, REEF.ray, amount),
+                    (int) (rayAlpha + (REEF.rayAlpha - rayAlpha) * amount), mix(accent, REEF.accent, amount));
+            if (step == CLEAN_STEPS) {
+                // Cleaning a clean place changes nothing.
+                mixed.cleanSteps = new ChapterPalette[CLEAN_STEPS + 1];
+                Arrays.fill(mixed.cleanSteps, mixed);
+            }
+            cleanSteps[step] = mixed;
+        }
+        return cleanSteps[step];
+    }
+
+    private static Color mix(Color from, Color to, double amount) {
         return new Color(
-                (int) (from.getRed() + (to.getRed() - from.getRed()) * CLEANED_AMOUNT),
-                (int) (from.getGreen() + (to.getGreen() - from.getGreen()) * CLEANED_AMOUNT),
-                (int) (from.getBlue() + (to.getBlue() - from.getBlue()) * CLEANED_AMOUNT));
+                (int) (from.getRed() + (to.getRed() - from.getRed()) * amount),
+                (int) (from.getGreen() + (to.getGreen() - from.getGreen()) * amount),
+                (int) (from.getBlue() + (to.getBlue() - from.getBlue()) * amount));
     }
 
     public Scenery getScenery() {

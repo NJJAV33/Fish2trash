@@ -3,6 +3,7 @@ package ui.render;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RadialGradientPaint;
 import java.awt.geom.AffineTransform;
 import model.ObjectView;
 
@@ -13,6 +14,9 @@ import model.ObjectView;
 public final class PufferPainter implements ObjectPainter {
 
     private static final Color BODY = new Color(232, 197, 71);
+    // A ball lit from the upper front: a bright spot that darkens toward the edge.
+    private static final float[] BALL = {0f, 1f};
+    private static final Color[] BALL_COLORS = {new Color(255, 236, 140), new Color(205, 160, 40)};
     private static final Color BELLY = new Color(255, 123, 84);
     private static final Color SPIKE = new Color(181, 101, 29);
     private static final Color DANGER = new Color(255, 90, 77);
@@ -56,7 +60,8 @@ public final class PufferPainter implements ObjectPainter {
                     (int) (SPIKE_COS[i] * (r + spikeLength)), (int) (SPIKE_SIN[i] * (r + spikeLength)));
         }
 
-        g2.setColor(BODY);
+        // The ball changes size as the fish swells, so its shading is made for the size it has now.
+        g2.setPaint(new RadialGradientPaint(r * 0.3f, -r * 0.4f, r * 1.4f, BALL, BALL_COLORS));
         g2.fillOval(-r, -r, 2 * r, 2 * r);
         g2.setColor(BELLY);
         g2.fillArc(-r, -r, 2 * r, 2 * r, 200, 140);   // lower part of the circle

@@ -1,14 +1,17 @@
 package ui.render;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.geom.AffineTransform;
 import model.ObjectView;
 
 /** Draws a long, thin barracuda. It flashes white while it warns and charges. */
 public final class BarracudaPainter implements ObjectPainter {
 
-    private static final Color BODY = new Color(184, 196, 204);
+    // The silver side: bright where the light falls on it, darker underneath.
+    private static final Paint BODY_SHADED = new GradientPaint(0, -5, new Color(228, 236, 242), 0, 8, new Color(140, 156, 170));
     private static final Color BACK = new Color(84, 98, 110);
     private static final Color FLASH = new Color(255, 245, 235);
     private static final Color FLASH_BACK = new Color(255, 120, 100);
@@ -36,7 +39,6 @@ public final class BarracudaPainter implements ObjectPainter {
         // While alarmed it blinks between its warning colours and its normal ones.
         boolean lit = object.getAlert() > 0 && (int) (time * BLINKS_PER_SECOND * 2) % 2 == 0;
         Color back = lit ? FLASH_BACK : BACK;
-        Color side = lit ? FLASH : BODY;
 
         AffineTransform beforeTail = g2.getTransform();
         g2.rotate(WAG * Math.sin(16 * time + object.getPhase()), -30, 0);
@@ -46,7 +48,11 @@ public final class BarracudaPainter implements ObjectPainter {
         g2.setTransform(beforeTail);
 
         g2.fillOval(-33, -8, 66, 14);   // dark back
-        g2.setColor(side);
+        if (lit) {
+            g2.setColor(FLASH);
+        } else {
+            g2.setPaint(BODY_SHADED);
+        }
         g2.fillOval(-33, -5, 66, 13);   // silver side
 
         // Open jaw with teeth

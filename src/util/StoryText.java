@@ -20,7 +20,7 @@ public final class StoryText {
     public static final String MENU_HOW_TO = "How to Play";
     public static final String MENU_SCORES = "High Scores";
     public static final String MENU_QUIT = "Quit";
-    public static final String MENU_HINT = "UP / DOWN: choose     ENTER: select";
+    public static final String MENU_HINT = "UP / DOWN: choose     ENTER: select     F11: full screen";
 
     // ---- How to play ----
     public static final String HOW_TO_TITLE = "HOW TO PLAY";
@@ -32,6 +32,7 @@ public final class StoryText {
             + "H                     Show the last tip again\n"
             + "P or ESC              Pause\n"
             + "M                     Sound on or off\n"
+            + "F11                   Full screen on or off\n"
             + "\n"
             + "Each kind of trash needs its own tool:\n"
             + "Hook - bottle 10.   Magnet - can 20.   Net Cutter - net 50.\n"

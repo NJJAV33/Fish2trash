@@ -24,7 +24,6 @@ public final class ChapterClearScreen implements Screen {
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
     private static final int VALUE_X = 570;
-    private static final double CLEAN_UP_SECONDS = 2.0;   // how long the water takes to clear
     private static final int BADGE_Y = 352;
     private static final double BADGE_RADIUS = 34;
     private static final double BADGE_DELAY_SECONDS = 0.8;   // the medal arrives a moment after the numbers
@@ -75,9 +74,8 @@ public final class ChapterClearScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        // The sea visibly clears up behind the report card.
-        ChapterPalette before = ChapterPalette.forChapter(result.getChapter());
-        backdrop.paintBackdropBlend(g, before, before.getCleaned(), time / CLEAN_UP_SECONDS);
+        // The sea cleared up while the chapter was played; the report shows it clean.
+        backdrop.paintBackdrop(g, ChapterPalette.forChapter(result.getChapter()).getCleaned());
         g.setColor(UiPalette.LIGHT_SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 

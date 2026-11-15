@@ -7,6 +7,7 @@ import java.util.Map;
 import model.EquipmentType;
 import model.ObjectKind;
 import model.ObjectView;
+import util.GameConstants;
 
 /**
  * Knows which painter draws which kind of object and which tool.
@@ -15,6 +16,8 @@ import model.ObjectView;
  * if/else chain and no type checks.
  */
 public final class PainterRegistry {
+
+    private static final double DEPTH_HAZE = 0.25;   // how much of an object the sea hides at the very bottom
 
     private final Map<ObjectKind, ObjectPainter> painters = new EnumMap<>(ObjectKind.class);
     private final Map<EquipmentType, ToolPainter> toolPainters = new EnumMap<>(EquipmentType.class);
@@ -48,16 +51,26 @@ public final class PainterRegistry {
 
     public void paint(Graphics2D g, ObjectView object, double time) {
         ObjectPainter painter = painters.get(object.getKind());
-        float opacity = (float) object.getOpacity();
+        float opacity = (float) (object.getOpacity() * clarityAt(object.getY()));
         if (opacity >= 1f) {
             painter.paint(g, object, time);
             return;
         }
-        // Still fading in: draw it see-through on a copy of the graphics.
+        // Fading in, or deep down: draw it see-through on a copy of the graphics.
         Graphics2D faded = (Graphics2D) g.create();
         faded.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
         painter.paint(faded, object, time);
         faded.dispose();
+    }
+
+    /**
+     * How clearly something shows at depth y: 1 at the surface, a little
+     * less at the sea floor. A deep object lets some of the sea's colour
+     * through, which is how things look through a lot of water.
+     */
+    static double clarityAt(double y) {
+        double depth = (y - GameConstants.WATER_Y) / (GameConstants.SEABED_Y - GameConstants.WATER_Y);
+        return 1 - DEPTH_HAZE * Math.max(0, Math.min(1, depth));
     }
 
     /**

@@ -1,26 +1,26 @@
 package ui.render;
 
-import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
-import java.awt.RenderingHints;
+import java.awt.RadialGradientPaint;
 import java.awt.image.BufferedImage;
 import java.util.EnumMap;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import util.GameConstants;
 
 /**
  * Draws the part of the scene that never moves: sky, sun, the sea's colour
- * and the sea floor with its scenery.
+ * and the sea floor with its scenery, darkened a little toward the corners.
  *
  * Painting gradients every frame is slow, so each look is drawn once into an
  * image and that image is reused (a cache). A look only costs time the first
- * time it is shown.
+ * time it is shown. The images are made at the size the window shows them,
+ * so they are drawn again when the window changes size.
  */
 public final class BackgroundPainter {
 
@@ -35,7 +35,25 @@ public final class BackgroundPainter {
     };
     private static final BasicStroke GRASS_STROKE = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
-    private final Map<ChapterPalette, BufferedImage> cache = new HashMap<>();
+    // The vignette: clear in the middle, darker toward the corners, which pulls the eye to the play area.
+    private static final float VIGNETTE_RADIUS = 560;
+    private static final float[] VIGNETTE_STOPS = {0f, 0.55f, 1f};
+    private static final Color[] VIGNETTE_COLORS = {
+        new Color(0, 0, 0, 0), new Color(0, 0, 0, 0), new Color(0, 0, 0, 105)
+    };
+
+    // A chapter shows up to eleven looks as its sea clears. Only the latest few are kept.
+    private static final int MAX_CACHED = 6;
+
+    @SuppressWarnings("serial")   // a LinkedHashMap is Serializable by inheritance; this one is never saved
+    private final Map<ChapterPalette, BufferedImage> cache =
+            new LinkedHashMap<ChapterPalette, BufferedImage>(16, 0.75f, true) {   // true: ordered by last use
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<ChapterPalette, BufferedImage> eldest) {
+                    return size() > MAX_CACHED;
+                }
+            };
+    private double cacheScale = 1;   // the size the cached images were made for
 
     // Which method draws which scenery, looked up instead of an if/else chain.
     private final Map<ChapterPalette.Scenery, BiConsumer<Graphics2D, ChapterPalette>> sceneryPainters =
@@ -49,38 +67,27 @@ public final class BackgroundPainter {
     }
 
     public void paint(Graphics2D g, ChapterPalette palette) {
-        g.drawImage(imageFor(palette), 0, 0, null);
-    }
-
-    /**
-     * Draws one look fading into another.
-     *
-     * @param amount 0 = only "from", 1 = only "to"
-     */
-    public void paintBlend(Graphics2D g, ChapterPalette from, ChapterPalette to, double amount) {
-        g.drawImage(imageFor(from), 0, 0, null);
-        if (amount > 0) {
-            Graphics2D over = (Graphics2D) g.create();
-            over.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) Math.min(1.0, amount)));
-            over.drawImage(imageFor(to), 0, 0, null);
-            over.dispose();
+        double scale = PixelImages.scaleOf(g);
+        if (scale != cacheScale) {
+            cache.clear();   // the window shows the game at another size now
+            cacheScale = scale;
         }
-    }
-
-    /** Returns the cached picture of a look, drawing it first if this is the first time. */
-    private BufferedImage imageFor(ChapterPalette palette) {
         BufferedImage image = cache.get(palette);
         if (image == null) {
-            image = render(palette);
+            image = render(palette, scale);
             cache.put(palette, image);
         }
-        return image;
+        PixelImages.paint(g, image, 0, 0, scale);
     }
 
-    private BufferedImage render(ChapterPalette palette) {
-        BufferedImage image = new BufferedImage(W, H, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    /** How many looks are in the cache right now. */
+    public int getCachedCount() {
+        return cache.size();
+    }
+
+    private BufferedImage render(ChapterPalette palette, double scale) {
+        BufferedImage image = PixelImages.create(W, H, scale, false);
+        Graphics2D g = PixelImages.draw(image, scale);
 
         g.setPaint(new GradientPaint(0, 0, palette.getSkyTop(), 0, WATER_Y, palette.getSkyBottom()));
         g.fillRect(0, 0, W, WATER_Y);
@@ -101,6 +108,9 @@ public final class BackgroundPainter {
 
         g.setColor(palette.getSeabed());
         g.fillRect(0, SEABED_Y, W, H - SEABED_Y);
+
+        g.setPaint(new RadialGradientPaint(W / 2f, H / 2f, VIGNETTE_RADIUS, VIGNETTE_STOPS, VIGNETTE_COLORS));
+        g.fillRect(0, 0, W, H);
 
         g.dispose();
         return image;
