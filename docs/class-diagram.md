@@ -620,7 +620,7 @@ classDiagram
     class TextPager
 
     class SceneRenderer {
-        +paint(g, game)
+        +paint(g, game, catchSquash)
         +paintBackdrop(g, palette)
         +paintBackdropWithBoat(g, palette, boatX)
     }
@@ -678,6 +678,7 @@ classDiagram
         +paintFlash(g)
         +getShakeX() double
         +getShakeY() double
+        +getCatchSquash() double
     }
 
     class BoatPainter {

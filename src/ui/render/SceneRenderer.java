@@ -43,6 +43,14 @@ public final class SceneRenderer {
     }
 
     public void paint(Graphics2D g, GameView game) {
+        paint(g, game, 0);
+    }
+
+    /**
+     * @param catchSquash how much wider than normal the caught object is
+     *                    drawn (0 = as it is); see EffectsSystem.getCatchSquash()
+     */
+    public void paint(Graphics2D g, GameView game, double catchSquash) {
         // The sea clears up as the quota fills: the look is picked by the score.
         ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber())
                 .cleanedBy((double) game.getScore() / game.getQuota());
@@ -53,11 +61,26 @@ public final class SceneRenderer {
         boatPainter.paint(g, boat.getX(), boat.getY(), boat.getFacing(), time);
         hookPainter.paintRope(g, boat.getHook(), time);
         for (ObjectView object : game.getObjects()) {
-            painters.paint(g, object, time);   // the registry picks the painter for this kind
+            if (catchSquash != 0 && object.isCaught()) {
+                paintSquashed(g, object, catchSquash);
+            } else {
+                painters.paint(g, object, time);   // the registry picks the painter for this kind
+            }
         }
         hookPainter.paintHead(g, boat.getHook(), time);
 
         paintWaterOnTop(g, palette);
+    }
+
+    /** Draws an object stretched sideways and flattened by the same factor, around its own middle. */
+    private void paintSquashed(Graphics2D g, ObjectView object, double squash) {
+        double wider = 1 + squash;
+        Graphics2D stretched = (Graphics2D) g.create();
+        stretched.translate(object.getX(), object.getY());
+        stretched.scale(wider, 1 / wider);   // what it gains in width it loses in height
+        stretched.translate(-object.getX(), -object.getY());
+        painters.paint(stretched, object, time);
+        stretched.dispose();
     }
 
     /** A backdrop with the boat idling at the given place. The menu uses it. */

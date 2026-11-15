@@ -22,6 +22,15 @@ public final class Mathx {
     }
 
     /**
+     * Easing for things that arrive: goes from 0 to 1 as t goes from 0 to 1,
+     * fast at first and slowing down toward the end.
+     */
+    public static double easeOut(double t) {
+        double left = 1 - t;
+        return 1 - left * left * left;
+    }
+
+    /**
      * Easing for "pop in" animations: goes from 0 to 1 as t goes from 0 to 1,
      * but shoots a little past 1 before settling, which reads as a bounce.
      */

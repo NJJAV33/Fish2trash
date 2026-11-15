@@ -49,7 +49,7 @@ public final class HudPainter {
      * @param time  seconds, used to make the timer pulse when it runs low
      * @param sound whether sound is on, shown as a small speaker
      */
-    public void paint(Graphics2D g, GameView game, double time, SoundState sound) {
+    public void paint(Graphics2D g, GameView game, double time, SoundState sound, double shownScore) {
         g.setColor(UiPalette.PANEL);
         g.fillRoundRect(8, 8, 784, 52, 14, 14);
 
@@ -60,7 +60,7 @@ public final class HudPainter {
         g.setColor(UiPalette.DIM_TEXT);
         g.drawString(StoryText.HUD_OBJECTIVE, 20, 48);
 
-        drawQuotaBar(g, game);
+        drawQuotaBar(g, game, shownScore);
         drawHearts(g, game);
         drawTimer(g, game, time);
 
@@ -151,12 +151,12 @@ public final class HudPainter {
         g.drawString(label, x + 46, TOOL_Y + 20);
     }
 
-    private void drawQuotaBar(Graphics2D g, GameView game) {
-        double filled = Mathx.clamp((double) game.getScore() / game.getQuota(), 0, 1);
+    private void drawQuotaBar(Graphics2D g, GameView game, double shownScore) {
+        double filled = Mathx.clamp(shownScore / game.getQuota(), 0, 1);
 
         g.setColor(UiPalette.BAR_TRACK);
         g.fillRoundRect(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, 8, 8);
-        g.setColor(filled >= 1 ? UiPalette.GOLD : UiPalette.ACCENT);
+        g.setColor(game.getScore() >= game.getQuota() ? UiPalette.GOLD : UiPalette.ACCENT);
         g.fillRoundRect(BAR_X, BAR_Y, (int) (BAR_WIDTH * filled), BAR_HEIGHT, 8, 8);
 
         // Quarter marks, so progress is readable at a glance.

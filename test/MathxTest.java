@@ -18,6 +18,11 @@ public final class MathxTest {
         Check.assertEquals("lerp end", 40.0, Mathx.lerp(20, 40, 1), TINY);
         Check.assertEquals("lerp halfway", 30.0, Mathx.lerp(20, 40, 0.5), TINY);
 
+        Check.assertEquals("easeOut starts at 0", 0.0, Mathx.easeOut(0), TINY);
+        Check.assertEquals("easeOut ends at 1", 1.0, Mathx.easeOut(1), TINY);
+        Check.assertTrue("easeOut is ahead of a steady pace halfway", Mathx.easeOut(0.5) > 0.5);
+        Check.assertTrue("easeOut never passes 1", Mathx.easeOut(0.9) < 1.0);
+
         Check.assertEquals("easeOutBack starts at 0", 0.0, Mathx.easeOutBack(0), TINY);
         Check.assertEquals("easeOutBack ends at 1", 1.0, Mathx.easeOutBack(1), TINY);
         Check.assertTrue("easeOutBack overshoots on the way", Mathx.easeOutBack(0.7) > 1.0);
