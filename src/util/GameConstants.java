@@ -40,6 +40,7 @@ public final class GameConstants {
     public static final double RADIUS_MAGNET = 16;
     public static final double RADIUS_CUTTER = 22;
     public static final double TOOL_SWAP_COOLDOWN_S = 1.0;   // wait between two tool changes
+    public static final int CUTTER_FISH_DAMAGE = 2;      // the Net Cutter's blades: every fish it touches costs this much
     public static final double SLIP_IMMUNITY_S = 1.5;   // an object that slipped off can't be touched for this long
     // false = one hook catches every kind of trash; true = each kind needs its own tool
     public static final boolean EQUIPMENT_ENABLED = true;
@@ -75,13 +76,19 @@ public final class GameConstants {
     public static final double BARRACUDA_CHARGE_SPEED = 400;  // pixels per second
     public static final double BARRACUDA_COOLDOWN_S = 3;      // rest before it can charge again
 
-    // ---- Chapters: points needed, seconds allowed, starting health ----
+    // ---- Stingray: rests on the sand until it feels the Magnet above it, then swims up at it ----
+    public static final double RADIUS_STINGRAY = 24;
+    public static final double STINGRAY_SENSE_RANGE = 220;    // sideways distance at which it notices the Magnet
+    public static final double STINGRAY_LOSE_RANGE = 300;     // it gives up when the Magnet is further away than this
+    public static final double STINGRAY_WARNING_S = 0.8;      // sparks fly this long before it moves
+    public static final double STINGRAY_CHASE_SPEED = 120;    // pixels per second toward the Magnet; the boat is faster
+    public static final double STINGRAY_SINK_SPEED = 80;      // going back down to the sand
+
+    // ---- Chapters: every chapter has five levels (the tables are in model.LevelData) ----
+    // The last level of a chapter asks for the chapter's full quota; the earlier ones build up to it.
     public static final int QUOTA_CH1 = 100;
     public static final int QUOTA_CH2 = 200;
     public static final int QUOTA_CH3 = 350;
-    public static final double TIME_CH1_S = 80;      // chapter 1 needs the most catches, so about 8 s per bottle
-    public static final double TIME_CH2_S = 90;
-    public static final double TIME_CH3_S = 105;
     public static final int HEALTH_CH1 = 3;
     public static final int HEALTH_CH2 = 4;
     public static final int HEALTH_CH3 = 5;
@@ -90,20 +97,20 @@ public final class GameConstants {
 
     // ---- Hints after repeated mistakes ----
     public static final double HINT_COOLDOWN_S = 20;       // quiet time after every hint
-    public static final int HINT_MAX_PER_CHAPTER = 3;
+    public static final int HINT_MAX_PER_LEVEL = 3;
     public static final int HINT_FISH_STREAK = 3;          // fish hooked in a row
     public static final int HINT_SLIP_STREAK = 2;          // wrong-tool touches in a row
     public static final double HINT_IDLE_S = 12;           // seconds without dropping the line
     public static final double HINT_LOW_TIME_S = 15;       // seconds left, with less than half the quota
     public static final int HINT_LOW_HEALTH = 1;
 
-    // ---- Badges: one per chapter, for clearing it well ----
+    // ---- Badges: one per chapter, for clearing its last level well ----
     public static final int SORTER_MAX_SLIPS = 1;               // wrong-tool touches allowed
     public static final double SORTER_MIN_ACCURACY = 0.60;      // share of throws that must bring up trash
     public static final double CHAMPION_TIME_FRACTION = 0.40;   // share of the clock that must be left
     public static final int CHAMPION_MAX_HP_LOST = 1;
 
-    // ---- Run score: what a cleared chapter is worth, and what a failed attempt costs ----
+    // ---- Run score: what a cleared level is worth, and what a failed attempt costs ----
     public static final int SCORE_POINT_MULT = 10;          // per point of trash
     public static final int TIME_BONUS_PER_S = 20;          // per whole second left on the clock
     public static final int HEALTH_BONUS_PER_HP = 100;      // per health left
@@ -116,7 +123,7 @@ public final class GameConstants {
     public static final int HIGHSCORE_MAX_ENTRIES = 10;
     public static final int HIGHSCORE_NAME_MAX_LEN = 12;
 
-    // ---- Spawning (the tables themselves are in model.ChapterData) ----
+    // ---- Spawning (the tables themselves are in model.LevelData) ----
     public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
     public static final double MIN_SPAWN_Y = 210;          // default spawn depth range
     public static final double MAX_SPAWN_Y = 540;          // the hook cannot reach much deeper
@@ -124,5 +131,5 @@ public final class GameConstants {
     public static final double SPAWN_MIN_DIST_TRASH = 100; // nothing appears closer to the hook than this
     public static final double SPAWN_MIN_DIST_FISH = 150;
     public static final int SPAWN_PLACEMENT_TRIES = 8;     // attempts to find a spot away from the hook
-    public static final double SUPPLY_MARGIN = 1.3;        // keep 30% more trash in the water than still needed
+    public static final double SUPPLY_MARGIN = 1.3;        // every level holds at least 30% more trash than its quota
 }

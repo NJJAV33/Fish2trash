@@ -1,18 +1,19 @@
 package ui.render;
 
-import game.ChapterStatus;
+import game.LevelStatus;
 import game.GameView;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import model.EquipmentType;
+import model.LevelData;
 import util.GameConstants;
 import util.Mathx;
 import util.SoundState;
 import util.StoryText;
 
 /**
- * Draws the heads-up display over the game: chapter name, quota bar, hearts,
+ * Draws the heads-up display over the game: level name, quota bar, hearts,
  * timer and score along the top, the tools along the bottom, and tips in a
  * toast above them.
  * It reads everything from the GameView and changes nothing.
@@ -55,7 +56,8 @@ public final class HudPainter {
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
-        g.drawString(game.getChapter().getTitle(), 20, 30);
+        LevelData level = game.getLevelData();
+        g.drawString(StoryText.levelLabel(level.getChapter(), level.getLevel()), 20, 30);
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
         g.drawString(StoryText.HUD_OBJECTIVE, 20, 48);
@@ -190,7 +192,7 @@ public final class HudPainter {
         String text = String.format("%d:%02d", secondsLeft / 60, secondsLeft % 60);
 
         g.setFont(Fonts.TIMER);
-        if (secondsLeft <= GameConstants.LOW_TIME_S && game.getStatus() == ChapterStatus.RUNNING) {
+        if (secondsLeft <= GameConstants.LOW_TIME_S && game.getStatus() == LevelStatus.RUNNING) {
             // Running low: red, and pulsing between dim and bright.
             float pulse = (float) (0.65 + 0.35 * Math.sin(time * 8));
             Graphics2D pulsing = (Graphics2D) g.create();

@@ -7,7 +7,7 @@ public enum GameState {
     /** Story pages before a chapter. */
     STORY,
     PLAYING,
-    CHAPTER_CLEAR,
+    LEVEL_CLEAR,
     GAME_OVER,
     /** The ending and the run recap, after chapter 3. */
     ENDING,

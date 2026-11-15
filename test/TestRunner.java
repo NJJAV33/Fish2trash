@@ -17,7 +17,7 @@ public final class TestRunner {
         run("BadgeTest", BadgeTest::run);
         run("BalanceBotTest", BalanceBotTest::run);
         run("BoatHookTest", BoatHookTest::run);
-        run("ChapterFlowTest", ChapterFlowTest::run);
+        run("LevelFlowTest", LevelFlowTest::run);
         run("DangerousFishTest", DangerousFishTest::run);
         run("DiagramTest", DiagramTest::run);
         run("EffectsTest", EffectsTest::run);

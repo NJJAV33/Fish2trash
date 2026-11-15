@@ -6,7 +6,7 @@ import util.GameConstants;
 
 /**
  * Works out the score of a run. Points, time left and health left of every
- * cleared chapter count; badges add a bonus; every failed attempt costs
+ * cleared level count; badges add a bonus; every failed attempt costs
  * more than the one before.
  *
  * All the numbers are in GameConstants, so the scoring can be rebalanced
@@ -18,8 +18,8 @@ public final class ScoreCalculator {
         // only static methods
     }
 
-    /** What one chapter is worth. A failed attempt is worth nothing. */
-    public static int chapterScore(ChapterResult result) {
+    /** What one level is worth. A failed attempt is worth nothing. */
+    public static int levelScore(LevelResult result) {
         if (!result.isCleared()) {
             return 0;
         }
@@ -37,10 +37,10 @@ public final class ScoreCalculator {
     }
 
     /** The score of a whole run. It never goes below zero. */
-    public static int runScore(List<ChapterResult> clearedChapters, Collection<Badge> badges, int retries) {
+    public static int runScore(List<LevelResult> clearedLevels, Collection<Badge> badges, int retries) {
         int total = 0;
-        for (ChapterResult result : clearedChapters) {
-            total += chapterScore(result);
+        for (LevelResult result : clearedLevels) {
+            total += levelScore(result);
         }
         for (Badge badge : badges) {
             total += badge.getBonus();

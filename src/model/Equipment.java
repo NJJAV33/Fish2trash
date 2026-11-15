@@ -29,6 +29,20 @@ public abstract class Equipment {
     /** What this tool does to an object of the given kind. Each tool decides. */
     protected abstract CatchOutcome outcomeFor(ObjectKind kind);
 
+    /**
+     * How much health it costs when this tool touches a fish that usually
+     * costs the given amount. Most tools change nothing; a tool with blades
+     * overrides this.
+     */
+    public int fishDamage(int usualDamage) {
+        return usualDamage;
+    }
+
+    /** True for a tool that stingrays can feel. Only the Magnet is. */
+    public boolean isMagnetic() {
+        return false;
+    }
+
     public EquipmentType getType() {
         return type;
     }

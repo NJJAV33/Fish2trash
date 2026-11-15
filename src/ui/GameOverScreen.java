@@ -1,6 +1,6 @@
 package ui;
 
-import game.ChapterResult;
+import game.LevelResult;
 import game.FailCause;
 import game.GameState;
 import java.awt.BasicStroke;
@@ -16,7 +16,7 @@ import util.Mathx;
 import util.SoundEffect;
 import util.StoryText;
 
-/** "You're fired": the pink slip after a lost chapter, with a retry. */
+/** "You're fired": the pink slip after a lost level, with a retry. */
 public final class GameOverScreen implements Screen {
 
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
@@ -27,7 +27,7 @@ public final class GameOverScreen implements Screen {
 
     private final ScreenManager screens;
     private final SceneRenderer backdrop;
-    private ChapterResult result;
+    private LevelResult result;
     private double time;
 
     public GameOverScreen(ScreenManager screens, SceneRenderer backdrop) {
@@ -50,7 +50,7 @@ public final class GameOverScreen implements Screen {
     public void keyPressed(int keyCode) {
         if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_R) {
             screens.getAudio().play(SoundEffect.MENU_SELECT);
-            screens.go(GameState.STORY);   // the session is still on the failed chapter
+            screens.go(GameState.STORY);   // the session is still on the failed level
         } else if (keyCode == KeyEvent.VK_ESCAPE) {
             // The run ends here. If it still made the high-score list, a name is asked for.
             screens.go(screens.afterRun(GameState.MENU));

@@ -10,7 +10,7 @@ import util.GameConstants;
  *
  * Every frame it asks each HintRule whether it is triggered and lets the most
  * urgent one speak. To keep hints helpful instead of nagging there is a pause
- * after each hint, a limit per chapter, and a rule that has spoken stays
+ * after each hint, a limit per level, and a rule that has spoken stays
  * quiet until its situation has passed and come back.
  */
 public final class HintEngine {
@@ -20,7 +20,7 @@ public final class HintEngine {
             new LowHealthRule(), new FishStreakRule(), new SlipStreakRule(), new LowTimeRule(), new IdleRule());
     private final Set<HintRule> spoken = new HashSet<>();   // rules that gave their hint and are still triggered
     private double cooldown;   // seconds until the next hint is allowed
-    private int shown;         // hints given in this chapter attempt
+    private int shown;         // hints given in this attempt at a level
 
     /**
      * Lets dt seconds pass and picks a hint if one is due.
@@ -40,7 +40,7 @@ public final class HintEngine {
             }
         }
 
-        if (mostUrgent == null || cooldown > 0 || shown >= GameConstants.HINT_MAX_PER_CHAPTER) {
+        if (mostUrgent == null || cooldown > 0 || shown >= GameConstants.HINT_MAX_PER_LEVEL) {
             return "";   // a rule that had to wait is asked again on a later frame
         }
         spoken.add(mostUrgent);
@@ -49,7 +49,7 @@ public final class HintEngine {
         return mostUrgent.getText(stats);
     }
 
-    /** Hints given so far in this chapter attempt. */
+    /** Hints given so far in this attempt at a level. */
     public int getShownCount() {
         return shown;
     }

@@ -7,6 +7,7 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import ui.GamePanel;
+import model.LevelData;
 import util.GameConstants;
 import util.SoundEffect;
 import util.SoundState;
@@ -155,6 +156,7 @@ public final class ScreenFlowTest {
         }
         play(SCREEN_CHANGE);
         expect("after the last page the chapter starts", GameState.PLAYING);
+        // The opening, the page that opens chapter 1, and the page of level 1-1.
         Check.assertEquals("three pages take two ENTERs each", 6, presses);
     }
 
@@ -197,7 +199,7 @@ public final class ScreenFlowTest {
 
     private static void runningOutOfTimeGetsYouFiredAndYouCanRetry() {
         startChapterOne();
-        play(GameConstants.TIME_CH1_S + 3);   // do nothing until the clock runs out
+        play(LevelData.of(1, 1).getTimeLimit() + 3);   // do nothing until the clock runs out
         expect("time up leads to the fired screen", GameState.GAME_OVER);
 
         press(KeyEvent.VK_ENTER);
@@ -211,7 +213,7 @@ public final class ScreenFlowTest {
 
     private static void endingTheRunReturnsToTheMenu() {
         startChapterOne();
-        play(GameConstants.TIME_CH1_S + 3);
+        play(LevelData.of(1, 1).getTimeLimit() + 3);
         expect("fired again", GameState.GAME_OVER);
 
         press(KeyEvent.VK_ESCAPE);

@@ -3,7 +3,7 @@ import game.GameEvent;
 import game.GameManager;
 import java.util.List;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 import model.Loadout;
 import model.OceanObject;
 
@@ -25,10 +25,10 @@ public final class GameEventTest {
     }
 
     private static void catchingTrashReportsCatchThenDelivery() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         OceanObject trash = GameScript.firstCatchable(game, true);
-        int objectsBefore = game.getObjects().size();
+        int trashBefore = trashInTheWater(game);
 
         GameScript.hookOnto(game, trash);
 
@@ -38,12 +38,25 @@ public final class GameEventTest {
         Check.assertEquals("event names the caught kind", trash.getKind(), caught.getKind());
         Check.assertEquals("event carries the points", game.getPlayer().getScore(), caught.getValue());
         Check.assertTrue("delivered trash left the water", !game.getObjects().contains(trash));
-        game.update(GameScript.STEP);
-        Check.assertEquals("the level put a new piece in its place", objectsBefore, game.getObjects().size());
+        Check.assertEquals("one piece fewer in the water", trashBefore - 1, trashInTheWater(game));
+        for (double t = 0; t < 4.5; t += GameScript.STEP) {
+            game.update(GameScript.STEP);
+        }
+        Check.assertEquals("after a few seconds the level brings a new piece", trashBefore, trashInTheWater(game));
+    }
+
+    private static int trashInTheWater(GameManager game) {
+        int count = 0;
+        for (OceanObject object : game.getObjects()) {
+            if (object.getKind().isTrash()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static void hookingAFishReportsHealthLost() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         OceanObject fish = GameScript.firstCatchable(game, false);
 
@@ -57,7 +70,7 @@ public final class GameEventTest {
     }
 
     private static void aMissIsReported() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         GameScript.clearTheWater(game);
 
@@ -69,7 +82,7 @@ public final class GameEventTest {
     }
 
     private static void aRecallIsNotAMiss() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(7));
         List<GameEvent> events = GameScript.record(game);
         GameScript.clearTheWater(game);
 

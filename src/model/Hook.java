@@ -138,6 +138,12 @@ public class Hook implements HookSensor {
         return state != State.SWINGING;
     }
 
+    /** True while the Magnet is the tool on the line. */
+    @Override
+    public boolean isMagnetic() {
+        return loadout.getSelected().isMagnetic();
+    }
+
     public double getAngle() {
         return angle;
     }

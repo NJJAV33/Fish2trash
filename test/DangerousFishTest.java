@@ -6,6 +6,8 @@ import model.Loadout;
 import model.OceanObject;
 import model.Player;
 import model.Pufferfish;
+import model.Stingray;
+import model.SmallFish;
 import util.GameConstants;
 
 /** Checks the fish with their own behaviour: big fish, pufferfish and barracuda. */
@@ -24,12 +26,17 @@ public final class DangerousFishTest {
         pufferfishSwellsNearTheHook();
         barracudaIgnoresAHookAtRest();
         barracudaWarnsThenCharges();
+        stingrayIgnoresEveryToolButTheMagnet();
+        stingrayWarnsThenRisesAtTheMagnet();
+        stingrayGivesUpWhenTheMagnetComesOff();
+        theNetCutterMakesEveryFishCostDouble();
     }
 
     private static void damageDependsOnTheFish() {
         Check.assertEquals("big fish costs 1 health", 4, healthAfterHooking(new BigFish(100, 300, 50)));
         Check.assertEquals("pufferfish costs 2 health", 3, healthAfterHooking(new Pufferfish(100, 300, 50)));
         Check.assertEquals("barracuda costs 2 health", 3, healthAfterHooking(new Barracuda(100, 300, 50)));
+        Check.assertEquals("stingray costs 2 health", 3, healthAfterHooking(new Stingray(100, 550, 30)));
     }
 
     private static int healthAfterHooking(OceanObject fish) {
@@ -124,6 +131,86 @@ public final class DangerousFishTest {
         Check.assertEquals("warns again after the cooldown", 1.0, barracuda.getAlert(), TINY);
     }
 
+    private static void stingrayIgnoresEveryToolButTheMagnet() {
+        OceanObject ray = new Stingray(400, 550, 0);
+        FakeHook hookLine = new FakeHook(400, 450, true);   // right above it, line out, but no magnet
+        play(ray, hookLine, 3.0);
+        Check.assertEquals("a hook or cutter line leaves it calm", 0.0, ray.getAlert(), TINY);
+        Check.assertEquals("and on the sand", 550, ray.getY(), TINY);
+
+        FakeHook farMagnet = new FakeHook(400 + GameConstants.STINGRAY_SENSE_RANGE + 40, 170, false);
+        farMagnet.magnetic = true;
+        play(ray, farMagnet, 3.0);
+        Check.assertEquals("a magnet too far to the side leaves it calm", 0.0, ray.getAlert(), TINY);
+    }
+
+    private static void stingrayWarnsThenRisesAtTheMagnet() {
+        OceanObject ray = new Stingray(400, 550, 0);
+        FakeHook magnet = new FakeHook(460, 170, false);   // the Magnet hangs under the boat; the line is not even out
+        magnet.magnetic = true;
+
+        play(ray, magnet, GameConstants.STINGRAY_WARNING_S - 0.1);
+        Check.assertEquals("it sparks as a warning", 1.0, ray.getAlert(), TINY);
+        Check.assertEquals("and does not move during the warning", 550, ray.getY(), TINY);
+
+        play(ray, magnet, 1.1);
+        Check.assertTrue("then it leaves the sand", ray.getY() < 550 - 60);
+        Check.assertTrue("toward the magnet", ray.getX() > 400);
+        Check.assertEquals("still sparking", 1.0, ray.getAlert(), TINY);
+
+        play(ray, magnet, 5.0);
+        Check.assertEquals("it swims all the way up to the magnet", 460, ray.getX(), 2.0);
+        Check.assertEquals("and stays there", 170, ray.getY(), 2.0);
+
+        // The boat is faster than the ray: steering away loses it.
+        magnet.tipX = 460 + GameConstants.STINGRAY_LOSE_RANGE + 20;
+        play(ray, magnet, 0.1);
+        Check.assertEquals("out of reach, the sparks stop", 0.0, ray.getAlert(), TINY);
+        play(ray, magnet, 6.0);
+        Check.assertEquals("and it sinks back to the sand", 550, ray.getY(), TINY);
+    }
+
+    private static void stingrayGivesUpWhenTheMagnetComesOff() {
+        OceanObject ray = new Stingray(400, 550, 0);
+        FakeHook magnet = new FakeHook(400, 170, false);
+        magnet.magnetic = true;
+        play(ray, magnet, GameConstants.STINGRAY_WARNING_S + 1.0);
+        double reached = ray.getY();
+        Check.assertTrue("it is on its way up", reached < 550 - 80);
+
+        magnet.magnetic = false;   // the player put the Hook on the line
+        play(ray, magnet, 0.1);
+        Check.assertEquals("the sparks stop at once", 0.0, ray.getAlert(), TINY);
+        play(ray, magnet, 0.5);
+        Check.assertTrue("and it sinks again", ray.getY() > reached);
+
+        // A sinking ray ignores the Magnet until it is back on the sand.
+        magnet.magnetic = true;
+        play(ray, magnet, 0.5);
+        Check.assertEquals("the Magnet does not turn it around on the way down", 0.0, ray.getAlert(), TINY);
+        play(ray, magnet, 3.0);
+        Check.assertEquals("back on the sand, it feels the Magnet again", 1.0, ray.getAlert(), TINY);
+
+        // Changing tools during the warning is always in time: the ray never left the sand.
+        OceanObject second = new Stingray(400, 550, 0);
+        FakeHook quick = new FakeHook(400, 170, false);
+        quick.magnetic = true;
+        play(second, quick, GameConstants.STINGRAY_WARNING_S - 0.2);
+        quick.magnetic = false;
+        play(second, quick, 1.0);
+        Check.assertEquals("a quick change of tools keeps the ray on the sand", 550, second.getY(), TINY);
+    }
+
+    private static void theNetCutterMakesEveryFishCostDouble() {
+        Player player = new Player(5);
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.forChapter(3));   // the Net Cutter is on the line
+        hook.launch();
+        new SmallFish(100, 300, 50).onCaught(player, hook);
+        Check.assertEquals("a small fish costs 2 with the Net Cutter", 3, player.getHealth());
+        new Pufferfish(100, 300, 50).onCaught(player, hook);
+        Check.assertEquals("a pufferfish still costs 2, not more", 1, player.getHealth());
+    }
+
     private static void play(OceanObject fish, HookSensor hook, double seconds) {
         for (double t = 0; t < seconds - 1e-9; t += STEP) {
             fish.sense(hook);
@@ -136,7 +223,8 @@ public final class DangerousFishTest {
 
         private double tipX;
         private double tipY;
-        private final boolean lineOut;
+        private boolean lineOut;
+        private boolean magnetic;   // true = the Magnet is the tool on the line
 
         private FakeHook(double tipX, double tipY, boolean lineOut) {
             this.tipX = tipX;
@@ -157,6 +245,11 @@ public final class DangerousFishTest {
         @Override
         public boolean isLineOut() {
             return lineOut;
+        }
+
+        @Override
+        public boolean isMagnetic() {
+            return magnetic;
         }
     }
 }

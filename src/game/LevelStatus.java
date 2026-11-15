@@ -1,7 +1,7 @@
 package game;
 
-/** How a chapter attempt stands: still going, won, or lost (and why). */
-public enum ChapterStatus {
+/** How an attempt at a level stands: still going, won, or lost (and why). */
+public enum LevelStatus {
     RUNNING(FailCause.NONE),
     /** The quota was met and the last catch reached the boat. */
     CLEARED(FailCause.NONE),
@@ -12,7 +12,7 @@ public enum ChapterStatus {
 
     private final FailCause failCause;
 
-    ChapterStatus(FailCause failCause) {
+    LevelStatus(FailCause failCause) {
         this.failCause = failCause;
     }
 

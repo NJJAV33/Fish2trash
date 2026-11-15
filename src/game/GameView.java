@@ -2,7 +2,7 @@ package game;
 
 import java.util.List;
 import model.Boat;
-import model.ChapterData;
+import model.LevelData;
 import model.EquipmentType;
 import model.ObjectView;
 
@@ -14,7 +14,8 @@ import model.ObjectView;
  */
 public interface GameView {
 
-    ChapterData getChapter();
+    /** The level being played: its chapter, its number and its numbers. */
+    LevelData getLevelData();
 
     Boat getBoat();
 
@@ -32,7 +33,7 @@ public interface GameView {
 
     double getTimeTotal();
 
-    ChapterStatus getStatus();
+    LevelStatus getStatus();
 
     /** The tool on the line right now. */
     EquipmentType getSelectedTool();

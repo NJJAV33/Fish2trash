@@ -50,11 +50,11 @@ public final class HighScoreScreenTest {
 
     private static void aRunWithoutAScoreSkipsTheNameEntry() {
         start();
-        GameManager game = screens.getSession().startChapter();
+        GameManager game = screens.getSession().startLevel();
         while (game.isPlaying()) {
             game.update(STEP);   // do nothing until the clock runs out
         }
-        screens.getSession().onChapterEnded(game);
+        screens.getSession().onLevelEnded(game);
         Check.assertEquals("a run that scored nothing goes straight on",
                 GameState.MENU, screens.afterRun(GameState.MENU));
     }
@@ -97,7 +97,7 @@ public final class HighScoreScreenTest {
         // MARK + ABCDEFGH is the twelve-letter limit; two are deleted, a Z is added.
         Check.assertEquals("capital letters, no forbidden character, cut at the limit", "MARKABCDEFZ", entry.getName());
         Check.assertEquals("with the score of the run", screens.getSession().getRunScore(), entry.getScore());
-        Check.assertEquals("its chapters", 1, entry.getChaptersCleared());
+        Check.assertEquals("its chapters", 1, entry.getLevelsCleared());
         Check.assertEquals("its badges", screens.getSession().getBadges(), entry.getBadges());
         Check.assertEquals("and today's date", LocalDate.now(), entry.getDate());
         Check.assertTrue("it is the latest entry", table.getLatest() == entry);
@@ -173,9 +173,9 @@ public final class HighScoreScreenTest {
 
     private static void clearChapterOne() {
         GameSession session = screens.getSession();
-        GameManager game = session.startChapter();
-        GameScript.clearChapter(game);
-        session.onChapterEnded(game);
+        GameManager game = session.startLevel();
+        GameScript.clearLevel(game);
+        session.onLevelEnded(game);
     }
 
     private static void play(double seconds) {

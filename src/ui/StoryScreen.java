@@ -1,6 +1,6 @@
 package ui;
 
-import game.ChapterResult;
+import game.LevelResult;
 import game.GameSession;
 import game.GameState;
 import java.awt.Graphics2D;
@@ -8,6 +8,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import model.EquipmentType;
+import model.LevelData;
 import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
@@ -19,9 +20,9 @@ import util.SoundEffect;
 import util.StoryText;
 
 /**
- * The story pages shown before a chapter is played: how the last chapter
- * ended (if there was one), what this chapter is about, and the new tool the
- * crew gets for it (if there is one).
+ * The story pages shown before a level is played: how the last level ended
+ * (if there was one), the page that opens a new chapter with the new tool
+ * the crew gets for it, and what this level is about.
  */
 public final class StoryScreen implements Screen {
 
@@ -50,35 +51,47 @@ public final class StoryScreen implements Screen {
     @Override
     public void onEnter() {
         GameSession session = screens.getSession();
-        int chapter = session.getChapterNumber();
-        ChapterResult last = session.getLastResult();
+        LevelData next = session.getLevelData();
+        int chapter = next.getChapter();
+        int level = next.getLevel();
+        LevelResult last = session.getLastResult();
         boolean retrying = last != null && !last.isCleared();
-
+        ChapterPalette look = lookOf(chapter, level - 1);
         List<String> pages = new ArrayList<>();
         pageTitles.clear();
         pageBackdrops.clear();
-        // A retry goes straight to the chapter's own pages.
-        if (!retrying && chapter == 1) {
-            addPage(pages, StoryText.GAME_TITLE, StoryText.CRAWL, ChapterPalette.SHALLOWS);
-        }
-        if (!retrying && chapter > 1) {
-            // The page about the cleared chapter shows that place cleaned up.
-            addPage(pages, StoryText.chapterTitle(chapter - 1), StoryText.outro(chapter - 1),
-                    ChapterPalette.forChapter(chapter - 1).getCleaned());
-        }
-        for (String page : StoryText.introPages(chapter)) {
-            addPage(pages, StoryText.chapterTitle(chapter), page, ChapterPalette.forChapter(chapter));
-        }
         gearPageIndex = NO_GEAR_PAGE;
-        String gearText = StoryText.gearPage(chapter);
-        if (GameConstants.EQUIPMENT_ENABLED && !gearText.isEmpty()) {
-            gearTool = EquipmentType.newestIn(chapter);
-            gearPageIndex = pages.size();
-            addPage(pages, StoryText.GEAR_TITLE + ": " + gearTool.getDisplayName().toUpperCase(),
-                    gearText, ChapterPalette.forChapter(chapter));
+
+        // A retry goes straight to the level's own page.
+        if (!retrying && last == null) {
+            addPage(pages, StoryText.GAME_TITLE, StoryText.CRAWL, look);
         }
+        if (!retrying && last != null) {
+            // The page about the cleared level shows that place as clean as it has become.
+            addPage(pages, StoryText.levelTitle(last.getChapter(), last.getLevel()),
+                    StoryText.levelOutro(last.getChapter(), last.getLevel()),
+                    lookOf(last.getChapter(), last.getLevel()));
+        }
+        if (!retrying && level == 1) {
+            // A new chapter: the page that opens it, and the tool the crew gets for it.
+            addPage(pages, StoryText.chapterTitle(chapter), StoryText.chapterOpening(chapter), look);
+            String gearText = StoryText.gearPage(chapter);
+            if (GameConstants.EQUIPMENT_ENABLED && !gearText.isEmpty()) {
+                gearTool = EquipmentType.newestIn(chapter);
+                gearPageIndex = pages.size();
+                addPage(pages, StoryText.GEAR_TITLE + ": " + gearTool.getDisplayName().toUpperCase(), gearText, look);
+            }
+        }
+        addPage(pages, StoryText.levelTitle(chapter, level), StoryText.levelIntro(chapter, level), look);
+
         pager.start(pages.toArray(new String[0]));
         time = 0;
+    }
+
+    /** How a chapter's sea looks once the given number of its levels are cleared. */
+    static ChapterPalette lookOf(int chapter, int levelsCleared) {
+        return ChapterPalette.forChapter(chapter)
+                .cleanedBy((double) levelsCleared / LevelData.LEVELS_PER_CHAPTER);
     }
 
     private void addPage(List<String> pages, String title, String text, ChapterPalette backdropLook) {

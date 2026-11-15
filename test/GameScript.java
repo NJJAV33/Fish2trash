@@ -1,9 +1,13 @@
 import game.EventType;
 import game.GameEvent;
 import game.GameManager;
+import game.LevelResult;
+import game.GameSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import model.CatchOutcome;
+import model.EquipmentType;
 import model.Hook;
 import model.ObjectKind;
 import model.OceanObject;
@@ -49,13 +53,50 @@ final class GameScript {
     }
 
     /**
-     * Wins the chapter without a single mistake: lifts the chapter's main
-     * kind of trash, one piece after another, with whatever tool is on the line.
+     * Wins the level without a single mistake: lifts one piece of trash after
+     * another, each with the tool made for it.
      */
-    static void clearChapter(GameManager game) {
-        ObjectKind kind = game.getChapter().getPrimaryKind();
+    static void clearLevel(GameManager game) {
         for (int i = 0; i < 100 && game.isPlaying(); i++) {
-            hookOnto(game, firstCatchable(game, kind));
+            OceanObject trash = firstCatchable(game, true);
+            putOnToolFor(game, trash);
+            hookOnto(game, trash);
+        }
+    }
+
+    /** Plays the session's current level without a mistake and records it. */
+    static LevelResult clearCleanly(GameSession session) {
+        GameManager game = session.startLevel();
+        clearLevel(game);
+        return session.onLevelEnded(game);
+    }
+
+    /** Clears levels without a mistake until the session stands at the last level of a chapter. */
+    static void clearUpToFinale(GameSession session) {
+        while (!session.getLevelData().isChapterFinale()) {
+            clearCleanly(session);
+        }
+    }
+
+    /** The tool the crew has that lifts this object, or the one on the line if none does. */
+    static EquipmentType toolFor(GameManager game, OceanObject object) {
+        for (EquipmentType type : EquipmentType.values()) {
+            if (game.isToolUnlocked(type) && type.create().attempt(object) == CatchOutcome.CATCH) {
+                return type;
+            }
+        }
+        return game.getSelectedTool();
+    }
+
+    /** Puts the tool that lifts the object on the line, waiting out the pause between two tool changes. */
+    static void putOnToolFor(GameManager game, OceanObject object) {
+        EquipmentType wanted = toolFor(game, object);
+        for (int i = 0; i < MAX_STEPS && game.isPlaying() && game.getSelectedTool() != wanted; i++) {
+            if (game.getSwapCooldownFraction() == 0) {
+                game.selectTool(wanted);
+            } else {
+                game.update(STEP);
+            }
         }
     }
 

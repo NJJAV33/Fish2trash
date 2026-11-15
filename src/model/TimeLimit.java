@@ -1,7 +1,7 @@
 package model;
 
 /**
- * The countdown for one chapter.
+ * The countdown for one level.
  *
  * It only counts. It can be frozen, which the game does once the quota is
  * met, so a catch that is still being reeled in can never be lost to the clock.

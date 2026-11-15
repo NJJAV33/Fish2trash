@@ -100,6 +100,14 @@ classDiagram
         +getAlert() double
     }
 
+    class Stingray {
+        -phase Phase
+        -homeY double
+        #move(dt)
+        +sense(hook)
+        +getAlert() double
+    }
+
     class ObjectKind {
         <<enumeration>>
         PLASTIC_BOTTLE
@@ -109,6 +117,7 @@ classDiagram
         BIG_FISH
         PUFFERFISH
         BARRACUDA
+        STINGRAY
         +isTrash() boolean
         +create(x, y, speedX)* OceanObject
     }
@@ -118,6 +127,7 @@ classDiagram
         +getTipX() double
         +getTipY() double
         +isLineOut() boolean
+        +isMagnetic() boolean
     }
 
     ObjectView <|.. OceanObject
@@ -130,6 +140,7 @@ classDiagram
     Fish <|-- BigFish
     Fish <|-- Pufferfish
     Fish <|-- Barracuda
+    Fish <|-- Stingray
     ObjectKind ..> OceanObject : creates
     OceanObject ..> HookSensor : senses
 ```
@@ -209,6 +220,8 @@ classDiagram
         -tipRadius double
         +attempt(object) CatchOutcome
         #outcomeFor(kind)* CatchOutcome
+        +fishDamage(usualDamage) int
+        +isMagnetic() boolean
     }
 
     class PlainHook {
@@ -218,11 +231,13 @@ classDiagram
 
     class Magnet {
         #outcomeFor(kind) CatchOutcome
+        +isMagnetic() boolean
     }
 
     class NetCutter {
         -outcomes Map
         #outcomeFor(kind) CatchOutcome
+        +fishDamage(usualDamage) int
     }
 
     class CatchOutcome {
@@ -272,26 +287,35 @@ classDiagram
 
 ## 3. Chapters and levels (package `model`)
 
-A chapter is data. `Level` reads it and keeps the water stocked.
+The story has three chapters of five levels. A level is data (`LevelData`):
+`Level` reads it and puts the objects in the water. Every `SpawnRule` has a
+limited supply, so trash can run out.
 
 ```mermaid
 classDiagram
     direction LR
 
-    class ChapterData {
+    class LevelData {
         +CHAPTER_COUNT int$
-        -number int
-        -title String
+        +LEVELS_PER_CHAPTER int$
+        +LEVEL_COUNT int$
+        -chapter int
+        -level int
         -quota int
         -timeLimit double
         -startHealth int
-        +forChapter(number)$ ChapterData
+        +of(chapter, level)$ LevelData
+        +byNumber(number)$ LevelData
+        +getNumber() int
+        +isChapterFinale() boolean
+        +getTitle() String
     }
 
     class SpawnRule {
         -initialCount int
         -maxCount int
         -minCount int
+        -supply int
         -respawning boolean
         -startSeconds double
         +of(kind)$ Builder
@@ -305,7 +329,7 @@ classDiagram
 
     class Level {
         -elapsed double
-        +update(dt, hook, chapterScore)
+        +update(dt, hook)
         +remove(object)
         +pollTutorialPrompts() List
         +getObjects() List
@@ -323,18 +347,19 @@ classDiagram
         <<interface>>
     }
 
-    ChapterData *-- SpawnRule : 1 or more
-    ChapterData *-- TutorialPrompt : 0 or more
-    ChapterData --> ObjectKind : primary kind
+    LevelData *-- SpawnRule : 1 or more
+    LevelData *-- TutorialPrompt : 0 or more
+    LevelData --> ObjectKind : primary kind
     SpawnRule --> ObjectKind : spawns
-    Level --> ChapterData : reads
+    Level --> LevelData : reads
     Level o-- OceanObject : 0 or more
     Level ..> HookSensor : keeps spawns away from
 ```
 
 ## 4. The rules (package `game`)
 
-`GameManager` plays one chapter attempt. `GameSession` remembers the whole run.
+`GameManager` plays one attempt at a level. `GameSession` remembers the whole
+run of fifteen levels.
 The manager announces `GameEvent`s to its listeners (the observer pattern).
 
 ```mermaid
@@ -342,11 +367,12 @@ classDiagram
     direction TB
 
     class GameSession {
-        -chapterNumber int
+        -levelNumber int
         -retries int
         -badges Set
-        +startChapter() GameManager
-        +onChapterEnded(game) ChapterResult
+        +startLevel() GameManager
+        +onLevelEnded(game) LevelResult
+        +getLevelData() LevelData
         +isFinished() boolean
         +getTotalPoints() int
         +getRunScore() int
@@ -370,14 +396,14 @@ classDiagram
 
     class GameView {
         <<interface>>
-        +getChapter() ChapterData
+        +getLevelData() LevelData
         +getBoat() Boat
         +getObjects() List
         +getScore() int
         +getQuota() int
         +getHealth() int
         +getTimeLeft() double
-        +getStatus() ChapterStatus
+        +getStatus() LevelStatus
         +getSelectedTool() EquipmentType
         +isToolUnlocked(type) boolean
         +getSwapCooldownFraction() double
@@ -457,7 +483,7 @@ classDiagram
         CHAPTER_FAILED
     }
 
-    class ChapterStatus {
+    class LevelStatus {
         <<enumeration>>
         RUNNING
         CLEARED
@@ -474,8 +500,9 @@ classDiagram
         HEALTH
     }
 
-    class ChapterResult {
+    class LevelResult {
         -chapter int
+        -level int
         -cleared boolean
         -points int
         -timeLeft double
@@ -484,7 +511,8 @@ classDiagram
         -catches int
         -slips int
         -fishHits int
-        +from(game)$ ChapterResult
+        +from(game)$ LevelResult
+        +isChapterFinale() boolean
         +getAccuracy() double
         +getTimeFractionLeft() double
         +getHealthLost() int
@@ -521,13 +549,14 @@ classDiagram
     class Level
     class TimeLimit
     class Loadout
-    class ChapterData
+    class LevelData
 
     GameSession ..> GameManager : creates
-    GameSession *-- ChapterResult : cleared chapters
+    GameSession *-- LevelResult : cleared levels
     GameSession o-- Badge : earned, 0 to 3
-    Badge ..> ChapterResult : judges
+    Badge ..> LevelResult : judges
     GameSession ..> Loadout : picks per chapter
+    GameSession ..> LevelData : walks through
     GameView <|.. GameManager
     CatchResolver <|.. GameManager
     GameManager *-- Player
@@ -543,15 +572,15 @@ classDiagram
     HintRule <|.. IdleRule
     HintRule <|.. LowTimeRule
     HintRule <|.. LowHealthRule
-    GameManager --> ChapterData : plays
+    GameManager --> LevelData : plays
     GameManager o-- GameListener : listeners, 0 or more
     GameListener <|.. SessionStats
     GameManager ..> GameEvent : announces
     GameEvent --> EventType
-    GameManager --> ChapterStatus
-    ChapterStatus --> FailCause
-    ChapterResult --> FailCause
-    ChapterResult ..> GameManager : reads when over
+    GameManager --> LevelStatus
+    LevelStatus --> FailCause
+    LevelResult --> FailCause
+    LevelResult ..> GameManager : reads when over
 ```
 
 ## 5. Screens (packages `ui` and `ui.render`)
@@ -610,7 +639,7 @@ classDiagram
     class HowToScreen
     class StoryScreen
     class GameScreen
-    class ChapterClearScreen
+    class LevelClearScreen
     class GameOverScreen
     class VictoryScreen
     class NameEntryScreen
@@ -734,7 +763,7 @@ classDiagram
     Screen <|.. HowToScreen
     Screen <|.. StoryScreen
     Screen <|.. GameScreen
-    Screen <|.. ChapterClearScreen
+    Screen <|.. LevelClearScreen
     Screen <|.. GameOverScreen
     Screen <|.. VictoryScreen
     Screen <|.. NameEntryScreen
@@ -771,14 +800,14 @@ classDiagram
     ToolPainter <|.. CutterPainter
     HookPainter --> PainterRegistry : draws the tool with
     HudPainter --> PainterRegistry : draws tool icons with
-    ChapterClearScreen *-- BadgePainter
+    LevelClearScreen *-- BadgePainter
     VictoryScreen *-- BadgePainter
     HighScoreScreen *-- BadgePainter
 ```
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
-`CanPainter`, `NetPainter`, `SmallFishPainter`, `BigFishPainter`, `PufferPainter`
-and `BarracudaPainter`.
+`CanPainter`, `NetPainter`, `SmallFishPainter`, `BigFishPainter`, `PufferPainter`,
+`BarracudaPainter` and `StingrayPainter`.
 
 ## 6. Sound (package `util`)
 
@@ -868,16 +897,16 @@ classDiagram
     direction LR
 
     class ScoreCalculator {
-        +chapterScore(result)$ int
+        +levelScore(result)$ int
         +retryPenalty(retries)$ int
-        +runScore(chapters, badges, retries)$ int
+        +runScore(levels, badges, retries)$ int
     }
 
     class ScoreEntry {
         <<Comparable>>
         -name String
         -score int
-        -chaptersCleared int
+        -levelsCleared int
         -badges Set
         -retries int
         -date LocalDate
@@ -909,14 +938,14 @@ classDiagram
     }
 
     class GameSession
-    class ChapterResult
+    class LevelResult
     class Badge
     class ScreenManager
     class NameEntryScreen
     class HighScoreScreen
 
     GameSession ..> ScoreCalculator : asks for the run score
-    ScoreCalculator ..> ChapterResult : scores
+    ScoreCalculator ..> LevelResult : scores
     ScoreCalculator ..> Badge : adds the bonus of
     ScoreEntry ..> GameSession : is made from
     ScoreEntry o-- Badge : 0 to 3

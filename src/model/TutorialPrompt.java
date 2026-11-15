@@ -1,7 +1,7 @@
 package model;
 
 /**
- * A short tip that appears at a set moment in a chapter.
+ * A short tip that appears at a set moment in a level.
  *
  * Some tips talk about a tool. Those carry a second wording for when the
  * tools are switched off and the plain hook does everything.

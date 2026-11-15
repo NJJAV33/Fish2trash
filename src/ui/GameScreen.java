@@ -1,6 +1,6 @@
 package ui;
 
-import game.ChapterResult;
+import game.LevelResult;
 import game.EventType;
 import game.GameEvent;
 import game.GameManager;
@@ -15,12 +15,12 @@ import util.GameConstants;
 import util.SoundEffect;
 
 /**
- * The screen where a chapter is played. Each time it is entered it starts a
- * fresh attempt at the session's current chapter.
+ * The screen where a level is played. Each time it is entered it starts a
+ * fresh attempt at the session's current level.
  */
 public final class GameScreen implements Screen {
 
-    // After a chapter ends, hold the last frame briefly before moving on.
+    // After a level ends, hold the last frame briefly before moving on.
     private static final double END_PAUSE_SECONDS = 0.8;
     private static final double BAR_CATCH_UP = 6;   // how fast the quota bar slides to a new score
 
@@ -50,7 +50,7 @@ public final class GameScreen implements Screen {
 
     @Override
     public void onEnter() {
-        game = screens.getSession().startChapter();
+        game = screens.getSession().startLevel();
         game.addListener(this::onGameEvent);   // this screen listens for messages to show
         effects.reset(game);
         game.addListener(effects);             // the effects listen for catches and hits
@@ -79,7 +79,7 @@ public final class GameScreen implements Screen {
         time += dt;
         tipAge += dt;
         game.setBoatDirection(input.getDirection());
-        game.update(dt);   // ignored by the manager once the chapter is over
+        game.update(dt);   // ignored by the manager once the level is over
         effects.update(dt);
         // The quota bar slides to the new score instead of jumping: fast at first, then easing in.
         shownScore += (game.getScore() - shownScore) * Math.min(1, BAR_CATCH_UP * dt);
@@ -95,8 +95,8 @@ public final class GameScreen implements Screen {
     /** Hands the result to the session and moves to the clear or game-over screen. */
     private void leave() {
         leaving = true;
-        ChapterResult result = screens.getSession().onChapterEnded(game);
-        screens.go(result.isCleared() ? GameState.CHAPTER_CLEAR : GameState.GAME_OVER);
+        LevelResult result = screens.getSession().onLevelEnded(game);
+        screens.go(result.isCleared() ? GameState.LEVEL_CLEAR : GameState.GAME_OVER);
     }
 
     @Override
@@ -136,7 +136,7 @@ public final class GameScreen implements Screen {
         }
     }
 
-    /** Pauses the chapter. Also called when the window loses focus. */
+    /** Pauses the level. Also called when the window loses focus. */
     public void pause() {
         if (!game.getStatus().isOver()) {
             screens.pause(pauseOverlay);

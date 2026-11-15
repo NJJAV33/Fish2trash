@@ -1,12 +1,15 @@
 package game;
 
+import model.LevelData;
+
 /**
- * The outcome of one finished chapter attempt, kept after the GameManager
+ * The outcome of one finished attempt at a level, kept after the GameManager
  * that played it is gone. Immutable: it is a record of what happened.
  */
-public final class ChapterResult {
+public final class LevelResult {
 
-    private final int chapter;
+    private final int chapter;   // 1 to 3
+    private final int level;     // 1 to 5 inside the chapter
     private final boolean cleared;
     private final FailCause failCause;
     private final int points;
@@ -20,11 +23,14 @@ public final class ChapterResult {
     private final int fishHits;
 
     /**
-     * @param failCause why the attempt was lost, or FailCause.NONE for a cleared chapter
+     * @param chapter   the chapter the level belongs to
+     * @param level     the level's place inside that chapter
+     * @param failCause why the attempt was lost, or FailCause.NONE for a cleared level
      */
-    public ChapterResult(int chapter, FailCause failCause, int points, double timeLeft, double timeTotal,
+    public LevelResult(int chapter, int level, FailCause failCause, int points, double timeLeft, double timeTotal,
             int healthLeft, int maxHealth, int launches, int catches, int slips, int fishHits) {
         this.chapter = chapter;
+        this.level = level;
         this.cleared = failCause == FailCause.NONE;
         this.failCause = failCause;
         this.points = points;
@@ -39,11 +45,12 @@ public final class ChapterResult {
     }
 
     /** Writes down how a finished attempt went. */
-    public static ChapterResult from(GameManager game) {
+    public static LevelResult from(GameManager game) {
         if (!game.getStatus().isOver()) {
-            throw new IllegalStateException("The chapter is still being played");
+            throw new IllegalStateException("The level is still being played");
         }
-        return new ChapterResult(game.getChapter().getNumber(), game.getStatus().getFailCause(),
+        LevelData played = game.getLevelData();
+        return new LevelResult(played.getChapter(), played.getLevel(), game.getStatus().getFailCause(),
                 game.getPlayer().getScore(), game.getTimeLeft(), game.getTimeTotal(),
                 game.getPlayer().getHealth(), game.getPlayer().getMaxHealth(),
                 game.getStats().getLaunches(), game.getStats().getCatches(),
@@ -52,6 +59,15 @@ public final class ChapterResult {
 
     public int getChapter() {
         return chapter;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    /** True for the last level of a chapter, where the chapter's badge is decided. */
+    public boolean isChapterFinale() {
+        return level == LevelData.LEVELS_PER_CHAPTER;
     }
 
     public boolean isCleared() {
@@ -114,7 +130,7 @@ public final class ChapterResult {
 
     @Override
     public String toString() {
-        return "Chapter " + chapter + (cleared ? " cleared" : " failed (" + failCause + ")")
+        return "Level " + chapter + "-" + level + (cleared ? " cleared" : " failed (" + failCause + ")")
                 + ", " + points + " points";
     }
 }
