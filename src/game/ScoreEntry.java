@@ -15,7 +15,7 @@ import util.StoryText;
  * Immutable.
  *
  * In the score file an entry is one line of text:
- * name|score|chapters cleared|badges|retries|date
+ * name|score|levels cleared|badges|retries|date
  */
 public final class ScoreEntry implements Comparable<ScoreEntry> {
 
@@ -24,17 +24,17 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
 
     private final String name;
     private final int score;
-    private final int chaptersCleared;
+    private final int levelsCleared;
     private final Set<Badge> badges = EnumSet.noneOf(Badge.class);
     private final int retries;
     private final LocalDate date;
 
     /** @param name as the player typed it; it is tidied by cleanName() */
-    public ScoreEntry(String name, int score, int chaptersCleared, Collection<Badge> badges,
+    public ScoreEntry(String name, int score, int levelsCleared, Collection<Badge> badges,
             int retries, LocalDate date) {
         this.name = cleanName(name);
         this.score = score;
-        this.chaptersCleared = chaptersCleared;
+        this.levelsCleared = levelsCleared;
         this.badges.addAll(badges);
         this.retries = retries;
         this.date = date;
@@ -42,7 +42,7 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
 
     /** The entry for a run that has just ended. */
     public static ScoreEntry forRun(String name, GameSession session, LocalDate date) {
-        return new ScoreEntry(name, session.getRunScore(), session.getChaptersCleared(),
+        return new ScoreEntry(name, session.getRunScore(), session.getLevelsCleared(),
                 session.getBadges(), session.getRetries(), date);
     }
 
@@ -73,7 +73,7 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
         for (Badge badge : badges) {
             badgeBits |= 1 << badge.ordinal();   // one bit per badge: 1, 2 and 4
         }
-        return name + SEPARATOR + score + SEPARATOR + chaptersCleared + SEPARATOR + badgeBits
+        return name + SEPARATOR + score + SEPARATOR + levelsCleared + SEPARATOR + badgeBits
                 + SEPARATOR + retries + SEPARATOR + date;
     }
 
@@ -89,11 +89,11 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
         }
         try {
             int score = Integer.parseInt(fields[1]);
-            int chaptersCleared = Integer.parseInt(fields[2]);
+            int levelsCleared = Integer.parseInt(fields[2]);
             int badgeBits = Integer.parseInt(fields[3]);
             int retries = Integer.parseInt(fields[4]);
             LocalDate date = LocalDate.parse(fields[5]);
-            if (score < 0 || chaptersCleared < 0 || retries < 0
+            if (score < 0 || levelsCleared < 0 || retries < 0
                     || badgeBits < 0 || badgeBits >= 1 << Badge.values().length) {
                 throw new HighScoreException("A number is out of range in: " + line);
             }
@@ -103,7 +103,7 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
                     badges.add(badge);
                 }
             }
-            return new ScoreEntry(fields[0], score, chaptersCleared, badges, retries, date);
+            return new ScoreEntry(fields[0], score, levelsCleared, badges, retries, date);
         } catch (NumberFormatException | DateTimeParseException e) {
             throw new HighScoreException("Not a score line: " + line, e);
         }
@@ -132,8 +132,8 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
         return score;
     }
 
-    public int getChaptersCleared() {
-        return chaptersCleared;
+    public int getLevelsCleared() {
+        return levelsCleared;
     }
 
     /** The badges of the run, as a read-only set. */
@@ -151,7 +151,7 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
 
     @Override
     public String toString() {
-        return name + " " + score + " (" + chaptersCleared + " chapters, " + badges.size() + " badges, "
+        return name + " " + score + " (" + levelsCleared + " levels, " + badges.size() + " badges, "
                 + retries + " retries, " + date + ")";
     }
 }

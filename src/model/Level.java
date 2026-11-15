@@ -7,32 +7,27 @@ import java.util.Random;
 import util.GameConstants;
 
 /**
- * The ocean of one chapter: it reads the chapter's spawn table and keeps the
- * water stocked with the right objects at the right time.
+ * The ocean of one level: it reads the level's spawn table and puts the
+ * right objects in the water at the right time.
  *
- * It knows nothing about scoring rules or drawing. The GameManager tells it
- * how far the player has come, and takes out objects that reach the boat.
+ * It knows nothing about scoring rules or drawing. The GameManager takes out
+ * the objects that reach the boat.
  */
 public class Level {
 
-    private final ChapterData data;
+    private final LevelData data;
     private final Random random;
     private final List<OceanObject> objects = new ArrayList<>();
     private final List<RuleState> ruleStates = new ArrayList<>();
     private final List<TutorialPrompt> waitingPrompts;
-    private RuleState primaryRule;   // the first rule that spawns this chapter's main trash
     private double elapsed;
 
-    public Level(ChapterData data, Random random) {
+    public Level(LevelData data, Random random) {
         this.data = data;
         this.random = random;
         this.waitingPrompts = new ArrayList<>(data.getPrompts());
         for (SpawnRule rule : data.getSpawnRules()) {
-            RuleState state = new RuleState(rule);
-            ruleStates.add(state);
-            if (primaryRule == null && rule.getKind() == data.getPrimaryKind()) {
-                primaryRule = state;
-            }
+            ruleStates.add(new RuleState(rule));
         }
     }
 
@@ -40,15 +35,13 @@ public class Level {
      * Advances the ocean by dt seconds: wakes up rules whose time has come,
      * replaces what was collected, and moves every object.
      *
-     * @param hook         where the hook is, so nothing appears right on top of it
-     * @param chapterScore the player's points so far, to judge how much trash is still needed
+     * @param hook where the hook is, so nothing appears right on top of it
      */
-    public void update(double dt, HookSensor hook, int chapterScore) {
+    public void update(double dt, HookSensor hook) {
         elapsed += dt;
         for (RuleState state : ruleStates) {
             runRule(state, dt, hook);
         }
-        guaranteeSupply(hook, chapterScore);
         for (OceanObject object : objects) {
             object.sense(hook);   // dangerous fish react to the hook; the rest ignore it
             object.update(dt, GameConstants.WORLD_WIDTH);
@@ -67,13 +60,13 @@ public class Level {
             }
         }
 
-        // Never fewer than the minimum: top up at once.
-        while (state.alive.size() < rule.getMinCount()) {
+        // Never fewer than the minimum: top up at once (while the rule has any left).
+        while (state.alive.size() < rule.getMinCount() && state.hasSupply()) {
             spawn(state, hook);
         }
 
         // Below the maximum: bring one back after a random delay.
-        if (rule.isRespawning() && state.alive.size() < rule.getMaxCount()) {
+        if (rule.isRespawning() && state.alive.size() < rule.getMaxCount() && state.hasSupply()) {
             if (!state.waitingToRespawn) {
                 state.waitingToRespawn = true;
                 state.respawnTimer = between(rule.getRespawnMin(), rule.getRespawnMax());
@@ -85,27 +78,6 @@ public class Level {
             }
         } else {
             state.waitingToRespawn = false;
-        }
-    }
-
-    /**
-     * The chapter must always be winnable: if the main trash left in the water
-     * is worth less than what the player still needs (plus a margin), add one
-     * more right away, up to one above the rule's normal maximum.
-     */
-    private void guaranteeSupply(HookSensor hook, int chapterScore) {
-        if (primaryRule == null || !primaryRule.started) {
-            return;
-        }
-        int supply = 0;
-        for (OceanObject object : objects) {
-            if (object.getKind() == data.getPrimaryKind() && !object.isCaught()) {
-                supply += object.getPoints();
-            }
-        }
-        double needed = (data.getQuota() - chapterScore) * GameConstants.SUPPLY_MARGIN;
-        if (supply < needed && primaryRule.alive.size() <= primaryRule.rule.getMaxCount()) {
-            spawn(primaryRule, hook);
         }
     }
 
@@ -135,6 +107,7 @@ public class Level {
         object.grantImmunity(GameConstants.SPAWN_FADE_IN_S);   // cannot be hooked while fading in
         objects.add(object);
         state.alive.add(object);
+        state.handedOut++;
     }
 
     private double between(double min, double max) {
@@ -179,7 +152,7 @@ public class Level {
         return data.getStartHealth();
     }
 
-    /** What the level remembers about one spawn rule while the chapter runs. */
+    /** What the level remembers about one spawn rule while the level runs. */
     private static final class RuleState {
 
         private final SpawnRule rule;
@@ -187,9 +160,15 @@ public class Level {
         private boolean started;
         private boolean waitingToRespawn;
         private double respawnTimer;
+        private int handedOut;   // objects this rule has put in the water so far
 
         private RuleState(SpawnRule rule) {
             this.rule = rule;
+        }
+
+        /** True while the rule still has objects to hand out. */
+        private boolean hasSupply() {
+            return handedOut < rule.getSupply();
         }
     }
 }

@@ -6,7 +6,8 @@ import util.GameConstants;
 
 /**
  * A pair of blades on the line. It cuts ghost nets free and brings them up.
- * Bottles and cans slip off it, and its blades still hurt any fish they touch.
+ * Bottles and cans slip off it. Its blades are the most dangerous thing on
+ * the boat: every fish they touch costs double health, even a small one.
  */
 public class NetCutter extends Equipment {
 
@@ -25,5 +26,10 @@ public class NetCutter extends Equipment {
     @Override
     protected CatchOutcome outcomeFor(ObjectKind kind) {
         return outcomes.get(kind);
+    }
+
+    @Override
+    public int fishDamage(int usualDamage) {
+        return Math.max(usualDamage, GameConstants.CUTTER_FISH_DAMAGE);
     }
 }

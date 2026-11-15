@@ -1,20 +1,20 @@
-import game.ChapterStatus;
+import game.LevelStatus;
 import game.EventType;
 import game.GameEvent;
 import game.GameManager;
 import java.util.List;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 import model.Loadout;
 import model.TimeLimit;
 import util.GameConstants;
 
 /** Checks how a chapter is won and lost: quota, clock and health. */
-public final class ChapterFlowTest {
+public final class LevelFlowTest {
 
     private static final double TINY = 1e-9;
 
-    private ChapterFlowTest() {
+    private LevelFlowTest() {
         // only static methods
     }
 
@@ -60,10 +60,10 @@ public final class ChapterFlowTest {
         }
         List<EventType> types = GameScript.types(events);
         int quotaAt = types.indexOf(EventType.QUOTA_REACHED);
-        int clearedAt = types.indexOf(EventType.CHAPTER_CLEARED);
+        int clearedAt = types.indexOf(EventType.LEVEL_CLEARED);
         boolean sawQuotaBeforeClear = quotaAt >= 0 && clearedAt > quotaAt;
 
-        Check.assertEquals("chapter is cleared", ChapterStatus.CLEARED, game.getStatus());
+        Check.assertEquals("chapter is cleared", LevelStatus.CLEARED, game.getStatus());
         Check.assertTrue("score reached the quota", game.getPlayer().getScore() >= game.getQuota());
         Check.assertTrue("quota is announced before the clear", sawQuotaBeforeClear);
         Check.assertEquals("the clear follows the last delivery",
@@ -81,12 +81,12 @@ public final class ChapterFlowTest {
         List<GameEvent> events = GameScript.record(game);
         GameScript.clearTheWater(game);
 
-        for (double t = 0; t < GameConstants.TIME_CH1_S + 1; t += 0.05) {
+        for (double t = 0; t < game.getTimeTotal() + 1; t += 0.05) {
             game.update(0.05);
         }
-        Check.assertEquals("out of time", ChapterStatus.FAILED_TIME, game.getStatus());
+        Check.assertEquals("out of time", LevelStatus.FAILED_TIME, game.getStatus());
         Check.assertEquals("clock shows zero", 0.0, game.getTimeLeft(), TINY);
-        Check.assertEquals("failure is announced once", List.of(EventType.CHAPTER_FAILED), GameScript.types(events));
+        Check.assertEquals("failure is announced once", List.of(EventType.LEVEL_FAILED), GameScript.types(events));
     }
 
     private static void runningOutOfHealthLoses() {
@@ -99,14 +99,14 @@ public final class ChapterFlowTest {
                 game.update(0.05);
             }
         }
-        Check.assertEquals("out of health", ChapterStatus.FAILED_HEALTH, game.getStatus());
+        Check.assertEquals("out of health", LevelStatus.FAILED_HEALTH, game.getStatus());
         Check.assertEquals("health is zero", 0, game.getPlayer().getHealth());
     }
 
     private static void nothingMovesAfterTheChapterEnds() {
         GameManager game = newGame();
         GameScript.clearTheWater(game);
-        for (double t = 0; t < GameConstants.TIME_CH1_S + 1; t += 0.05) {
+        for (double t = 0; t < game.getTimeTotal() + 1; t += 0.05) {
             game.update(0.05);
         }
         List<GameEvent> events = GameScript.record(game);
@@ -122,6 +122,6 @@ public final class ChapterFlowTest {
     }
 
     private static GameManager newGame() {
-        return new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(11));
+        return new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(11));
     }
 }

@@ -1,9 +1,9 @@
-import game.ChapterResult;
+import game.LevelResult;
 import game.FailCause;
 import game.GameManager;
 import game.GameSession;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 
 /** Checks the run through the story: moving on after a clear, retrying after a fail. */
 public final class SessionTest {
@@ -20,75 +20,87 @@ public final class SessionTest {
 
     private static void clearingEveryChapterFinishesTheStory() {
         GameSession session = new GameSession(new Random(3));
-        int[] quotas = {100, 200, 350};
+        int[] finalQuotas = {100, 200, 350};
+        int quotaTotal = 0;
 
-        for (int n = 1; n <= ChapterData.CHAPTER_COUNT; n++) {
-            Check.assertEquals("playing chapter", n, session.getChapterNumber());
-            Check.assertTrue("story not finished before chapter " + n, !session.isFinished());
+        for (int n = 1; n <= LevelData.LEVEL_COUNT; n++) {
+            LevelData level = session.getLevelData();
+            String name = "level " + level.getChapter() + "-" + level.getLevel();
+            Check.assertEquals("the levels come in order", n, level.getNumber());
+            Check.assertEquals(name + " is in the right chapter",
+                    (n - 1) / LevelData.LEVELS_PER_CHAPTER + 1, level.getChapter());
+            Check.assertTrue("story not finished before " + name, !session.isFinished());
 
-            GameManager game = session.startChapter();
-            Check.assertEquals("chapter " + n + " quota", quotas[n - 1], game.getQuota());
-            GameScript.clearChapter(game);
-            ChapterResult result = session.onChapterEnded(game);
+            GameManager game = session.startLevel();
+            Check.assertEquals(name + " quota", level.getQuota(), game.getQuota());
+            if (level.isChapterFinale()) {
+                Check.assertEquals("the last level of chapter " + level.getChapter() + " asks for the chapter's quota",
+                        finalQuotas[level.getChapter() - 1], game.getQuota());
+            }
+            quotaTotal += game.getQuota();
+            GameScript.clearLevel(game);
+            LevelResult result = session.onLevelEnded(game);
 
-            Check.assertTrue("chapter " + n + " cleared", result.isCleared());
+            Check.assertTrue(name + " cleared", result.isCleared());
+            Check.assertEquals("the result remembers its chapter", level.getChapter(), result.getChapter());
+            Check.assertEquals("the result remembers its level", level.getLevel(), result.getLevel());
             Check.assertEquals("no fail cause on a clear", FailCause.NONE, result.getFailCause());
-            Check.assertTrue("result keeps the points", result.getPoints() >= quotas[n - 1]);
+            Check.assertTrue("result keeps the points", result.getPoints() >= level.getQuota());
             Check.assertEquals("every launch was a catch", result.getLaunches(), result.getCatches());
             Check.assertEquals("no fish were hooked", 0, result.getFishHits());
         }
 
         Check.assertTrue("story is finished", session.isFinished());
-        Check.assertEquals("three chapters banked", 3, session.getChaptersCleared());
+        Check.assertEquals("fifteen levels banked", LevelData.LEVEL_COUNT, session.getLevelsCleared());
         Check.assertEquals("no retries", 0, session.getRetries());
-        Check.assertTrue("total points cover all three quotas", session.getTotalPoints() >= 650);
-        Check.assertTrue("trash was counted", session.getTotalTrash() >= 10 + 10 + 7);
+        Check.assertTrue("total points cover every quota", session.getTotalPoints() >= quotaTotal);
+        Check.assertTrue("trash was counted", session.getTotalTrash() >= 100);
 
         boolean refused = false;
         try {
-            session.startChapter();
+            session.startLevel();
         } catch (IllegalStateException expected) {
             refused = true;
         }
-        Check.assertTrue("no chapter can start after the story ends", refused);
+        Check.assertTrue("no level can start after the story ends", refused);
     }
 
     private static void aFailedChapterIsRetriedAndKeepsEarlierWins() {
         GameSession session = new GameSession(new Random(4));
-        GameManager first = session.startChapter();
-        GameScript.clearChapter(first);
-        session.onChapterEnded(first);
+        GameManager first = session.startLevel();
+        GameScript.clearLevel(first);
+        session.onLevelEnded(first);
         int bankedPoints = session.getTotalPoints();
 
-        // Chapter 2: do nothing until the clock runs out.
-        GameManager second = session.startChapter();
+        // Level 1-2: do nothing until the clock runs out.
+        GameManager second = session.startLevel();
         while (second.isPlaying()) {
             second.update(0.05);
         }
-        ChapterResult failed = session.onChapterEnded(second);
+        LevelResult failed = session.onLevelEnded(second);
 
-        Check.assertTrue("chapter 2 failed", !failed.isCleared());
+        Check.assertTrue("level 1-2 failed", !failed.isCleared());
         Check.assertEquals("it failed on time", FailCause.TIME, failed.getFailCause());
-        Check.assertEquals("still on chapter 2", 2, session.getChapterNumber());
+        Check.assertEquals("still on level 2", 2, session.getLevelData().getNumber());
         Check.assertEquals("one retry counted", 1, session.getRetries());
-        Check.assertEquals("chapter 1 stays banked", 1, session.getChaptersCleared());
+        Check.assertEquals("level 1-1 stays banked", 1, session.getLevelsCleared());
         Check.assertEquals("banked points are kept", bankedPoints, session.getTotalPoints());
 
-        // The retry is a fresh attempt at the same chapter.
-        GameManager retry = session.startChapter();
+        // The retry is a fresh attempt at the same level.
+        GameManager retry = session.startLevel();
         Check.assertEquals("retry starts at zero points", 0, retry.getPlayer().getScore());
         Check.assertEquals("retry has the full clock", retry.getTimeTotal(), retry.getTimeLeft(), 1e-9);
-        GameScript.clearChapter(retry);
-        session.onChapterEnded(retry);
-        Check.assertEquals("moves on to chapter 3 after the retry", 3, session.getChapterNumber());
+        GameScript.clearLevel(retry);
+        session.onLevelEnded(retry);
+        Check.assertEquals("moves on to level 1-3 after the retry", 3, session.getLevelData().getNumber());
     }
 
     private static void anUnfinishedChapterCannotBeRecorded() {
         GameSession session = new GameSession(new Random(5));
-        GameManager game = session.startChapter();
+        GameManager game = session.startLevel();
         boolean refused = false;
         try {
-            session.onChapterEnded(game);
+            session.onLevelEnded(game);
         } catch (IllegalStateException expected) {
             refused = true;
         }

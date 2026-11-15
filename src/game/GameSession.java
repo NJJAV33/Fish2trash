@@ -6,83 +6,85 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import model.ChapterData;
+import model.LevelData;
 import model.Loadout;
 
 /**
- * One run through the story: which chapter the player is on, the chapters
+ * One run through the story: which level the player is on, the levels
  * already cleared, the badges earned, and how many attempts failed.
  *
- * A GameManager only lives for one chapter attempt. The session is the memory
- * that lasts across them.
+ * A GameManager only lives for one attempt at a level. The session is the
+ * memory that lasts across them.
  */
 public final class GameSession {
 
     private final Random random;
-    private final List<ChapterResult> clearedChapters = new ArrayList<>();
+    private final List<LevelResult> clearedLevels = new ArrayList<>();
     private final Set<Badge> badges = EnumSet.noneOf(Badge.class);
-    private int chapterNumber;
+    private int levelNumber;   // 1 for level 1-1, up to 15 for level 3-5; 16 once the story is finished
     private int retries;
-    private ChapterResult lastResult;
+    private LevelResult lastResult;
 
     public GameSession(Random random) {
         this.random = random;
-        this.chapterNumber = 1;
+        this.levelNumber = 1;
     }
 
-    /** Starts an attempt at the current chapter. */
-    public GameManager startChapter() {
-        if (isFinished()) {
-            throw new IllegalStateException("The story is already finished");
-        }
-        // Each chapter starts with the tools the crew has by then.
-        return new GameManager(ChapterData.forChapter(chapterNumber), Loadout.forChapter(chapterNumber), random);
+    /** Starts an attempt at the current level. */
+    public GameManager startLevel() {
+        LevelData level = getLevelData();
+        // Tools belong to the chapter: every level starts with the tools the crew has by then.
+        return new GameManager(level, Loadout.forChapter(level.getChapter()), random);
     }
 
     /**
-     * Records how an attempt ended. A cleared chapter is banked, may earn
-     * its badge, and the story moves on; a failed one only counts as a
-     * retry, so nothing already won is ever lost.
+     * Records how an attempt ended. A cleared level is banked and the story
+     * moves on; the last level of a chapter may also earn the chapter's
+     * badge. A failed attempt only counts as a retry, so nothing already
+     * won is ever lost.
      */
-    public ChapterResult onChapterEnded(GameManager game) {
-        lastResult = ChapterResult.from(game);
+    public LevelResult onLevelEnded(GameManager game) {
+        lastResult = LevelResult.from(game);
         if (lastResult.isCleared()) {
-            clearedChapters.add(lastResult);
-            Badge badge = Badge.forChapter(chapterNumber);
+            clearedLevels.add(lastResult);
+            Badge badge = Badge.forChapter(lastResult.getChapter());
             if (badge.isEarnedBy(lastResult)) {
                 badges.add(badge);
             }
-            chapterNumber++;
+            levelNumber++;
         } else {
             retries++;
         }
         return lastResult;
     }
 
-    /** True once the last chapter has been cleared. */
+    /** True once the last level has been cleared. */
     public boolean isFinished() {
-        return chapterNumber > ChapterData.CHAPTER_COUNT;
+        return levelNumber > LevelData.LEVEL_COUNT;
     }
 
-    /** The chapter to play next (1 to 3). */
-    public int getChapterNumber() {
-        return chapterNumber;
+    /** The level to play next. */
+    public LevelData getLevelData() {
+        if (isFinished()) {
+            throw new IllegalStateException("The story is already finished");
+        }
+        return LevelData.byNumber(levelNumber);
     }
 
     public int getRetries() {
         return retries;
     }
 
-    public ChapterResult getLastResult() {
+    public LevelResult getLastResult() {
         return lastResult;
     }
 
-    public List<ChapterResult> getClearedChapters() {
-        return Collections.unmodifiableList(clearedChapters);
+    public List<LevelResult> getClearedLevels() {
+        return Collections.unmodifiableList(clearedLevels);
     }
 
-    public int getChaptersCleared() {
-        return clearedChapters.size();
+    public int getLevelsCleared() {
+        return clearedLevels.size();
     }
 
     public boolean hasBadge(Badge badge) {
@@ -94,33 +96,33 @@ public final class GameSession {
         return Collections.unmodifiableSet(badges);
     }
 
-    /** Points from every cleared chapter. */
+    /** Points from every cleared level. */
     public int getTotalPoints() {
         int total = 0;
-        for (ChapterResult result : clearedChapters) {
+        for (LevelResult result : clearedLevels) {
             total += result.getPoints();
         }
         return total;
     }
 
-    /** The score of the whole run so far: cleared chapters, badges and failed attempts. */
+    /** The score of the whole run so far: cleared levels, badges and failed attempts. */
     public int getRunScore() {
-        return ScoreCalculator.runScore(clearedChapters, badges, retries);
+        return ScoreCalculator.runScore(clearedLevels, badges, retries);
     }
 
-    /** Pieces of trash collected in the cleared chapters. */
+    /** Pieces of trash collected in the cleared levels. */
     public int getTotalTrash() {
         int total = 0;
-        for (ChapterResult result : clearedChapters) {
+        for (LevelResult result : clearedLevels) {
             total += result.getCatches();
         }
         return total;
     }
 
-    /** Fish hooked by mistake in the cleared chapters. */
+    /** Fish hit by mistake in the cleared levels. */
     public int getTotalFishHits() {
         int total = 0;
-        for (ChapterResult result : clearedChapters) {
+        for (LevelResult result : clearedLevels) {
             total += result.getFishHits();
         }
         return total;

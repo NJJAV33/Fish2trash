@@ -29,7 +29,7 @@ public enum EventType {
     /** The score reached the chapter's quota. The clock stops here. */
     QUOTA_REACHED,
     /** The chapter was won: the catch that met the quota reached the boat. */
-    CHAPTER_CLEARED,
+    LEVEL_CLEARED,
     /** The chapter was lost. GameManager.getStatus() says why. */
-    CHAPTER_FAILED
+    LEVEL_FAILED
 }

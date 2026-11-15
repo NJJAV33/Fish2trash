@@ -3,6 +3,7 @@ package ui.render;
 import game.GameView;
 import java.awt.Graphics2D;
 import model.Boat;
+import model.LevelData;
 import model.ObjectView;
 import util.GameConstants;
 
@@ -51,9 +52,11 @@ public final class SceneRenderer {
      *                    drawn (0 = as it is); see EffectsSystem.getCatchSquash()
      */
     public void paint(Graphics2D g, GameView game, double catchSquash) {
-        // The sea clears up as the quota fills: the look is picked by the score.
-        ChapterPalette palette = ChapterPalette.forChapter(game.getChapter().getNumber())
-                .cleanedBy((double) game.getScore() / game.getQuota());
+        // The sea clears up over the five levels of a chapter, a little with every catch.
+        LevelData level = game.getLevelData();
+        double levelsDone = level.getLevel() - 1 + (double) game.getScore() / game.getQuota();
+        ChapterPalette palette = ChapterPalette.forChapter(level.getChapter())
+                .cleanedBy(levelsDone / LevelData.LEVELS_PER_CHAPTER);
         background.paint(g, palette);
         water.paintBackWaves(g, palette, time);
 

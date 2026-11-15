@@ -3,7 +3,7 @@ import game.GameEvent;
 import game.GameManager;
 import java.util.List;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 import model.EquipmentLockedException;
 import model.EquipmentType;
 import model.Loadout;
@@ -25,12 +25,12 @@ public final class LoadoutTest {
         steppingSkipsLockedToolsAndWrapsAround();
         theGameAnnouncesToolChanges();
         noToolChangeWhileTheLineIsOut();
-        theMagnetGoesStraightPastAFish();
+        theMagnetKnocksAFishToo();
     }
 
     private static void eachChapterAddsOneToolAndStartsWithIt() {
         EquipmentType[] all = EquipmentType.values();
-        for (int chapter = 1; chapter <= ChapterData.CHAPTER_COUNT; chapter++) {
+        for (int chapter = 1; chapter <= LevelData.CHAPTER_COUNT; chapter++) {
             Loadout loadout = Loadout.forChapter(chapter);
             for (EquipmentType type : all) {
                 Check.assertEquals("chapter " + chapter + " has the " + type,
@@ -95,7 +95,7 @@ public final class LoadoutTest {
     }
 
     private static void theGameAnnouncesToolChanges() {
-        GameManager game = new GameManager(ChapterData.forChapter(2), Loadout.forChapter(2), new Random(3));
+        GameManager game = new GameManager(LevelData.of(2, 1), Loadout.forChapter(2), new Random(3));
         List<GameEvent> events = GameScript.record(game);
 
         game.selectTool(EquipmentType.MAGNET);       // already on the line: nothing happens
@@ -121,7 +121,7 @@ public final class LoadoutTest {
     }
 
     private static void noToolChangeWhileTheLineIsOut() {
-        GameManager game = new GameManager(ChapterData.forChapter(2), Loadout.forChapter(2), new Random(3));
+        GameManager game = new GameManager(LevelData.of(2, 1), Loadout.forChapter(2), new Random(3));
         GameScript.clearTheWater(game);
         List<GameEvent> events = GameScript.record(game);
 
@@ -133,15 +133,22 @@ public final class LoadoutTest {
         Check.assertEquals("the magnet stays on the line", EquipmentType.MAGNET, game.getSelectedTool());
     }
 
-    private static void theMagnetGoesStraightPastAFish() {
-        GameManager game = new GameManager(ChapterData.forChapter(2), Loadout.forChapter(2), new Random(3));
+    private static void theMagnetKnocksAFishToo() {
+        GameManager game = new GameManager(LevelData.of(2, 1), Loadout.forChapter(2), new Random(3));
         OceanObject fish = GameScript.firstCatchable(game, false);
         Check.assertTrue("found a fish", !fish.getKind().isTrash() && fish.getKind() != ObjectKind.CAN);
         List<GameEvent> events = GameScript.record(game);
 
         GameScript.hookOnto(game, fish);   // the magnet is on the line in chapter 2
 
-        Check.assertEquals("the throw ends as a miss", List.of(EventType.HOOK_LAUNCHED, EventType.MISSED), GameScript.types(events));
-        Check.assertEquals("no health lost", game.getMaxHealth(), game.getHealth());
+        Check.assertEquals("the magnet hits the fish",
+                List.of(EventType.HOOK_LAUNCHED, EventType.HEALTH_LOST), GameScript.types(events));
+        Check.assertTrue("health is lost", game.getHealth() < game.getMaxHealth());
+
+        // A bottle is not metal: the magnet goes straight past it.
+        events.clear();
+        GameScript.hookOnto(game, GameScript.firstCatchable(game, ObjectKind.PLASTIC_BOTTLE));
+        Check.assertEquals("past a bottle the throw ends as a miss",
+                List.of(EventType.HOOK_LAUNCHED, EventType.MISSED), GameScript.types(events));
     }
 }

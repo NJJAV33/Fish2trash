@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 import model.Boat;
 import model.CatchResolver;
-import model.ChapterData;
+import model.LevelData;
 import model.Equipment;
 import model.EquipmentLockedException;
 import model.EquipmentType;
@@ -18,7 +18,7 @@ import model.TimeLimit;
 import util.GameConstants;
 
 /**
- * The rules of one chapter attempt: what the hook touches, the countdown, and
+ * The rules of one attempt at a level: what the hook touches, the countdown, and
  * whether the player has won or lost.
  *
  * It contains no drawing and no keyboard code - the ui package handles those.
@@ -26,7 +26,7 @@ import util.GameConstants;
  */
 public final class GameManager implements GameView, CatchResolver {
 
-    private final ChapterData chapter;
+    private final LevelData levelData;
     private final Level level;
     private final List<GameListener> listeners = new ArrayList<>();
     private final SessionStats stats = new SessionStats();
@@ -37,7 +37,7 @@ public final class GameManager implements GameView, CatchResolver {
     private final TimeLimit timeLimit;
     private final int quota;
     private int boatDirection;
-    private ChapterStatus status;
+    private LevelStatus status;
     private boolean quotaReached;
     private int lastAnnouncedSecond;   // the last "seconds left" that was announced as a low-time tick
 
@@ -46,23 +46,23 @@ public final class GameManager implements GameView, CatchResolver {
     private boolean launchResolved;
 
     /**
-     * @param chapter the chapter to play
+     * @param levelData the level to play
      * @param loadout the tools the crew has
      * @param random  the random source; a test can pass a fixed seed to get
      *                the same game every time
      */
-    public GameManager(ChapterData chapter, Loadout loadout, Random random) {
-        this.chapter = chapter;
-        level = new Level(chapter, random);
+    public GameManager(LevelData levelData, Loadout loadout, Random random) {
+        this.levelData = levelData;
+        level = new Level(levelData, random);
         player = new Player(level.getStartHealth());
         boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y, loadout);
         timeLimit = new TimeLimit(level.getTimeLimitSeconds());
         quota = level.getQuota();
-        status = ChapterStatus.RUNNING;
+        status = LevelStatus.RUNNING;
         addListener(stats);   // the stats count events like any other listener
 
         // Run the level for zero seconds, so the water is stocked from the first frame.
-        level.update(0, boat.getHook(), 0);
+        level.update(0, boat.getHook());
     }
 
     /** Registers someone who wants to hear about game events. */
@@ -81,7 +81,7 @@ public final class GameManager implements GameView, CatchResolver {
      * if it is still on its way out.
      */
     public void spaceAction() {
-        if (status != ChapterStatus.RUNNING) {
+        if (status != LevelStatus.RUNNING) {
             return;
         }
         Hook hook = boat.getHook();
@@ -104,7 +104,7 @@ public final class GameManager implements GameView, CatchResolver {
     public void selectTool(EquipmentType type) {
         Hook hook = boat.getHook();
         Loadout loadout = hook.getLoadout();
-        if (status != ChapterStatus.RUNNING || type == loadout.getSelectedType()) {
+        if (status != LevelStatus.RUNNING || type == loadout.getSelectedType()) {
             return;
         }
         try {
@@ -129,15 +129,15 @@ public final class GameManager implements GameView, CatchResolver {
         boatDirection = direction;
     }
 
-    /** Advances the game by dt seconds. Does nothing once the chapter is over. */
+    /** Advances the game by dt seconds. Does nothing once the level is over. */
     public void update(double dt) {
-        if (status != ChapterStatus.RUNNING) {
+        if (status != LevelStatus.RUNNING) {
             return;
         }
 
         timeLimit.tick(dt);   // does nothing once the clock is frozen
         if (timeLimit.isTimeUp()) {
-            fail(ChapterStatus.FAILED_TIME);
+            fail(LevelStatus.FAILED_TIME);
             return;
         }
         announceLowTime();
@@ -147,7 +147,7 @@ public final class GameManager implements GameView, CatchResolver {
         boolean lineWasOut = hook.isLineOut();
         hook.update(dt);
         hook.getLoadout().tick(dt);
-        level.update(dt, hook, player.getScore());
+        level.update(dt, hook);
         for (String tip : level.pollTutorialPrompts()) {
             emit(GameEvent.withText(EventType.TUTORIAL_PROMPT, tip));
         }
@@ -163,7 +163,7 @@ public final class GameManager implements GameView, CatchResolver {
     private void giveHintIfDue(double dt) {
         stats.tick(dt);
         String hint = hints.update(dt, stats, this);
-        if (status == ChapterStatus.RUNNING && !hint.isEmpty()) {
+        if (status == LevelStatus.RUNNING && !hint.isEmpty()) {
             emit(GameEvent.withText(EventType.HINT_SHOWN, hint));
         }
     }
@@ -204,7 +204,7 @@ public final class GameManager implements GameView, CatchResolver {
         int healthBefore = player.getHealth();
 
         // POLYMORPHISM: the same call does different things - trash adds
-        // points and rides the hook, a fish costs health and swims away.
+        // points and rides the line up, a fish costs health and swims away.
         object.onCaught(player, boat.getHook());
         launchResolved = true;
 
@@ -217,10 +217,10 @@ public final class GameManager implements GameView, CatchResolver {
         }
 
         if (!player.isAlive()) {
-            fail(ChapterStatus.FAILED_HEALTH);
+            fail(LevelStatus.FAILED_HEALTH);
         } else if (!quotaReached && player.getScore() >= quota) {
             // Quota met: stop the clock so the catch on the line cannot be
-            // lost to it. The chapter is won when that catch reaches the boat.
+            // lost to it. The level is won when that catch reaches the boat.
             quotaReached = true;
             timeLimit.freeze();
             emit(GameEvent.of(EventType.QUOTA_REACHED));
@@ -249,24 +249,24 @@ public final class GameManager implements GameView, CatchResolver {
             hook.clearCaughtObject();
             emit(GameEvent.about(EventType.DELIVERED, carried, 0));
             if (quotaReached) {
-                status = ChapterStatus.CLEARED;
-                emit(GameEvent.of(EventType.CHAPTER_CLEARED));
+                status = LevelStatus.CLEARED;
+                emit(GameEvent.of(EventType.LEVEL_CLEARED));
             }
         } else if (!launchResolved) {
             emit(GameEvent.of(EventType.MISSED));
         }
     }
 
-    private void fail(ChapterStatus reason) {
+    private void fail(LevelStatus reason) {
         status = reason;
-        emit(GameEvent.of(EventType.CHAPTER_FAILED));
+        emit(GameEvent.of(EventType.LEVEL_FAILED));
     }
 
     // ---- Reading the game (GameView) ----
 
     @Override
-    public ChapterData getChapter() {
-        return chapter;
+    public LevelData getLevelData() {
+        return levelData;
     }
 
     @Override
@@ -311,7 +311,7 @@ public final class GameManager implements GameView, CatchResolver {
     }
 
     @Override
-    public ChapterStatus getStatus() {
+    public LevelStatus getStatus() {
         return status;
     }
 
@@ -331,7 +331,7 @@ public final class GameManager implements GameView, CatchResolver {
     }
 
     public boolean isPlaying() {
-        return status == ChapterStatus.RUNNING;
+        return status == LevelStatus.RUNNING;
     }
 
     public Player getPlayer() {

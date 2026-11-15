@@ -4,7 +4,7 @@ import game.GameManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 import model.Loadout;
 import model.ObjectKind;
 import ui.AudioEventListener;
@@ -38,14 +38,14 @@ public final class AudioEventTest {
         listener.onGameEvent(GameEvent.of(EventType.SWAP_DENIED));
         listener.onGameEvent(GameEvent.withText(EventType.HINT_SHOWN, "a hint"));
         listener.onGameEvent(GameEvent.of(EventType.QUOTA_REACHED));
-        listener.onGameEvent(GameEvent.of(EventType.CHAPTER_CLEARED));
-        listener.onGameEvent(GameEvent.of(EventType.CHAPTER_FAILED));
+        listener.onGameEvent(GameEvent.of(EventType.LEVEL_CLEARED));
+        listener.onGameEvent(GameEvent.of(EventType.LEVEL_FAILED));
         listener.onGameEvent(GameEvent.withValue(EventType.LOW_TIME_TICK, 8));
         listener.onGameEvent(GameEvent.withValue(EventType.LOW_TIME_TICK, 3));
         Check.assertEquals("sounds for the events, in order", List.of(
                 SoundEffect.HOOK_LAUNCH, SoundEffect.CATCH_PLASTIC, SoundEffect.CATCH_CAN, SoundEffect.CATCH_NET,
                 SoundEffect.FISH_HIT, SoundEffect.WRONG_TOOL, SoundEffect.TOOL_SWITCH, SoundEffect.WRONG_TOOL,
-                SoundEffect.HINT, SoundEffect.QUOTA, SoundEffect.CHAPTER_CLEAR, SoundEffect.CHAPTER_FAIL,
+                SoundEffect.HINT, SoundEffect.QUOTA, SoundEffect.LEVEL_CLEAR, SoundEffect.LEVEL_FAIL,
                 SoundEffect.LOW_TICK, SoundEffect.LOW_TICK_URGENT), audio.getPlayed());
 
         // Events that have no sound must be skipped quietly.
@@ -57,7 +57,7 @@ public final class AudioEventTest {
     }
 
     private static void theClockTicksOncePerSecondAtTheEnd() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(1));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(1));
         List<Integer> ticks = new ArrayList<>();
         game.addListener(event -> {
             if (event.getType() == EventType.LOW_TIME_TICK) {
@@ -75,7 +75,7 @@ public final class AudioEventTest {
 
     private static void aPlayedChapterSoundsRight() {
         RecordingAudioPlayer audio = new RecordingAudioPlayer();
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(2));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(2));
         game.addListener(new AudioEventListener(audio));
 
         GameScript.hookOnto(game, GameScript.firstCatchable(game, true));
@@ -88,8 +88,8 @@ public final class AudioEventTest {
         List<SoundEffect> played = audio.getPlayed();
         Check.assertTrue("the quota jingle comes before the clear jingle",
                 played.indexOf(SoundEffect.QUOTA) >= 0
-                        && played.indexOf(SoundEffect.QUOTA) < played.indexOf(SoundEffect.CHAPTER_CLEAR));
-        Check.assertTrue("a won chapter never plays the fail jingle", !played.contains(SoundEffect.CHAPTER_FAIL));
+                        && played.indexOf(SoundEffect.QUOTA) < played.indexOf(SoundEffect.LEVEL_CLEAR));
+        Check.assertTrue("a won chapter never plays the fail jingle", !played.contains(SoundEffect.LEVEL_FAIL));
         Check.assertTrue("the clock never ticked, because the quota froze it in time",
                 !played.contains(SoundEffect.LOW_TICK));
     }

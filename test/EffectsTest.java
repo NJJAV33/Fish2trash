@@ -4,7 +4,7 @@ import game.GameManager;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 import model.Loadout;
 import model.OceanObject;
 import ui.render.EffectsSystem;
@@ -20,7 +20,7 @@ public final class EffectsTest {
     }
 
     public static void run() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(1));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(1));
         OceanObject something = game.getObjects().get(0);
         EffectsSystem effects = new EffectsSystem();
         effects.reset(game);
@@ -77,7 +77,7 @@ public final class EffectsTest {
     }
 
     private static void theLineSplashesAndLeavesBubbles() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(2));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(2));
         EffectsSystem effects = new EffectsSystem();
         effects.reset(game);
         game.addListener(effects);
@@ -112,7 +112,7 @@ public final class EffectsTest {
     }
 
     private static void aFreshCatchWobblesAndSettles() {
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(3));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(3));
         OceanObject something = game.getObjects().get(0);
         EffectsSystem effects = new EffectsSystem();
         effects.reset(game);

@@ -1,9 +1,10 @@
 package ui;
 
 import game.Badge;
-import game.ChapterResult;
+import game.LevelResult;
 import game.GameState;
 import game.ScoreCalculator;
+import model.LevelData;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
@@ -18,8 +19,12 @@ import util.Mathx;
 import util.SoundEffect;
 import util.StoryText;
 
-/** The report card after a cleared chapter, with the chapter's badge if it was earned. */
-public final class ChapterClearScreen implements Screen {
+/**
+ * The report card after a cleared level. The last level of a chapter also
+ * shows the chapter's badge; the others show how far into the chapter the
+ * player is.
+ */
+public final class LevelClearScreen implements Screen {
 
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
@@ -31,17 +36,22 @@ public final class ChapterClearScreen implements Screen {
     private static final double BADGE_POP_SECONDS = 0.4;
     private static final double SPARKLE_SECONDS = 0.7;
     private static final int SPARKLES = 10;
+    private static final int PIP_Y = 352;                    // the row of level dots
+    private static final int PIP_RADIUS = 9;
+    private static final int PIP_SPACING = 34;
+    private static final double PIP_BADGE_RADIUS = 16;
 
     private final ScreenManager screens;
     private final SceneRenderer backdrop;
     private final BadgePainter badgePainter = new BadgePainter();
-    private ChapterResult result;
+    private LevelResult result;
     private Badge badge;
+    private boolean badgeDecided;   // only the last level of a chapter awards (or misses) the badge
     private boolean badgeEarned;
     private boolean badgeAnnounced;
     private double time;
 
-    public ChapterClearScreen(ScreenManager screens, SceneRenderer backdrop) {
+    public LevelClearScreen(ScreenManager screens, SceneRenderer backdrop) {
         this.screens = screens;
         this.backdrop = backdrop;
     }
@@ -50,7 +60,8 @@ public final class ChapterClearScreen implements Screen {
     public void onEnter() {
         result = screens.getSession().getLastResult();
         badge = Badge.forChapter(result.getChapter());
-        badgeEarned = screens.getSession().hasBadge(badge);
+        badgeDecided = result.isChapterFinale();
+        badgeEarned = badgeDecided && screens.getSession().hasBadge(badge);
         badgeAnnounced = false;
         time = 0;
     }
@@ -67,7 +78,7 @@ public final class ChapterClearScreen implements Screen {
     @Override
     public void keyPressed(int keyCode) {
         if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_SPACE) {
-            // After the last chapter comes the ending; otherwise the next chapter's story.
+            // After the last level comes the ending; otherwise the next level's story.
             screens.getAudio().play(SoundEffect.MENU_SELECT);
             screens.go(screens.getSession().isFinished() ? GameState.ENDING : GameState.STORY);
         }
@@ -75,8 +86,8 @@ public final class ChapterClearScreen implements Screen {
 
     @Override
     public void paint(Graphics2D g) {
-        // The sea cleared up while the chapter was played; the report shows it clean.
-        backdrop.paintBackdrop(g, ChapterPalette.forChapter(result.getChapter()).getCleaned());
+        // The sea cleared up while the level was played; the report shows how clean it is now.
+        backdrop.paintBackdrop(g, StoryScreen.lookOf(result.getChapter(), result.getLevel()));
         g.setColor(UiPalette.LIGHT_SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 
@@ -90,7 +101,7 @@ public final class ChapterClearScreen implements Screen {
         TextDraw.centered(g, StoryText.CLEAR_TITLE, CENTER_X, 148);
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, StoryText.chapterTitle(result.getChapter()), CENTER_X, 174);
+        TextDraw.centered(g, StoryText.levelTitle(result.getChapter(), result.getLevel()), CENTER_X, 174);
 
         // The numbers count up from zero when the report appears.
         drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(counted(result.getPoints())), 208);
@@ -99,9 +110,13 @@ public final class ChapterClearScreen implements Screen {
         drawRow(g, StoryText.CLEAR_FISH, String.valueOf(counted(result.getFishHits())), 277);
         g.setColor(UiPalette.PANEL_EDGE);
         g.drawLine(LABEL_X, 285, VALUE_X, 285);
-        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.chapterScore(result))), 306);
+        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.levelScore(result))), 306);
 
-        drawBadge(g);
+        if (badgeDecided) {
+            drawBadge(g);
+        } else {
+            drawProgress(g);
+        }
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
@@ -137,6 +152,32 @@ public final class ChapterClearScreen implements Screen {
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
         TextDraw.centered(g, badgeEarned ? badge.getEarnedText() : badge.getLockedText(), CENTER_X, 467);
+    }
+
+    /**
+     * Before the last level of a chapter: five dots, one per level, filled
+     * for the ones already cleared, and the badge that is still to win.
+     */
+    private void drawProgress(Graphics2D g) {
+        int levels = LevelData.LEVELS_PER_CHAPTER;
+        for (int i = 0; i < levels; i++) {
+            int x = CENTER_X + (i - levels / 2) * PIP_SPACING;
+            if (i < result.getLevel()) {
+                g.setColor(UiPalette.GOOD);
+                g.fillOval(x - PIP_RADIUS, PIP_Y - PIP_RADIUS, 2 * PIP_RADIUS, 2 * PIP_RADIUS);
+            }
+            g.setColor(UiPalette.PANEL_EDGE);
+            g.drawOval(x - PIP_RADIUS, PIP_Y - PIP_RADIUS, 2 * PIP_RADIUS, 2 * PIP_RADIUS);
+        }
+        g.setFont(Fonts.SUBHEADING);
+        g.setColor(UiPalette.TEXT);
+        TextDraw.centered(g, String.format(StoryText.CLEAR_PROGRESS, result.getLevel(), levels), CENTER_X, 392);
+
+        badgePainter.paint(g, badge, CENTER_X - 150, 440, PIP_BADGE_RADIUS, false);
+        g.setFont(Fonts.SMALL);
+        g.setColor(UiPalette.DIM_TEXT);
+        g.drawString(badge.getDisplayName() + ": " + badge.getLockedText(), CENTER_X - 126, 437);
+        g.drawString(StoryText.CLEAR_BADGE_AHEAD, CENTER_X - 126, 453);
     }
 
     /** Small crosses of light that fly out from the medal and fade. */

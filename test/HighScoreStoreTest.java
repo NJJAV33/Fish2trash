@@ -71,7 +71,7 @@ public final class HighScoreStoreTest {
                 ScoreEntry copy = ScoreEntry.parse(original.toLine());
                 Check.assertEquals("name survives", original.getName(), copy.getName());
                 Check.assertEquals("score survives", original.getScore(), copy.getScore());
-                Check.assertEquals("chapters survive", original.getChaptersCleared(), copy.getChaptersCleared());
+                Check.assertEquals("chapters survive", original.getLevelsCleared(), copy.getLevelsCleared());
                 Check.assertEquals("badges survive", original.getBadges(), copy.getBadges());
                 Check.assertEquals("retries survive", original.getRetries(), copy.getRetries());
                 Check.assertEquals("date survives", original.getDate(), copy.getDate());

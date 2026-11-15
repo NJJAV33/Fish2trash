@@ -56,8 +56,8 @@ public enum SoundEffect {
             Tone.of(Wave.SINE, 784).lasting(150).gain(0.32).shape(3, 60, 0.4, 60),
             Tone.of(Wave.SINE, 1047).from(110).lasting(220).gain(0.32).shape(3, 60, 0.4, 100)),
 
-    /** Chapter cleared: four rising notes, then a chord. */
-    CHAPTER_CLEAR(1000, false,
+    /** Level cleared: four rising notes, then a chord. */
+    LEVEL_CLEAR(1000, false,
             Tone.of(Wave.TRIANGLE, 392).lasting(120).gain(0.27).shape(4, 50, 0.6, 40),
             Tone.of(Wave.TRIANGLE, 523).from(90).lasting(120).gain(0.27).shape(4, 50, 0.6, 40),
             Tone.of(Wave.TRIANGLE, 659).from(180).lasting(120).gain(0.27).shape(4, 50, 0.6, 40),
@@ -71,8 +71,8 @@ public enum SoundEffect {
             Tone.of(Wave.SINE, 1319).lasting(160).gain(0.24).shape(1, 30, 0.25, 100),
             Tone.of(Wave.SINE, 1760).from(130).gain(0.24).shape(1, 30, 0.25, 120)),
 
-    /** Chapter failed: four gentle notes going down. */
-    CHAPTER_FAIL(1160, false,
+    /** Level failed: four gentle notes going down. */
+    LEVEL_FAIL(1160, false,
             Tone.of(Wave.SINE, 440).lasting(200).gain(0.28).shape(8, 80, 0.5, 60),
             Tone.of(Wave.SINE, 330).from(170).lasting(200).gain(0.28).shape(8, 80, 0.5, 60),
             Tone.of(Wave.SINE, 262).from(340).lasting(200).gain(0.28).shape(8, 80, 0.5, 60),

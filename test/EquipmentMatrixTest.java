@@ -22,10 +22,14 @@ public final class EquipmentMatrixTest {
     }
 
     public static void run() {
-        //                         bottle  can    net    small  big    puffer barracuda
-        checkRow(EquipmentType.HOOK,       CATCH, SLIP,  SLIP,  CATCH, CATCH, CATCH, CATCH);
-        checkRow(EquipmentType.MAGNET,     PASS,  CATCH, PASS,  PASS,  PASS,  PASS,  PASS);
-        checkRow(EquipmentType.NET_CUTTER, SLIP,  SLIP,  CATCH, CATCH, CATCH, CATCH, CATCH);
+        // Every tool touches every fish (CATCH on a fish means: it is hit, and health is lost).
+        //                         bottle  can    net    small  big    puffer barracuda ray
+        checkRow(EquipmentType.HOOK,       CATCH, SLIP,  SLIP,  CATCH, CATCH, CATCH, CATCH, CATCH);
+        checkRow(EquipmentType.MAGNET,     PASS,  CATCH, PASS,  CATCH, CATCH, CATCH, CATCH, CATCH);
+        checkRow(EquipmentType.NET_CUTTER, SLIP,  SLIP,  CATCH, CATCH, CATCH, CATCH, CATCH, CATCH);
+
+        noToolIsSafeForFish();
+        onlyTheMagnetIsMagnetic();
 
         everyKindOfTrashHasExactlyOneTool();
         toolsHaveTheirOwnSizeAndName();
@@ -38,6 +42,33 @@ public final class EquipmentMatrixTest {
         Equipment tool = type.create();
         for (int i = 0; i < kinds.length; i++) {
             Check.assertEquals(type + " on " + kinds[i], expected[i], tool.attempt(kinds[i].create(100, 300, 20)));
+        }
+    }
+
+    private static void noToolIsSafeForFish() {
+        for (EquipmentType type : EquipmentType.values()) {
+            for (ObjectKind kind : ObjectKind.values()) {
+                if (!kind.isTrash()) {
+                    Check.assertEquals("the " + type + " cannot pass through a " + kind,
+                            CATCH, type.create().attempt(kind.create(100, 300, 20)));
+                }
+            }
+        }
+        // The Net Cutter's blades: every fish costs at least double. The other tools change nothing.
+        Check.assertEquals("hook on a small fish", GameConstants.DAMAGE_FISH,
+                EquipmentType.HOOK.create().fishDamage(GameConstants.DAMAGE_FISH));
+        Check.assertEquals("magnet on a small fish", GameConstants.DAMAGE_FISH,
+                EquipmentType.MAGNET.create().fishDamage(GameConstants.DAMAGE_FISH));
+        Check.assertEquals("net cutter on a small fish", GameConstants.CUTTER_FISH_DAMAGE,
+                EquipmentType.NET_CUTTER.create().fishDamage(GameConstants.DAMAGE_FISH));
+        Check.assertEquals("net cutter on a dangerous fish costs no more than it already did",
+                GameConstants.DAMAGE_DANGEROUS,
+                EquipmentType.NET_CUTTER.create().fishDamage(GameConstants.DAMAGE_DANGEROUS));
+    }
+
+    private static void onlyTheMagnetIsMagnetic() {
+        for (EquipmentType type : EquipmentType.values()) {
+            Check.assertEquals(type + " magnetic", type == EquipmentType.MAGNET, type.create().isMagnetic());
         }
     }
 

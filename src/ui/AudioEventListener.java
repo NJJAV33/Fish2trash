@@ -32,8 +32,8 @@ public final class AudioEventListener implements GameListener {
         soundForEvent.put(EventType.TOOL_SWITCHED, SoundEffect.TOOL_SWITCH);
         soundForEvent.put(EventType.SWAP_DENIED, SoundEffect.WRONG_TOOL);
         soundForEvent.put(EventType.QUOTA_REACHED, SoundEffect.QUOTA);
-        soundForEvent.put(EventType.CHAPTER_CLEARED, SoundEffect.CHAPTER_CLEAR);
-        soundForEvent.put(EventType.CHAPTER_FAILED, SoundEffect.CHAPTER_FAIL);
+        soundForEvent.put(EventType.LEVEL_CLEARED, SoundEffect.LEVEL_CLEAR);
+        soundForEvent.put(EventType.LEVEL_FAILED, SoundEffect.LEVEL_FAIL);
         soundForEvent.put(EventType.TUTORIAL_PROMPT, SoundEffect.HINT);
         soundForEvent.put(EventType.HINT_SHOWN, SoundEffect.HINT);
         soundForEvent.put(EventType.LOW_TIME_TICK, SoundEffect.LOW_TICK);

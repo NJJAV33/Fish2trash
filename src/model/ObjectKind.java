@@ -51,6 +51,12 @@ public enum ObjectKind {
         public OceanObject create(double x, double y, double speedX) {
             return new Barracuda(x, y, speedX);
         }
+    },
+    STINGRAY(false) {
+        @Override
+        public OceanObject create(double x, double y, double speedX) {
+            return new Stingray(x, y, speedX);
+        }
     };
 
     private final boolean trash;

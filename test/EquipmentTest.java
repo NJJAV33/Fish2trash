@@ -7,7 +7,7 @@ import java.util.Random;
 import model.Can;
 import model.CatchOutcome;
 import model.CatchResolver;
-import model.ChapterData;
+import model.LevelData;
 import model.Equipment;
 import model.EquipmentType;
 import model.Loadout;
@@ -84,7 +84,7 @@ public final class EquipmentTest {
     }
 
     private static void aSlipCostsNothingButTheThrow() {
-        GameManager game = new GameManager(ChapterData.forChapter(2), Loadout.forChapter(2), new Random(7));
+        GameManager game = new GameManager(LevelData.of(2, 1), Loadout.forChapter(2), new Random(7));
         game.selectTool(EquipmentType.HOOK);   // the wrong tool for a can
         List<GameEvent> events = GameScript.record(game);
         OceanObject slippery = firstCanOrNet(game);

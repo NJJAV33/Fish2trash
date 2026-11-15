@@ -3,6 +3,7 @@ package ui;
 import game.Badge;
 import game.GameSession;
 import game.GameState;
+import model.LevelData;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -52,7 +53,7 @@ public final class VictoryScreen implements Screen {
 
     @Override
     public void onEnter() {
-        pager.start(new String[] {StoryText.CH3_OUTRO, StoryText.END_P1, StoryText.END_P2, StoryText.END_P3});
+        pager.start(new String[] {StoryText.levelOutro(LevelData.CHAPTER_COUNT, LevelData.LEVELS_PER_CHAPTER), StoryText.END_P1, StoryText.END_P2, StoryText.END_P3});
         showingReport = false;
         time = 0;
         screens.getAudio().play(SoundEffect.ENDING);
@@ -130,7 +131,7 @@ public final class VictoryScreen implements Screen {
 
         drawRow(g, StoryText.RECAP_TRASH, session.getTotalTrash(), 250);
         drawRow(g, StoryText.RECAP_FISH, session.getTotalFishHits(), 284);
-        drawRow(g, StoryText.RECAP_CHAPTERS, session.getChaptersCleared(), 318);
+        drawRow(g, StoryText.RECAP_LEVELS, session.getLevelsCleared(), 318);
         drawRow(g, StoryText.RECAP_SCORE, session.getRunScore(), 352);
 
         // The badges of the run: earned ones in colour, the others in grey.

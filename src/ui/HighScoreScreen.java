@@ -8,7 +8,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.List;
-import model.ChapterData;
+import model.LevelData;
 import ui.render.BadgePainter;
 import ui.render.ChapterPalette;
 import ui.render.Fonts;
@@ -19,7 +19,7 @@ import util.GameConstants;
 import util.SoundEffect;
 import util.StoryText;
 
-/** The high-score list: the ten best runs, with their chapters, badges and date. */
+/** The high-score list: the ten best runs, with their levels, badges and date. */
 public final class HighScoreScreen implements Screen {
 
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
@@ -28,7 +28,7 @@ public final class HighScoreScreen implements Screen {
     private static final int RANK_RIGHT = 150;      // the columns, from left to right
     private static final int NAME_X = 170;
     private static final int SCORE_RIGHT = 400;
-    private static final int CHAPTERS_X = 450;
+    private static final int LEVELS_X = 450;
     private static final int BADGES_X = 522;
     private static final int BADGE_SPACING = 22;
     private static final int BADGE_RADIUS = 8;
@@ -95,7 +95,7 @@ public final class HighScoreScreen implements Screen {
         TextDraw.rightAligned(g, StoryText.SCORES_RANK, RANK_RIGHT, y);
         g.drawString(StoryText.SCORES_NAME, NAME_X, y);
         TextDraw.rightAligned(g, StoryText.SCORES_SCORE, SCORE_RIGHT, y);
-        TextDraw.centered(g, StoryText.SCORES_CHAPTERS, CHAPTERS_X, y);
+        TextDraw.centered(g, StoryText.SCORES_LEVELS, LEVELS_X, y);
         TextDraw.centered(g, StoryText.SCORES_BADGES, BADGES_X + BADGE_SPACING, y);
         TextDraw.rightAligned(g, StoryText.SCORES_DATE, DATE_RIGHT, y);
     }
@@ -118,7 +118,7 @@ public final class HighScoreScreen implements Screen {
 
         g.setFont(Fonts.MONO);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, entry.getChaptersCleared() + " / " + ChapterData.CHAPTER_COUNT, CHAPTERS_X, y);
+        TextDraw.centered(g, entry.getLevelsCleared() + " / " + LevelData.LEVEL_COUNT, LEVELS_X, y);
         TextDraw.rightAligned(g, entry.getDate().toString(), DATE_RIGHT, y);
 
         Badge[] badges = Badge.values();

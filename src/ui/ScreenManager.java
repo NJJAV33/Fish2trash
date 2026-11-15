@@ -146,7 +146,7 @@ public final class ScreenManager {
 
     // ---- The run in progress ----
 
-    /** Starts a new run through the story from chapter 1. */
+    /** Starts a new run through the story from level 1-1. */
     public void startNewRun() {
         session = new GameSession(new Random());
     }

@@ -3,7 +3,7 @@ package game;
 import util.GameConstants;
 import util.StoryText;
 
-/** One more fish ends the chapter: the most urgent hint there is. */
+/** One more fish ends the level: the most urgent hint there is. */
 public final class LowHealthRule implements HintRule {
 
     private static final int PRIORITY = 5;

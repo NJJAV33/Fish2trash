@@ -67,7 +67,7 @@ public final class GamePanel extends JPanel {
             @Override
             public void focusLost(FocusEvent e) {
                 // Another window took the keyboard: no key is "still held",
-                // and a chapter in progress should not run unattended.
+                // and a level in progress should not run unattended.
                 input.releaseAll();
                 if (screens.getState() == GameState.PLAYING) {
                     gameScreen.pause();
@@ -81,7 +81,7 @@ public final class GamePanel extends JPanel {
         screens.register(GameState.HOW_TO, new HowToScreen(screens, renderer));
         screens.register(GameState.STORY, new StoryScreen(screens, renderer));
         screens.register(GameState.PLAYING, gameScreen);
-        screens.register(GameState.CHAPTER_CLEAR, new ChapterClearScreen(screens, renderer));
+        screens.register(GameState.LEVEL_CLEAR, new LevelClearScreen(screens, renderer));
         screens.register(GameState.GAME_OVER, new GameOverScreen(screens, renderer));
         screens.register(GameState.ENDING, new VictoryScreen(screens, renderer));
         screens.register(GameState.NAME_ENTRY, new NameEntryScreen(screens, renderer));

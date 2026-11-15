@@ -3,12 +3,12 @@ package model;
 import util.GameConstants;
 
 /**
- * One line of a chapter's spawn table: which kind of object appears, how
+ * One line of a level's spawn table: which kind of object appears, how
  * many, how fast, where, and from when.
  *
  * A rule is immutable. It is put together with a small builder:
  *
- *   SpawnRule.of(ObjectKind.CAN).count(3, 4).respawn(3, 5).speed(35, 70).build()
+ *   SpawnRule.of(ObjectKind.CAN).count(3, 4).supply(8).respawn(3, 5).speed(35, 70).build()
  */
 public final class SpawnRule {
 
@@ -16,6 +16,7 @@ public final class SpawnRule {
     private final int initialCount;     // how many appear when the rule starts
     private final int maxCount;         // respawning refills up to this many
     private final int minCount;         // never fewer than this on screen
+    private final int supply;           // how many the rule hands out in a whole level
     private final double respawnMin;    // seconds until a missing one is replaced...
     private final double respawnMax;    // ...picked at random in this range
     private final boolean respawning;
@@ -32,6 +33,7 @@ public final class SpawnRule {
         this.initialCount = builder.initialCount;
         this.maxCount = builder.maxCount;
         this.minCount = builder.minCount;
+        this.supply = builder.supply;
         this.respawnMin = builder.respawnMin;
         this.respawnMax = builder.respawnMax;
         this.respawning = builder.respawning;
@@ -63,6 +65,11 @@ public final class SpawnRule {
 
     public int getMinCount() {
         return minCount;
+    }
+
+    /** How many objects this rule hands out in a whole level, counting the first ones. */
+    public int getSupply() {
+        return supply;
     }
 
     /** False for objects that are never replaced (fish are never removed, so they never need to be). */
@@ -121,6 +128,7 @@ public final class SpawnRule {
         private int initialCount = 1;
         private int maxCount = 1;
         private int minCount = 0;
+        private int supply = 0;   // 0 = not set: build() makes it the initial count
         private double respawnMin = 0;
         private double respawnMax = 0;
         private boolean respawning = false;
@@ -144,6 +152,15 @@ public final class SpawnRule {
 
         public Builder min(int min) {
             this.minCount = min;
+            return this;
+        }
+
+        /**
+         * The level only holds this many of the kind. Once they are all
+         * lifted, no more appear. Left out, the rule only hands out its first objects.
+         */
+        public Builder supply(int total) {
+            this.supply = total;
             return this;
         }
 
@@ -179,6 +196,9 @@ public final class SpawnRule {
         }
 
         public SpawnRule build() {
+            if (supply < initialCount) {
+                supply = initialCount;
+            }
             return new SpawnRule(this);
         }
     }

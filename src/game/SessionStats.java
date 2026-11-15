@@ -5,7 +5,7 @@ import java.util.Map;
 import model.ObjectKind;
 
 /**
- * Keeps count of what happened during a chapter attempt, including the
+ * Keeps count of what happened during an attempt at a level, including the
  * player's recent run of mistakes, which the hints look at.
  *
  * It is a GameListener: the GameManager does not update these numbers itself,

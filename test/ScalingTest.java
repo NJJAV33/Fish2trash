@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import model.ChapterData;
+import model.LevelData;
 import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
@@ -107,24 +107,25 @@ public final class ScalingTest {
 
     private static void theSeaClearsAsTheQuotaFills() {
         SceneRenderer renderer = new SceneRenderer();
-        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(7));
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(7));
         GameScript.clearTheWater(game);   // nothing in the way of the spot that is looked at
         int atStart = seaColor(renderer, game);
         Check.assertEquals("the same score gives the same sea", atStart, seaColor(renderer, game));
 
-        GameScript.hookOnto(game, GameScript.firstCatchable(game, ObjectKind.PLASTIC_BOTTLE));
-        GameScript.clearTheWater(game);
-        int afterOne = seaColor(renderer, game);
-        Check.assertTrue("one bottle, a tenth of the quota: the sea has changed", afterOne != atStart);
-
-        for (int i = 0; i < 4; i++) {
+        // A chapter clears up over its five levels, so one level moves the sea a fifth of the way.
+        while (game.getScore() < game.getQuota() / 2) {
             GameScript.hookOnto(game, GameScript.firstCatchable(game, ObjectKind.PLASTIC_BOTTLE));
         }
         GameScript.clearTheWater(game);
         int atHalf = seaColor(renderer, game);
-        Check.assertEquals("half the quota", game.getQuota() / 2, game.getScore());
-        Check.assertTrue("the sea is bluer at half the quota than at the start", blue(atHalf) > blue(atStart));
-        Check.assertTrue("and bluer than after one bottle", blue(atHalf) > blue(afterOne));
+        Check.assertTrue("half the quota of the first level: the sea has changed", atHalf != atStart);
+        Check.assertTrue("and it is bluer than at the start", blue(atHalf) > blue(atStart));
+
+        GameManager lastLevel = new GameManager(
+                LevelData.of(1, LevelData.LEVELS_PER_CHAPTER), Loadout.forChapter(1), new Random(7));
+        GameScript.clearTheWater(lastLevel);
+        Check.assertTrue("the last level of the chapter starts with a much cleaner sea",
+                blue(seaColor(renderer, lastLevel)) > blue(atHalf));
     }
 
     private static void deepObjectsAreHazier() {
@@ -161,7 +162,7 @@ public final class ScalingTest {
         BufferedImage image = new BufferedImage(W, H, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
         // A whole story: every step of every chapter, and the reef at the end.
-        for (int chapter = 1; chapter <= ChapterData.CHAPTER_COUNT; chapter++) {
+        for (int chapter = 1; chapter <= LevelData.CHAPTER_COUNT; chapter++) {
             for (int step = 0; step <= ChapterPalette.CLEAN_STEPS; step++) {
                 background.paint(g, ChapterPalette.forChapter(chapter).cleanedBy((double) step / ChapterPalette.CLEAN_STEPS));
             }
@@ -179,7 +180,7 @@ public final class ScalingTest {
     private static void aCaughtObjectCanBeDrawnStretched() {
         SceneRenderer renderer = new SceneRenderer();
         // Chapter 3: the catch is a net, which is drawn from a reused picture.
-        GameManager game = new GameManager(ChapterData.forChapter(3), Loadout.forChapter(3), new Random(9));
+        GameManager game = new GameManager(LevelData.of(3, 1), Loadout.forChapter(3), new Random(9));
         OceanObject net = GameScript.firstCatchable(game, ObjectKind.FISHING_NET);
         GameScript.clearTheWater(game);
         game.spaceAction();

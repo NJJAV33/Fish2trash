@@ -30,6 +30,7 @@ public final class PainterRegistry {
         painters.put(ObjectKind.BIG_FISH, new BigFishPainter());
         painters.put(ObjectKind.PUFFERFISH, new PufferPainter());
         painters.put(ObjectKind.BARRACUDA, new BarracudaPainter());
+        painters.put(ObjectKind.STINGRAY, new StingrayPainter());
 
         toolPainters.put(EquipmentType.HOOK, new HookClawPainter());
         toolPainters.put(EquipmentType.MAGNET, new MagnetPainter());

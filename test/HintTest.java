@@ -2,7 +2,7 @@ import game.EventType;
 import game.FishStreakRule;
 import game.GameEvent;
 import game.GameManager;
-import game.ChapterStatus;
+import game.LevelStatus;
 import game.HintEngine;
 import game.HintRule;
 import game.IdleRule;
@@ -13,7 +13,7 @@ import game.SlipStreakRule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import model.ChapterData;
+import model.LevelData;
 import model.EquipmentType;
 import model.Loadout;
 import model.ObjectKind;
@@ -47,7 +47,7 @@ public final class HintTest {
     }
 
     private static GameManager newGame(int chapter) {
-        return new GameManager(ChapterData.forChapter(chapter), Loadout.forChapter(chapter), new Random(5));
+        return new GameManager(LevelData.of(chapter, 1), Loadout.forChapter(chapter), new Random(5));
     }
 
     private static GameEvent fishHit() {
@@ -158,7 +158,7 @@ public final class HintTest {
                 engine.update(GameConstants.HINT_COOLDOWN_S / 2, stats, game));
         Check.assertEquals("then the least urgent", StoryText.HINT_IDLE,
                 engine.update(GameConstants.HINT_COOLDOWN_S, stats, game));
-        Check.assertEquals("three hints given", GameConstants.HINT_MAX_PER_CHAPTER, engine.getShownCount());
+        Check.assertEquals("three hints given", GameConstants.HINT_MAX_PER_LEVEL, engine.getShownCount());
     }
 
     private static void aRuleSpeaksAgainOnlyAfterItsSituationCameBack() {
@@ -210,8 +210,8 @@ public final class HintTest {
             now[0] += STEP;
         }
 
-        Check.assertEquals("the chapter ran out of time", ChapterStatus.FAILED_TIME, game.getStatus());
-        Check.assertEquals("hints in the whole chapter", GameConstants.HINT_MAX_PER_CHAPTER, hintTimes.size());
+        Check.assertEquals("the chapter ran out of time", LevelStatus.FAILED_TIME, game.getStatus());
+        Check.assertEquals("hints in the whole chapter", GameConstants.HINT_MAX_PER_LEVEL, hintTimes.size());
         Check.assertEquals("first hint after 12 idle seconds", 12.0, hintTimes.get(0), 0.1);
         // Idle again from second 25, but the quiet time after the first hint lasts until 32.
         Check.assertEquals("second hint waits for the quiet time", 32.0, hintTimes.get(1), 0.1);
@@ -223,6 +223,7 @@ public final class HintTest {
 
     private static void threeFishInARowBringAHintInARealGame() {
         GameManager game = newGame(3);   // five health, so three small fish leave two
+        game.selectTool(EquipmentType.HOOK);   // with the Net Cutter on, each fish would cost double
         List<String> hints = recordHints(game);
 
         for (int i = 1; i <= GameConstants.HINT_FISH_STREAK; i++) {

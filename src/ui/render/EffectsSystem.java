@@ -104,7 +104,7 @@ public final class EffectsSystem implements GameListener {
         reactions.put(EventType.DELIVERED, event -> splash(DELIVERY_DROPLETS));
     }
 
-    /** Clears everything for a new chapter attempt. */
+    /** Clears everything for a new attempt at a level. */
     public void reset(GameView newGame) {
         game = newGame;
         for (int i = 0; i < MAX_EFFECTS; i++) {

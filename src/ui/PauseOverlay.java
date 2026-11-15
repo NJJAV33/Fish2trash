@@ -33,7 +33,7 @@ public final class PauseOverlay implements Screen {
         menu = new MenuList(audio);
         menu.add(StoryText.PAUSE_RESUME, screens::resume);
         menu.add(() -> soundLabels.get(audio.getState()), () -> audio.setMuted(!audio.isMuted()));
-        // Entering the playing screen again starts a fresh attempt at the chapter.
+        // Entering the playing screen again starts a fresh attempt at the level.
         menu.add(StoryText.PAUSE_RESTART, () -> screens.go(GameState.PLAYING));
         menu.add(StoryText.PAUSE_QUIT, () -> screens.go(GameState.MENU));
     }
