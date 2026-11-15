@@ -22,6 +22,7 @@ public final class GameScreen implements Screen {
 
     // After a chapter ends, hold the last frame briefly before moving on.
     private static final double END_PAUSE_SECONDS = 0.8;
+    private static final double BAR_CATCH_UP = 6;   // how fast the quota bar slides to a new score
 
     private final ScreenManager screens;
     private final InputState input;
@@ -34,6 +35,7 @@ public final class GameScreen implements Screen {
     private String tip;          // the last tip or hint, or null before the first one
     private double tipAge;       // seconds since it appeared
     private double time;         // seconds on this screen, drives HUD animation
+    private double shownScore;   // the score the quota bar shows; it slides toward the real one
     private double secondsSinceEnd;
     private boolean leaving;
 
@@ -55,6 +57,7 @@ public final class GameScreen implements Screen {
         game.addListener(sounds);              // and so do the sounds
         tip = null;
         time = 0;
+        shownScore = 0;
         secondsSinceEnd = 0;
         leaving = false;
     }
@@ -78,6 +81,8 @@ public final class GameScreen implements Screen {
         game.setBoatDirection(input.getDirection());
         game.update(dt);   // ignored by the manager once the chapter is over
         effects.update(dt);
+        // The quota bar slides to the new score instead of jumping: fast at first, then easing in.
+        shownScore += (game.getScore() - shownScore) * Math.min(1, BAR_CATCH_UP * dt);
 
         if (game.getStatus().isOver() && !leaving) {
             secondsSinceEnd += dt;
@@ -143,12 +148,12 @@ public final class GameScreen implements Screen {
         // The world can shake; the HUD on top of it stays still.
         Graphics2D world = (Graphics2D) g.create();
         world.translate(effects.getShakeX(), effects.getShakeY());
-        renderer.paint(world, game);
+        renderer.paint(world, game, effects.getCatchSquash());
         effects.paint(world);
         world.dispose();
         effects.paintFlash(g);
 
-        hud.paint(g, game, time, screens.getAudio().getState());
+        hud.paint(g, game, time, screens.getAudio().getState(), shownScore);
         hud.paintToast(g, tip, tipAge);
     }
 }

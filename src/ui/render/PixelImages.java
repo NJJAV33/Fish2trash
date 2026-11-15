@@ -27,8 +27,9 @@ final class PixelImages {
 
     /** How much the target enlarges what is drawn on it: 1 for 800 x 600, 2 for twice that. */
     static double scaleOf(Graphics2D target) {
-        AffineTransform view = target.getTransform();
-        double scale = Math.hypot(view.getScaleX(), view.getShearY());
+        // The determinant says how much an area grows. Its square root is the
+        // enlargement, also when a shape is flipped, turned or squashed.
+        double scale = Math.sqrt(Math.abs(target.getTransform().getDeterminant()));
         scale = Math.round(scale * ROUND_TO) / ROUND_TO;
         return Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
     }

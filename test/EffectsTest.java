@@ -53,7 +53,7 @@ public final class EffectsTest {
         Check.assertEquals("reaching the quota throws 24 stars", 24, effects.getActiveCount());
 
         // Events it has no reaction for change nothing.
-        effects.onGameEvent(GameEvent.of(EventType.HOOK_LAUNCHED));
+        effects.onGameEvent(GameEvent.of(EventType.MISSED));
         Check.assertEquals("other events are ignored", 24, effects.getActiveCount());
 
         // A flood of events cannot overflow the pool, and drawing a full pool works.
@@ -71,6 +71,71 @@ public final class EffectsTest {
 
         effects.reset(game);
         Check.assertEquals("a new chapter starts with a clean screen", 0, effects.getActiveCount());
+
+        theLineSplashesAndLeavesBubbles();
+        aFreshCatchWobblesAndSettles();
+    }
+
+    private static void theLineSplashesAndLeavesBubbles() {
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(2));
+        EffectsSystem effects = new EffectsSystem();
+        effects.reset(game);
+        game.addListener(effects);
+        GameScript.clearTheWater(game);   // nothing for the hook to touch
+
+        game.spaceAction();
+        Check.assertEquals("dropping the line throws a ring and five drops", 6, effects.getActiveCount());
+
+        // A third of a second on the way down: the tool leaves bubbles behind.
+        for (double t = 0; t < 0.3; t += STEP) {
+            game.update(STEP);
+            effects.update(STEP);
+        }
+        Check.assertTrue("the line is still going out", game.getBoat().getHook().isExtending());
+        Check.assertTrue("bubbles trail behind the tool", effects.getActiveCount() > 6);
+
+        // Back at the boat with nothing: everything has faded, and no new bubbles came.
+        GameScript.playUntilHookIsBack(game);
+        play(effects, 1.0);
+        Check.assertEquals("nothing is left a second after the line is back", 0, effects.getActiveCount());
+
+        // Bringing something up splashes again, a little bigger.
+        GameScript.hookOnto(game, GameScript.firstCatchable(game, true));
+        effects.update(STEP);
+        Check.assertTrue("the catch breaks the surface with a splash", effects.getActiveCount() >= 9);
+
+        BufferedImage image = new BufferedImage(
+                GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+        effects.paint(g);   // rings, drops and bubbles can all be drawn
+        g.dispose();
+    }
+
+    private static void aFreshCatchWobblesAndSettles() {
+        GameManager game = new GameManager(ChapterData.forChapter(1), Loadout.forChapter(1), new Random(3));
+        OceanObject something = game.getObjects().get(0);
+        EffectsSystem effects = new EffectsSystem();
+        effects.reset(game);
+        Check.assertEquals("nothing wobbles before a catch", 0.0, effects.getCatchSquash(), 1e-9);
+
+        effects.onGameEvent(GameEvent.about(EventType.OBJECT_CAUGHT, something, 10));
+        double first = effects.getCatchSquash();
+        Check.assertTrue("a fresh catch is drawn wide and flat", first > 0.2);
+
+        boolean wentTall = false;
+        double biggest = 0;
+        for (double t = 0; t < 0.3; t += STEP) {
+            effects.update(STEP);
+            wentTall |= effects.getCatchSquash() < 0;
+            biggest = Math.max(biggest, Math.abs(effects.getCatchSquash()));
+        }
+        Check.assertTrue("then it swings the other way, tall and thin", wentTall);
+        Check.assertTrue("the wobble never grows past its first stretch", biggest <= first);
+        play(effects, 0.2);
+        Check.assertEquals("and after a moment it is still", 0.0, effects.getCatchSquash(), 1e-9);
+
+        effects.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, something, 1));
+        Check.assertEquals("a hooked fish does not wobble: it swims away", 0.0, effects.getCatchSquash(), 1e-9);
     }
 
     private static void play(EffectsSystem effects, double seconds) {

@@ -265,7 +265,7 @@ no test library is needed. The script exits with an error if any check fails.
 | `ScreenFlowTest` | Key presses lead to the right screens: menu, how to play, high scores, story, pause, fired screen, retry |
 | `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
 | `AudioEventTest` | The right sound for each game event; ten clock ticks in the last ten seconds |
-| `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the math helpers |
+| `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the splash, the bubble trail and the wobble of a catch; the math helpers |
 | `ScalingTest` | The picture grows with the window and gets bars when the shape differs; the sea clears step by step as the quota fills; deep objects look hazier; only a few background pictures are kept |
 
 The tests cannot judge how the game feels or sounds. Use the checklist below for that,
@@ -298,6 +298,11 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 - [ ] Tips appear at about 1, 8 and 16 seconds.
 - [ ] At 100 points the timer stops; the chapter clears when the catch reaches the boat.
 - [ ] The murky green water turns a little clearer and bluer with every bottle.
+- [ ] Dropping the line makes a small splash and a ring under the boat; so does bringing
+      a catch up.
+- [ ] The tool leaves a trail of bubbles on its way down.
+- [ ] A bottle wobbles for a moment when it is caught.
+- [ ] The quota bar slides to the new score instead of jumping.
 
 **Chapter 2**
 - [ ] The story ends with a NEW GEAR page; the Magnet is on the line at the start.
@@ -342,7 +347,7 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 
 **High scores**
 - [ ] The menu's High Scores page opens; with no file yet it says "No scores yet".
-- [ ] The chapter report shows a chapter score.
+- [ ] The chapter report shows a chapter score. Its numbers count up from zero.
 - [ ] Finish the story: the shift report shows the run score, then the name entry appears
       with a short fanfare.
 - [ ] Typing shows capital letters; `Backspace` deletes; no more than 12 fit; typing an

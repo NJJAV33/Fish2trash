@@ -24,6 +24,7 @@ public final class ChapterClearScreen implements Screen {
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
     private static final int VALUE_X = 570;
+    private static final double COUNT_SECONDS = 0.7;         // how long the numbers take to count up
     private static final int BADGE_Y = 352;
     private static final double BADGE_RADIUS = 34;
     private static final double BADGE_DELAY_SECONDS = 0.8;   // the medal arrives a moment after the numbers
@@ -91,19 +92,25 @@ public final class ChapterClearScreen implements Screen {
         g.setColor(UiPalette.DIM_TEXT);
         TextDraw.centered(g, StoryText.chapterTitle(result.getChapter()), CENTER_X, 174);
 
-        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(result.getPoints()), 208);
-        drawRow(g, StoryText.CLEAR_TIME, (int) result.getTimeLeft() + " s", 231);
-        drawRow(g, StoryText.CLEAR_HEALTH, result.getHealthLeft() + " / " + result.getMaxHealth(), 254);
-        drawRow(g, StoryText.CLEAR_FISH, String.valueOf(result.getFishHits()), 277);
+        // The numbers count up from zero when the report appears.
+        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(counted(result.getPoints())), 208);
+        drawRow(g, StoryText.CLEAR_TIME, counted((int) result.getTimeLeft()) + " s", 231);
+        drawRow(g, StoryText.CLEAR_HEALTH, counted(result.getHealthLeft()) + " / " + result.getMaxHealth(), 254);
+        drawRow(g, StoryText.CLEAR_FISH, String.valueOf(counted(result.getFishHits())), 277);
         g.setColor(UiPalette.PANEL_EDGE);
         g.drawLine(LABEL_X, 285, VALUE_X, 285);
-        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(ScoreCalculator.chapterScore(result)), 306);
+        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.chapterScore(result))), 306);
 
         drawBadge(g);
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
         TextDraw.centered(g, StoryText.CONTINUE_PROMPT, CENTER_X, 494);
+    }
+
+    /** The part of a number that has been counted so far: 0 at first, the full number after a moment. */
+    private int counted(int value) {
+        return (int) Math.round(value * Mathx.easeOut(Mathx.clamp(time / COUNT_SECONDS, 0, 1)));
     }
 
     /**

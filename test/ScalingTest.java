@@ -41,6 +41,7 @@ public final class ScalingTest {
         deepObjectsAreHazier();
         aNetLooksTheSameEveryTimeAndGrowsWithTheWindow();
         onlyAFewBackgroundsAreKept();
+        aCaughtObjectCanBeDrawnStretched();
     }
 
     // ---- The window ----
@@ -175,7 +176,37 @@ public final class ScalingTest {
         g.dispose();
     }
 
+    private static void aCaughtObjectCanBeDrawnStretched() {
+        SceneRenderer renderer = new SceneRenderer();
+        // Chapter 3: the catch is a net, which is drawn from a reused picture.
+        GameManager game = new GameManager(ChapterData.forChapter(3), Loadout.forChapter(3), new Random(9));
+        OceanObject net = GameScript.firstCatchable(game, ObjectKind.FISHING_NET);
+        GameScript.clearTheWater(game);
+        game.spaceAction();
+        for (int i = 0; i < 2000 && !net.isCaught(); i++) {
+            net.moveTo(game.getBoat().getHook().getTipX(), game.getBoat().getHook().getTipY() + 10);
+            game.update(GameScript.STEP);
+        }
+        Check.assertTrue("a net is on the line", net.isCaught());
+
+        int[] normal = scenePixels(renderer, game, 0);
+        Check.assertTrue("without a wobble the scene is drawn the same each time",
+                Arrays.equals(normal, scenePixels(renderer, game, 0)));
+        Check.assertTrue("with a wobble the catch is drawn differently",
+                !Arrays.equals(normal, scenePixels(renderer, game, 0.3)));
+        Check.assertTrue("and afterwards it is back to normal",
+                Arrays.equals(normal, scenePixels(renderer, game, 0)));
+    }
+
     // ---- helpers ----
+
+    private static int[] scenePixels(SceneRenderer renderer, GameManager game, double squash) {
+        BufferedImage image = new BufferedImage(W, H, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+        renderer.paint(g, game, squash);
+        g.dispose();
+        return image.getRGB(0, 0, W, H, null, 0, W);
+    }
 
     private static BufferedImage picture(GamePanel panel, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
