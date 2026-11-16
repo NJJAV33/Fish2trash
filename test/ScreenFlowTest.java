@@ -118,7 +118,17 @@ public final class ScreenFlowTest {
         press(KeyEvent.VK_DOWN);
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
-        expect("second menu item opens How to Play", GameState.HOW_TO);
+        expect("second menu item opens the level select", GameState.LEVEL_SELECT);
+
+        press(KeyEvent.VK_ESCAPE);
+        play(SCREEN_CHANGE);
+        expect("ESC leaves the level select for the menu", GameState.MENU);
+
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        expect("third menu item opens How to Play", GameState.HOW_TO);
 
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
@@ -126,9 +136,10 @@ public final class ScreenFlowTest {
 
         press(KeyEvent.VK_DOWN);
         press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_DOWN);
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
-        expect("third menu item opens the high scores", GameState.HIGH_SCORES);
+        expect("fourth menu item opens the high scores", GameState.HIGH_SCORES);
 
         press(KeyEvent.VK_ESCAPE);
         play(SCREEN_CHANGE);
@@ -230,7 +241,7 @@ public final class ScreenFlowTest {
 
     private static void startGame() {
         audio = new RecordingAudioPlayer();
-        panel = new GamePanel(audio, TempScores.newTable());
+        panel = new GamePanel(audio, TempScores.newTable(), TempScores.newProgress());
         panel.setSize(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
         clock = 1000;
         play(0.1);

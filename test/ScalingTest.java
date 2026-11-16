@@ -47,7 +47,7 @@ public final class ScalingTest {
     // ---- The window ----
 
     private static void theGameFillsABiggerWindow() {
-        GamePanel panel = new GamePanel(new RecordingAudioPlayer(), TempScores.newTable());
+        GamePanel panel = new GamePanel(new RecordingAudioPlayer(), TempScores.newTable(), TempScores.newProgress());
         panel.setSize(W, H);
         Check.assertEquals("at 800 x 600 nothing is enlarged", 1.0, panel.getViewScale(), 1e-9);
         BufferedImage small = picture(panel, W, H);
@@ -68,7 +68,7 @@ public final class ScalingTest {
     }
 
     private static void aWindowOfAnotherShapeGetsBarsAtTheSides() {
-        GamePanel panel = new GamePanel(new RecordingAudioPlayer(), TempScores.newTable());
+        GamePanel panel = new GamePanel(new RecordingAudioPlayer(), TempScores.newTable(), TempScores.newProgress());
         int width = 2 * W;          // twice as wide,
         int height = H * 3 / 2;     // but only one and a half times as high
         panel.setSize(width, height);

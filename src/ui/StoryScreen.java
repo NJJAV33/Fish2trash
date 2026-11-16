@@ -62,8 +62,9 @@ public final class StoryScreen implements Screen {
         pageBackdrops.clear();
         gearPageIndex = NO_GEAR_PAGE;
 
-        // A retry goes straight to the level's own page.
-        if (!retrying && last == null) {
+        // A retry goes straight to the level's own page. The opening crawl
+        // belongs to a run from the very start, not one picked from the level select.
+        if (!retrying && last == null && next.getNumber() == 1) {
             addPage(pages, StoryText.GAME_TITLE, StoryText.CRAWL, look);
         }
         if (!retrying && last != null) {

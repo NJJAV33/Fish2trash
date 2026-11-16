@@ -10,7 +10,7 @@ import ui.render.UiPalette;
 import util.GameConstants;
 import util.StoryText;
 
-/** The title screen: start the story, read how to play, see the high scores, or quit. */
+/** The title screen: start the story, pick a level, read how to play, see the high scores, or quit. */
 public final class MainMenu implements Screen {
 
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
@@ -25,6 +25,7 @@ public final class MainMenu implements Screen {
         this.backdrop = backdrop;
         this.menu = new MenuList(screens.getAudio());
         menu.add(StoryText.MENU_START, this::startStory);
+        menu.add(StoryText.MENU_LEVELS, () -> screens.go(GameState.LEVEL_SELECT));
         menu.add(StoryText.MENU_HOW_TO, () -> screens.go(GameState.HOW_TO));
         menu.add(StoryText.MENU_SCORES, () -> screens.go(GameState.HIGH_SCORES));
         menu.add(StoryText.MENU_QUIT, () -> System.exit(0));
@@ -61,7 +62,7 @@ public final class MainMenu implements Screen {
         g.setColor(UiPalette.ACCENT);
         TextDraw.centered(g, StoryText.TAGLINE, CENTER_X, 285);
 
-        menu.paint(g, CENTER_X, 350, 44);
+        menu.paint(g, CENTER_X, 340, 40);
 
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);

@@ -17,6 +17,12 @@ public final class StoryText {
     public static final String TAGLINE = "Hook the trash. Spare the fish. Save the reef.";
     public static final String CREDITS = "Made by team LangoyLaban for CIS 2103, University of San Carlos.";
     public static final String MENU_START = "Start";
+    public static final String MENU_LEVELS = "Select Level";
+    public static final String LEVELS_TITLE = "SELECT LEVEL";
+    public static final String LEVELS_HINT = "ARROWS: choose     ENTER: play from here     ESC: back";
+    public static final String LEVELS_LOCKED = "Locked. Clear the level before it to open this one.";
+    public static final String LEVELS_DETAILS = "Quota %d points     %d s     %d health";
+    public static final String LEVELS_NEW = "NEW";
     public static final String MENU_HOW_TO = "How to Play";
     public static final String MENU_SCORES = "High Scores";
     public static final String MENU_QUIT = "Quit";
