@@ -678,6 +678,7 @@ classDiagram
     class HudPainter {
         +paint(g, game, time)
         +paintToast(g, text, age)
+        +designOf(object, designs)$ int
     }
 
     class BadgePainter {
@@ -827,6 +828,13 @@ No sound is loaded from a file. `ToneSynth` makes the samples from recipes, and
 `SynthAudioPlayer` mixes and plays them on its own thread.
 
 ```mermaid
+Bottles, cans and nets each come in several designs (water bottle, soda bottle,
+milk jug, iced tea, crushed bottle; soda, energy drink, lemon soda, food tin,
+crushed can; gill net, nylon net, rope knot, kelp net). Each painter keeps its
+designs as an enum whose constants draw themselves, and
+`ObjectPainter.designOf()` picks one from the object's phase, so an object
+keeps its look and the game rules never need to know about it.
+
 classDiagram
     direction LR
 
