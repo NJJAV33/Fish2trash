@@ -15,6 +15,7 @@ fifteen levels and the reef comes back to life.
 | ![Chapter 3](docs/screenshots/chapter3.png) | ![The ending](docs/screenshots/ending.png) |
 | ![A cleared level and its badge](docs/screenshots/cleared.png) | ![The shift report](docs/screenshots/report.png) |
 | ![Typing a name for the list](docs/screenshots/name.png) | ![The high-score list](docs/screenshots/highscores.png) |
+| ![The level select](docs/screenshots/levels.png) | |
 
 Team project for CIS 2103 (Object Oriented Programming), University of San Carlos.
 
@@ -61,12 +62,19 @@ java -cp out Main
 | `Enter` | Confirm, next story page |
 | `Esc` on a story page | Skip the story |
 | `Up` / `Down` | Move in menus |
+| Arrow keys, `Enter`, `Esc` | In the level select: choose a level, play it, go back |
 
 ## How to play
 
 The story is three chapters of five levels. Every level is one shift: a short
 story page, then a quota to fill. Inside a chapter each level is harder than the
 one before, and the last one asks for the chapter's full quota.
+
+**Select Level** in the menu shows all fifteen levels. Every level you have cleared,
+and the one after the furthest, can be picked; the run then starts there and goes on
+through the story to the ending. Levels further on stay locked. How far you got is
+saved in `.fish2trash/progress.txt` in your home folder, so it is still there the
+next time you play; delete that file to lock the levels again.
 
 | Chapter | Trash to look for | New tool | Quota of its 5 levels | Health |
 |---|---|---|---|---|
@@ -183,6 +191,7 @@ FISH2TRASH/
 │   │   ├── Badge            enum: one badge per chapter, each with its own rule
 │   │   ├── ScoreCalculator  the run score: levels, badges, failed attempts
 │   │   ├── ScoreEntry, HighScoreTable   one line of the high-score list, and the list
+│   │   ├── LevelProgress    the furthest level cleared: which levels the level select opens
 │   │   ├── GameEvent, EventType, GameListener   (observer pattern)
 │   │   ├── HintEngine       decides when the player gets a hint
 │   │   └── HintRule         interface, one small class per reason for a hint:
@@ -193,7 +202,7 @@ FISH2TRASH/
 │   │   ├── ScreenManager    which screen is showing, fades between them
 │   │   ├── Screen           interface every screen implements
 │   │   ├── AudioEventListener   picks the sound for each game event
-│   │   ├── MainMenu, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
+│   │   ├── MainMenu, LevelSelectScreen, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
 │   │   │   LevelClearScreen, GameOverScreen, VictoryScreen, NameEntryScreen,
 │   │   │   HighScoreScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
@@ -204,6 +213,7 @@ FISH2TRASH/
 │       ├── StoryText        every line of text the player reads
 │       ├── Mathx            clamp, lerp, easing
 │       ├── HighScoreStore, HighScoreException   the score file, and what goes wrong with it
+│       ├── ProgressStore    the file that remembers the furthest level cleared
 │       ├── ToneSynth        turns a recipe of tones into sound samples
 │       ├── SoundEffect      enum: one recipe per sound in the game
 │       └── AudioPlayer      interface: SynthAudioPlayer (real), SilentAudioPlayer (no sound)
@@ -257,7 +267,7 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 | Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
 | Custom exception | `Loadout.select()` throws the checked `EquipmentLockedException` for a tool the crew does not have yet. `GameManager.selectTool()` catches it and turns it into a message on screen. `HighScoreStore` and `ScoreEntry.parse()` throw the checked `HighScoreException` (it wraps the `IOException`); `HighScoreTable` catches it, skips a damaged line or carries on without the file. |
 | Comparable and collections | `ScoreEntry implements Comparable<ScoreEntry>`, so `Collections.sort` orders the list. `ArrayList` for lists, `EnumMap` and `EnumSet` for lookups and sets keyed by an enum. |
-| File I/O | `HighScoreStore` reads and writes the score file with `java.nio.file`, writing a draft first and swapping it in. |
+| File I/O | `HighScoreStore` reads and writes the score file with `java.nio.file`, writing a draft first and swapping it in. `ProgressStore` does the same for the furthest level cleared. |
 | Enums with behaviour | `ObjectKind.create()` and `EquipmentType.create()` build their own objects; `CatchOutcome.resolve()` calls the right method; each `Badge` constant carries its own rule. No `switch` over types. |
 
 Patterns used: observer (`GameListener`), template method (`OceanObject.update`,
@@ -293,7 +303,8 @@ no test library is needed. The script exits with an error if any check fails.
 | `HighScoreScreenTest` | When a name is asked for, what can be typed, and that the run lands on the list and in the file |
 | `BalanceBotTest` | Four computer players play every level 50 times. A careful one (right tool, waits for a gap between the fish, switches away from the Magnet when a ray comes) must win at least 3 of 5 runs. A slow, sloppy one must get a fair clock. A blind one that ignores the fish must lose the last level of every chapter more often than it wins, and get stung where there are rays. One that never changes tools must never win from chapter 2 on |
 | `StoryTextTest` | Every story page, fail message and tip fits its box; every level has its own name and pages, and its page names the real quota |
-| `ScreenFlowTest` | Key presses lead to the right screens: menu, how to play, high scores, story, pause, fired screen, retry |
+| `ScreenFlowTest` | Key presses lead to the right screens: menu, level select, how to play, high scores, story, pause, fired screen, retry |
+| `LevelSelectTest` | Which levels the saved progress opens; that it survives a restart, a damaged file and a failed save; that a run can start at any open level and never at a locked one |
 | `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
 | `AudioEventTest` | The right sound for each game event; ten clock ticks in the last ten seconds |
 | `RenderTest`, `EffectsTest`, `MathxTest` | Drawing into an off-screen image, each chapter's look, the bubble and effect pools; the splash, the bubble trail and the wobble of a catch; the math helpers |
@@ -313,6 +324,10 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 - [ ] The game runs smoothly at the largest size. (Tell the team if it does not, and
       on which computer.)
 - [ ] How to Play opens and Enter returns.
+- [ ] Select Level shows 1-1 open and the rest locked on a first launch. Enter on a
+      locked level only plays a short "no" sound.
+- [ ] After clearing a level, close the game and open it again: that level and the
+      next one are open in Select Level, and picking one starts the run there.
 - [ ] Start shows the opening and chapter 1 story. Enter finishes a page, then turns it.
 - [ ] Esc skips the story.
 

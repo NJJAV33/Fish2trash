@@ -1,8 +1,11 @@
 package ui;
 
+import game.GameManager;
 import game.GameSession;
 import game.GameState;
 import game.HighScoreTable;
+import game.LevelProgress;
+import game.LevelResult;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
@@ -15,7 +18,8 @@ import util.GameConstants;
 /**
  * Knows which screen is showing and moves between screens with a short fade.
  * It also holds what every screen needs: the run in progress (the
- * GameSession), the high-score list and the sound player.
+ * GameSession), the high-score list, how far the player has got (for the
+ * level select) and the sound player.
  */
 public final class ScreenManager {
 
@@ -30,10 +34,12 @@ public final class ScreenManager {
     private GameSession session;
     private final AudioPlayer audio;
     private final HighScoreTable highScores;
+    private final LevelProgress progress;
 
-    public ScreenManager(AudioPlayer audio, HighScoreTable highScores) {
+    public ScreenManager(AudioPlayer audio, HighScoreTable highScores, LevelProgress progress) {
         this.audio = audio;
         this.highScores = highScores;
+        this.progress = progress;
     }
 
     /** The sound player every screen shares. */
@@ -151,12 +157,36 @@ public final class ScreenManager {
         session = new GameSession(new Random());
     }
 
+    /** Starts a new run at a level picked from the level select. */
+    public void startRunAt(int levelNumber) {
+        session = new GameSession(new Random(), levelNumber);
+    }
+
+    /**
+     * Records how an attempt at a level ended: in the run, and for a cleared
+     * level also in the saved progress, which opens it and the next one in
+     * the level select.
+     */
+    public LevelResult endLevel(GameManager game) {
+        int levelNumber = game.getLevelData().getNumber();
+        LevelResult result = session.onLevelEnded(game);
+        if (result.isCleared()) {
+            progress.recordCleared(levelNumber);
+        }
+        return result;
+    }
+
     public GameSession getSession() {
         return session;
     }
 
     public HighScoreTable getHighScores() {
         return highScores;
+    }
+
+    /** The levels cleared so far, kept between launches. */
+    public LevelProgress getProgress() {
+        return progress;
     }
 
     /**

@@ -2,6 +2,7 @@ package ui;
 
 import game.GameState;
 import game.HighScoreTable;
+import game.LevelProgress;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -54,10 +55,11 @@ public final class GamePanel extends JPanel {
     /**
      * @param audio      how the game makes sound; tests pass a silent player
      * @param highScores the high-score list; tests pass one kept in a temporary folder
+     * @param progress   the levels cleared so far; tests pass one kept in a temporary folder
      */
-    public GamePanel(AudioPlayer audio, HighScoreTable highScores) {
+    public GamePanel(AudioPlayer audio, HighScoreTable highScores, LevelProgress progress) {
         this.audio = audio;
-        this.screens = new ScreenManager(audio, highScores);
+        this.screens = new ScreenManager(audio, highScores, progress);
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
         setBackground(Color.BLACK);   // the bars beside the picture when the window has another shape
         setOpaque(true);              // every pixel is painted here, so nothing behind needs painting
@@ -78,6 +80,7 @@ public final class GamePanel extends JPanel {
         // One screen per state. They share one renderer for their backdrops.
         gameScreen = new GameScreen(screens, input, renderer);
         screens.register(GameState.MENU, new MainMenu(screens, renderer));
+        screens.register(GameState.LEVEL_SELECT, new LevelSelectScreen(screens, renderer));
         screens.register(GameState.HOW_TO, new HowToScreen(screens, renderer));
         screens.register(GameState.STORY, new StoryScreen(screens, renderer));
         screens.register(GameState.PLAYING, gameScreen);

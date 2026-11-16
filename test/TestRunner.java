@@ -27,6 +27,7 @@ public final class TestRunner {
         run("HighScoreScreenTest", HighScoreScreenTest::run);
         run("HighScoreStoreTest", HighScoreStoreTest::run);
         run("HintTest", HintTest::run);
+        run("LevelSelectTest", LevelSelectTest::run);
         run("LevelSpawnTest", LevelSpawnTest::run);
         run("LoadoutTest", LoadoutTest::run);
         run("MathxTest", MathxTest::run);

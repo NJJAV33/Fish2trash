@@ -370,6 +370,7 @@ classDiagram
         -levelNumber int
         -retries int
         -badges Set
+        +GameSession(random, firstLevel)
         +startLevel() GameManager
         +onLevelEnded(game) LevelResult
         +getLevelData() LevelData
@@ -619,8 +620,11 @@ classDiagram
         +pause(overlay)
         +resume()
         +startNewRun()
+        +startRunAt(levelNumber)
+        +endLevel(game) LevelResult
         +getSession() GameSession
         +getHighScores() HighScoreTable
+        +getProgress() LevelProgress
         +afterRun(otherwise) GameState
     }
 
@@ -636,6 +640,7 @@ classDiagram
     }
 
     class MainMenu
+    class LevelSelectScreen
     class HowToScreen
     class StoryScreen
     class GameScreen
@@ -673,6 +678,7 @@ classDiagram
     class ObjectPainter {
         <<interface>>
         +paint(g, object)
+        +designOf(object, designs)$ int
     }
 
     class HudPainter {
@@ -696,6 +702,13 @@ classDiagram
         ~scaleOf(target)$ double
         ~create(width, height, scale, seeThrough)$ BufferedImage
         ~paint(target, image, x, y, scale)$
+    }
+
+    class SpriteCache {
+        -pictures BufferedImage[]
+        ~paint(g, x, y, pose)
+        ~step(swing, steps)$ int
+        ~pose(step, facing)$ int
     }
 
     class EffectsSystem {
@@ -760,6 +773,7 @@ classDiagram
     ScreenManager o-- Screen : one per GameState
     ScreenManager *-- GameSession : the run
     Screen <|.. MainMenu
+    Screen <|.. LevelSelectScreen
     Screen <|.. HowToScreen
     Screen <|.. StoryScreen
     Screen <|.. GameScreen
@@ -788,7 +802,8 @@ classDiagram
     SceneRenderer *-- ParticleSystem
     BackgroundPainter ..> ChapterPalette : one cached picture per look
     BackgroundPainter ..> PixelImages : makes and copies pictures with
-    NetPainter ..> PixelImages : makes and copies pictures with
+    SpriteCache ..> PixelImages : makes and copies pictures with
+    ObjectPainter ..> SpriteCache : most copy their poses from
     SceneRenderer ..> ChapterPalette : picks the look by the score
     SceneRenderer *-- PainterRegistry
     SceneRenderer *-- BoatPainter
@@ -807,7 +822,18 @@ classDiagram
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
 `CanPainter`, `NetPainter`, `SmallFishPainter`, `BigFishPainter`, `PufferPainter`,
-`BarracudaPainter` and `StingrayPainter`.
+`BarracudaPainter` and `StingrayPainter`. Most of them draw each pose (a tail
+position, a rocking angle) once into a `SpriteCache` and copy it from then on,
+because copying a picture is several times cheaper than drawing a dozen shapes.
+Only things that change freely are drawn every frame: the stingray's tail and
+sparks, a fast fish's speed lines and a swelling pufferfish.
+
+Bottles, cans and nets each come in several designs (water bottle, soda bottle,
+milk jug, iced tea, crushed bottle; soda, energy drink, lemon soda, food tin,
+crushed can; gill net, nylon net, rope knot, kelp net). Each painter keeps its
+designs as an enum whose constants draw themselves, and
+`ObjectPainter.designOf()` picks one from the object's phase, so an object
+keeps its look and the game rules never need to know about it.
 
 ## 6. Sound (package `util`)
 
@@ -885,12 +911,17 @@ classDiagram
     SynthAudioPlayer ..> SoundEffect : renders all at start
 ```
 
-## 7. Scores (packages `game` and `util`)
+## 7. Scores and progress (packages `game` and `util`)
 
 When a run ends, `ScoreCalculator` turns it into one number. If that number makes
 the list, the player types a name and a `ScoreEntry` goes into the `HighScoreTable`,
 which keeps itself on disk through `HighScoreStore`. `ScoreEntry` implements Java's
 own `Comparable` interface, which is how the list gets sorted.
+
+Every cleared level is also written to `LevelProgress`, which keeps the furthest
+level cleared on disk through `ProgressStore`. The level select (`LevelSelectScreen`)
+opens every cleared level and the one after it; picking one starts a
+`GameSession` at that level.
 
 ```mermaid
 classDiagram
@@ -937,12 +968,28 @@ classDiagram
         +HighScoreException(message, cause)
     }
 
+    class LevelProgress {
+        -furthestCleared int
+        +recordCleared(levelNumber)
+        +isCleared(levelNumber) boolean
+        +isUnlocked(levelNumber) boolean
+        +getFurthestCleared() int
+    }
+
+    class ProgressStore {
+        -file Path
+        +inUserHome()$ ProgressStore
+        +read() int
+        +write(furthestCleared) boolean
+    }
+
     class GameSession
     class LevelResult
     class Badge
     class ScreenManager
     class NameEntryScreen
     class HighScoreScreen
+    class LevelSelectScreen
 
     GameSession ..> ScoreCalculator : asks for the run score
     ScoreCalculator ..> LevelResult : scores
@@ -956,6 +1003,10 @@ classDiagram
     ScreenManager --> HighScoreTable
     NameEntryScreen ..> ScoreEntry : creates
     HighScoreScreen ..> HighScoreTable : draws
+    ScreenManager --> LevelProgress : records cleared levels in
+    LevelProgress --> ProgressStore : loads and saves through
+    LevelSelectScreen ..> LevelProgress : shows which levels are open
+    LevelSelectScreen ..> GameSession : starts at the picked level
 ```
 
 ## Classes without a box

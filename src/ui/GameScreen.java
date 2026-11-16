@@ -95,7 +95,7 @@ public final class GameScreen implements Screen {
     /** Hands the result to the session and moves to the clear or game-over screen. */
     private void leave() {
         leaving = true;
-        LevelResult result = screens.getSession().onLevelEnded(game);
+        LevelResult result = screens.endLevel(game);
         screens.go(result.isCleared() ? GameState.LEVEL_CLEAR : GameState.GAME_OVER);
     }
 

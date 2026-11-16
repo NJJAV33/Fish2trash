@@ -12,6 +12,8 @@ public final class MagnetPainter implements ToolPainter {
     private static final Color RING = new Color(200, 200, 205);
     private static final BasicStroke THICK = new BasicStroke(7, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);
     private static final BasicStroke THIN = new BasicStroke(1);
+    private static final Color SHINE = new Color(255, 255, 255, 150);
+    private static final BasicStroke SHINE_STROKE = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     private static final BasicStroke FIELD = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
             1, new float[] {3, 4}, 0);   // dashed
 
@@ -34,6 +36,9 @@ public final class MagnetPainter implements ToolPainter {
         g.setColor(TIP);
         g.drawLine(-11, 8, -11, 14);
         g.drawLine(11, 8, 11, 14);
+        g.setStroke(SHINE_STROKE);
+        g.setColor(SHINE);
+        g.drawArc(-12, -14, 24, 24, 100, 60);   // light on the curve
 
         g.setStroke(THIN);
         g.setColor(RING);

@@ -1,8 +1,10 @@
 import javax.swing.SwingUtilities;
 import game.HighScoreTable;
+import game.LevelProgress;
 import ui.GamePanel;
 import ui.GameWindow;
 import util.HighScoreStore;
+import util.ProgressStore;
 import util.SynthAudioPlayer;
 
 /**
@@ -18,7 +20,8 @@ public class Main {
 
     private static void createAndShowWindow() {
         HighScoreTable highScores = new HighScoreTable(HighScoreStore.inUserHome());
-        GamePanel panel = new GamePanel(new SynthAudioPlayer(), highScores);
+        LevelProgress progress = new LevelProgress(ProgressStore.inUserHome());
+        GamePanel panel = new GamePanel(new SynthAudioPlayer(), highScores, progress);
         new GameWindow(panel).open();
     }
 }

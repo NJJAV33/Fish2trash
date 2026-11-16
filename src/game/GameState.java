@@ -3,6 +3,8 @@ package game;
 /** The screens the game can be on. */
 public enum GameState {
     MENU,
+    /** Picking a level that is already open, to start a run from there. */
+    LEVEL_SELECT,
     HOW_TO,
     /** Story pages before a chapter. */
     STORY,

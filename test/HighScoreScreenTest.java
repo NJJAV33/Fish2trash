@@ -163,7 +163,7 @@ public final class HighScoreScreenTest {
     }
 
     private static ScreenManager newScreens() {
-        ScreenManager manager = new ScreenManager(audio, table);
+        ScreenManager manager = new ScreenManager(audio, table, TempScores.newProgress());
         SceneRenderer renderer = new SceneRenderer();
         manager.register(GameState.MENU, new MainMenu(manager, renderer));
         manager.register(GameState.NAME_ENTRY, new NameEntryScreen(manager, renderer));

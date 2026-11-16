@@ -25,9 +25,23 @@ public final class GameSession {
     private int retries;
     private LevelResult lastResult;
 
+    /** A run through the whole story, from level 1-1. */
     public GameSession(Random random) {
+        this(random, 1);
+    }
+
+    /**
+     * A run that starts at a level picked from the level select and goes on
+     * from there to the ending.
+     *
+     * @param firstLevel 1 for level 1-1, up to 15 for level 3-5
+     */
+    public GameSession(Random random, int firstLevel) {
+        if (firstLevel < 1 || firstLevel > LevelData.LEVEL_COUNT) {
+            throw new IllegalArgumentException("No level number " + firstLevel);
+        }
         this.random = random;
-        this.levelNumber = 1;
+        this.levelNumber = firstLevel;
     }
 
     /** Starts an attempt at the current level. */
