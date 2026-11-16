@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.geom.Path2D;
 import util.GameConstants;
 
 /**
@@ -38,9 +40,13 @@ public final class BoatPainter {
     private static final int HALF = GameConstants.BOAT_WIDTH / 2;
     private static final int DECK = DECK_Y;
 
-    // The hull: a trapezoid that sits slightly in the water.
-    private static final int[] HULL_X = {-HALF, HALF, HALF - 18, -HALF + 18};
-    private static final int[] HULL_Y = {DECK, DECK, 4, 4};
+    // The hull sits slightly in the water, with a bow that rises toward the front.
+    private static final Shape HULL_SHAPE = hull();
+    private static final Color RAIL = new Color(235, 235, 230);
+    private static final Color RING = new Color(235, 80, 60);
+    private static final Color PORTHOLE = new Color(70, 120, 160);
+    private static final Color PORTHOLE_RIM = new Color(225, 225, 220);
+    private static final BasicStroke RING_STROKE = new BasicStroke(2.5f);
 
     // The pennant's points are rewritten every frame, in arrays made once.
     private final int[] pennantX = new int[3];
@@ -80,6 +86,22 @@ public final class BoatPainter {
         g2.setPaint(WINDOW);
         g2.fillRect(-18, DECK - 16, 12, 10);
         g2.fillRect(-2, DECK - 16, 12, 10);
+        g2.setColor(HULL_OUTLINE);
+        g2.setStroke(THIN);
+        g2.drawRect(-25, DECK - 22, 40, 22);
+
+        // A railing along the deck, and a life ring on the stern.
+        g2.setColor(RAIL);
+        g2.drawLine(-HALF + 4, DECK - 7, -30, DECK - 7);
+        g2.drawLine(20, DECK - 7, HALF - 6, DECK - 7);
+        for (int post = -HALF + 6; post < HALF - 4; post += 12) {
+            if (post < -28 || post > 18) {
+                g2.drawLine(post, DECK - 7, post, DECK);
+            }
+        }
+        g2.setColor(RING);
+        g2.setStroke(RING_STROKE);
+        g2.drawOval(-48, DECK - 13, 9, 9);
 
         // Crew member at the bow, in a yellow slicker
         g2.setColor(SLICKER);
@@ -91,13 +113,32 @@ public final class BoatPainter {
 
         // Hull
         g2.setPaint(HULL);
-        g2.fillPolygon(HULL_X, HULL_Y, 4);
+        g2.fill(HULL_SHAPE);
         g2.setColor(HULL_STRIPE);
-        g2.fillRect(-HALF + 4, DECK + 5, GameConstants.BOAT_WIDTH - 8, 3);
+        g2.fillRect(-HALF + 6, DECK + 5, GameConstants.BOAT_WIDTH - 12, 3);
+        for (int port = -24; port <= 16; port += 20) {
+            g2.setColor(PORTHOLE_RIM);
+            g2.fillOval(port - 1, DECK + 11, 8, 8);
+            g2.setColor(PORTHOLE);
+            g2.fillOval(port + 1, DECK + 13, 4, 4);
+        }
         g2.setColor(HULL_OUTLINE);
-        g2.setStroke(THIN);
-        g2.drawPolygon(HULL_X, HULL_Y, 4);
+        g2.setStroke(MAST_STROKE);
+        g2.draw(HULL_SHAPE);
 
         g2.dispose();
+    }
+
+    /** The hull: flat deck, a bow that sweeps up at the front, a rounded stern. */
+    private static Shape hull() {
+        Path2D hull = new Path2D.Double();
+        hull.moveTo(-HALF, DECK);
+        hull.lineTo(HALF - 4, DECK);
+        hull.lineTo(HALF + 4, DECK - 4);
+        hull.quadTo(HALF - 4, 0, HALF - 22, 4);
+        hull.lineTo(-HALF + 16, 4);
+        hull.quadTo(-HALF + 2, 0, -HALF, DECK);
+        hull.closePath();
+        return hull;
     }
 }

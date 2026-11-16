@@ -698,6 +698,13 @@ classDiagram
         ~paint(target, image, x, y, scale)$
     }
 
+    class SpriteCache {
+        -pictures BufferedImage[]
+        ~paint(g, x, y, pose)
+        ~step(swing, steps)$ int
+        ~pose(step, facing)$ int
+    }
+
     class EffectsSystem {
         +MAX_EFFECTS int$
         +reset(game)
@@ -788,7 +795,8 @@ classDiagram
     SceneRenderer *-- ParticleSystem
     BackgroundPainter ..> ChapterPalette : one cached picture per look
     BackgroundPainter ..> PixelImages : makes and copies pictures with
-    NetPainter ..> PixelImages : makes and copies pictures with
+    SpriteCache ..> PixelImages : makes and copies pictures with
+    ObjectPainter ..> SpriteCache : most copy their poses from
     SceneRenderer ..> ChapterPalette : picks the look by the score
     SceneRenderer *-- PainterRegistry
     SceneRenderer *-- BoatPainter
@@ -807,7 +815,11 @@ classDiagram
 
 `ObjectPainter` has one implementation for each `ObjectKind`: `BottlePainter`,
 `CanPainter`, `NetPainter`, `SmallFishPainter`, `BigFishPainter`, `PufferPainter`,
-`BarracudaPainter` and `StingrayPainter`.
+`BarracudaPainter` and `StingrayPainter`. Most of them draw each pose (a tail
+position, a rocking angle) once into a `SpriteCache` and copy it from then on,
+because copying a picture is several times cheaper than drawing a dozen shapes.
+Only things that change freely are drawn every frame: the stingray's tail and
+sparks, a fast fish's speed lines and a swelling pufferfish.
 
 ## 6. Sound (package `util`)
 
