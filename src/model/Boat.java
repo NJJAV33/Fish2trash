@@ -14,6 +14,7 @@ public class Boat {
     private double x;         // center of the boat
     private final double y;   // waterline (bottom of the hull)
     private int facing;       // 1 = pointing right, -1 = pointing left
+    private double tilt;      // how far the swell tips it, in radians; positive = to the right
     private final Hook hook;
 
     public Boat(double x, double y, Loadout loadout) {
@@ -36,6 +37,16 @@ public class Boat {
         x = Mathx.clamp(x + facing * GameConstants.BOAT_SPEED * dt,
                 GameConstants.BOAT_MIN_X, GameConstants.BOAT_MAX_X);
         hook.setAnchorX(x);   // the hook hangs from the boat, so it follows
+    }
+
+    /** The swell tips the boat, and the hook swinging under it leans along. */
+    public void rock(double tilt) {
+        this.tilt = tilt;
+        hook.setSway(tilt);
+    }
+
+    public double getTilt() {
+        return tilt;
     }
 
     public double getX() {

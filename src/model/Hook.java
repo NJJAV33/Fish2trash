@@ -23,6 +23,7 @@ public class Hook implements HookSensor {
     private double angle;       // 0 = straight down, negative = left, positive = right
     private double length;
     private double swingTime;   // seconds spent swinging, drives the swing motion
+    private double sway;        // how far the rocking boat throws the swing off, in radians
     private OceanObject caughtObject;
     private final Loadout loadout;   // the tools that can go on this line
 
@@ -63,14 +64,24 @@ public class Hook implements HookSensor {
         this.anchorX = anchorX;
     }
 
+    /**
+     * The boat is tipped by this much (radians, positive = to the right). The
+     * line hangs from the boat, so the whole swing leans with it and the
+     * moment the hook points straight down keeps shifting.
+     */
+    public void setSway(double sway) {
+        this.sway = sway;
+    }
+
     /** Moves the hook forward by dt seconds of game time. */
     public void update(double dt) {
         switch (state) {
             case SWINGING:
                 // A sine wave goes smoothly from -1 to 1 and back, which gives
                 // a pendulum-like swing between -MAX_ANGLE and +MAX_ANGLE.
+                // The rocking boat leans the whole swing to one side.
                 swingTime += dt;
-                angle = MAX_ANGLE * Math.sin(swingTime * GameConstants.SWING_SPEED);
+                angle = sway + MAX_ANGLE * Math.sin(swingTime * GameConstants.SWING_SPEED);
                 break;
 
             case EXTENDING:

@@ -82,21 +82,21 @@ After every change, run `scripts/test.sh` (or `scripts\test.bat`):
 
 | Level | Time | Careful: cleared | Careful: time left | Slow: cleared | Slow: out of time | Blind: cleared | Blind: ray hits per run |
 |---|---|---|---|---|---|---|---|
-| 1-1 | 50 s | 50 | 39 s | 49 | 1 | 50 | - |
-| 1-2 | 60 s | 48 | 41 s | 49 | 1 | 48 | - |
-| 1-3 | 70 s | 47 | 43 s | 47 | 3 | 42 | - |
-| 1-4 | 80 s | 50 | 44 s | 40 | 10 | 37 | - |
-| 1-5 | 95 s | 44 | 50 s | 36 | 14 | 11 | - |
-| 2-1 | 65 s | 50 | 40 s | 46 | 4 | 49 | - |
-| 2-2 | 70 s | 46 | 39 s | 40 | 10 | 43 | - |
-| 2-3 | 85 s | 49 | 45 s | 36 | 14 | 27 | 0.4 |
-| 2-4 | 95 s | 46 | 47 s | 36 | 13 | 14 | 0.8 |
-| 2-5 | 115 s | 47 | 45 s | 23 | 25 | 9 | 0.9 |
-| 3-1 | 75 s | 49 | 49 s | 46 | 4 | 46 | - |
-| 3-2 | 100 s | 45 | 46 s | 30 | 20 | 20 | - |
-| 3-3 | 110 s | 45 | 46 s | 26 | 24 | 17 | - |
-| 3-4 | 140 s | 46 | 53 s | 21 | 29 | 4 | 0.2 |
-| 3-5 | 150 s | 39 | 54 s | 8 | 42 | 2 | 0.2 |
+| 1-1 | 50 s | 50 | 36 s | 50 | 0 | 50 | - |
+| 1-2 | 60 s | 50 | 39 s | 50 | 0 | 46 | - |
+| 1-3 | 70 s | 50 | 45 s | 50 | 0 | 44 | - |
+| 1-4 | 80 s | 50 | 44 s | 45 | 5 | 36 | - |
+| 1-5 | 95 s | 49 | 46 s | 36 | 14 | 18 | - |
+| 2-1 | 65 s | 50 | 41 s | 49 | 1 | 50 | - |
+| 2-2 | 70 s | 50 | 44 s | 48 | 2 | 49 | - |
+| 2-3 | 85 s | 50 | 50 s | 48 | 2 | 39 | 0.3 |
+| 2-4 | 95 s | 48 | 52 s | 44 | 5 | 35 | 0.4 |
+| 2-5 | 115 s | 50 | 61 s | 47 | 1 | 16 | 0.6 |
+| 3-1 | 75 s | 50 | 47 s | 50 | 0 | 50 | - |
+| 3-2 | 100 s | 50 | 59 s | 47 | 3 | 28 | - |
+| 3-3 | 110 s | 50 | 57 s | 45 | 5 | 13 | - |
+| 3-4 | 140 s | 50 | 70 s | 41 | 9 | 12 | 0.2 |
+| 3-5 | 150 s | 49 | 71 s | 42 | 8 | 7 | 0.1 |
 
 All counts are out of 50. "Time left" is the average over the cleared runs. The
 careful bot almost never loses health, so health is decided by the blind bot.
@@ -118,10 +118,20 @@ long levels were raised until the careful bot cleared at least 3 runs in 5.
   is clear from the story page and the tip alone.
 - Hints, badges and score values.
 
+- The swell and the current. The bots wait until the hook points straight down,
+  so the swell costs them nothing, and they work out where drifting trash will be.
+  A person cannot do either that well. The strengths per level (`SWELL_DEGREES`
+  and `CURRENT_SPEED` at the top of `LevelData`) are first guesses: if the last
+  levels of a chapter feel unfair, lower those two numbers before touching a clock.
+- What the tools do to a fish (hauled up, dazed for 3 seconds, killed). The times
+  are in `GameConstants` (`DAZE_S`, `HOOK_CARRY`).
+
 **Things to watch for in a playtest:**
 
-- The slow bot runs out of time in most runs of 3-5 (42 of 50). That level is meant
-  to be the hardest, but if real players feel the same, give it 10 more seconds.
+- The bots now clear every level more easily than before the sea started moving
+  (trash is carried under the boat, and the Magnet pulls cans in). If people also
+  find it easier, take 5 to 10 seconds off the clocks of chapter 3.
+
 - The Net Cutter costs 2 for every fish. If players stop using it near any fish at
   all, chapter 3 may feel slow; try `CUTTER_FISH_DAMAGE = 1` and compare.
 - Trash is limited now. If a player misses a lot, a level can run low on one kind;

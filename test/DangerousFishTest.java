@@ -6,6 +6,7 @@ import model.Loadout;
 import model.OceanObject;
 import model.Player;
 import model.Pufferfish;
+import model.Sea;
 import model.Stingray;
 import model.SmallFish;
 import util.GameConstants;
@@ -54,7 +55,7 @@ public final class DangerousFishTest {
         double lowest = 350;
         for (double t = 0; t < GameConstants.PUFFER_WEAVE_PERIOD_S; t += STEP) {
             puffer.sense(farAway);
-            puffer.update(STEP, GameConstants.WORLD_WIDTH);
+            puffer.update(STEP, Sea.CALM);
             highest = Math.min(highest, puffer.getY());
             lowest = Math.max(lowest, puffer.getY());
         }
@@ -70,7 +71,7 @@ public final class DangerousFishTest {
         for (double t = 0; t < 1.0; t += STEP) {
             near.tipY = puffer.getY() - 30;   // keep the hook right beside it
             puffer.sense(near);
-            puffer.update(STEP, GameConstants.WORLD_WIDTH);
+            puffer.update(STEP, Sea.CALM);
         }
         Check.assertEquals("fully swollen near the hook", 1.0, puffer.getAlert(), TINY);
         Check.assertEquals("swollen size is 50% bigger",
@@ -81,7 +82,7 @@ public final class DangerousFishTest {
         FakeHook gone = new FakeHook(0, 0, false);
         for (double t = 0; t < 1.0; t += STEP) {
             puffer.sense(gone);
-            puffer.update(STEP, GameConstants.WORLD_WIDTH);
+            puffer.update(STEP, Sea.CALM);
         }
         Check.assertEquals("shrinks again when the hook is gone", 0.0, puffer.getAlert(), TINY);
     }
@@ -91,7 +92,7 @@ public final class DangerousFishTest {
         FakeHook resting = new FakeHook(320, 170, false);   // close, but the line is not out
         for (double t = 0; t < 1.0; t += STEP) {
             barracuda.sense(resting);
-            barracuda.update(STEP, GameConstants.WORLD_WIDTH);
+            barracuda.update(STEP, Sea.CALM);
         }
         Check.assertEquals("no warning while the hook is at rest", 0.0, barracuda.getAlert(), TINY);
         Check.assertEquals("keeps patrolling at its own speed", 400.0, barracuda.getX(), 2.0);
@@ -103,7 +104,7 @@ public final class DangerousFishTest {
 
         // Warning: it stops and flashes.
         barracuda.sense(hook);
-        barracuda.update(STEP, GameConstants.WORLD_WIDTH);
+        barracuda.update(STEP, Sea.CALM);
         double xAtWarning = barracuda.getX();
         double yAtWarning = barracuda.getY();
         play(barracuda, hook, GameConstants.BARRACUDA_TELEGRAPH_S - 0.1);
@@ -214,7 +215,7 @@ public final class DangerousFishTest {
     private static void play(OceanObject fish, HookSensor hook, double seconds) {
         for (double t = 0; t < seconds - 1e-9; t += STEP) {
             fish.sense(hook);
-            fish.update(STEP, GameConstants.WORLD_WIDTH);
+            fish.update(STEP, Sea.CALM);
         }
     }
 

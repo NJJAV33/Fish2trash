@@ -63,7 +63,8 @@ public final class GameEventTest {
         GameScript.hookOnto(game, fish);
 
         Check.assertEquals("events for a fish hit",
-                List.of(EventType.HOOK_LAUNCHED, EventType.HEALTH_LOST), GameScript.types(events));
+                List.of(EventType.HOOK_LAUNCHED, EventType.HEALTH_LOST, EventType.FISH_FREED),
+                GameScript.types(events));
         Check.assertEquals("event carries the damage", 1, events.get(1).getValue());
         Check.assertTrue("the fish is still in the water", game.getObjects().contains(fish));
         Check.assertEquals("score unchanged by a fish", 0, game.getPlayer().getScore());

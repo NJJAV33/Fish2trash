@@ -6,7 +6,8 @@ import util.GameConstants;
 
 /**
  * The basic hook. It snags anything it touches - which is why it also hurts
- * fish. When gear matters, it only holds on to plastic: cans and nets slip
+ * fish: a fish it touches is really hooked, and has to be hauled up to the
+ * boat and let go there, which costs time as well as health. When gear matters, it only holds on to plastic: cans and nets slip
  * off and need their own tools.
  */
 public class PlainHook extends Equipment {
@@ -32,5 +33,11 @@ public class PlainHook extends Equipment {
     @Override
     protected CatchOutcome outcomeFor(ObjectKind kind) {
         return outcomes.get(kind);
+    }
+
+    /** The barb holds: the fish rides the line up to the boat. */
+    @Override
+    public void strike(Fish fish, Hook hook) {
+        fish.snag(hook);
     }
 }

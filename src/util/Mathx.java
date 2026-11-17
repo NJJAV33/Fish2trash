@@ -16,6 +16,14 @@ public final class Mathx {
         return Math.max(min, Math.min(max, value));
     }
 
+    /** Moves value toward goal by at most step, without going past it. */
+    public static double approach(double value, double goal, double step) {
+        if (value < goal) {
+            return Math.min(goal, value + step);
+        }
+        return Math.max(goal, value - step);
+    }
+
     /** Linear interpolation: t = 0 gives from, t = 1 gives to, 0.5 is halfway. */
     public static double lerp(double from, double to, double t) {
         return from + (to - from) * t;

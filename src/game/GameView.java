@@ -5,6 +5,7 @@ import model.Boat;
 import model.LevelData;
 import model.EquipmentType;
 import model.ObjectView;
+import model.Sea;
 
 /**
  * What the screen is allowed to see of a running game.
@@ -20,6 +21,9 @@ public interface GameView {
     Boat getBoat();
 
     List<? extends ObjectView> getObjects();
+
+    /** The swell and the current right now. */
+    Sea getSea();
 
     int getScore();
 

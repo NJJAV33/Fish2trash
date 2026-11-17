@@ -36,6 +36,9 @@ public interface ObjectView {
      */
     double getAlert();
 
-    /** 0 = invisible, 1 = fully visible. Objects fade in when they appear. */
+    /** The shape it is in. The drawing shows a dazed or lifeless fish differently. */
+    Condition getCondition();
+
+    /** 0 = invisible, 1 = fully visible. Objects fade in at the start of a level. */
     double getOpacity();
 }

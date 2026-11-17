@@ -14,6 +14,7 @@ import model.Level;
 import model.Loadout;
 import model.OceanObject;
 import model.Player;
+import model.Sea;
 import model.TimeLimit;
 import util.GameConstants;
 
@@ -143,6 +144,7 @@ public final class GameManager implements GameView, CatchResolver {
         announceLowTime();
 
         boat.moveBy(boatDirection, dt);
+        boat.rock(level.getSea().getTilt());   // the swell tips the boat and throws the swing off
         Hook hook = boat.getHook();
         boolean lineWasOut = hook.isLineOut();
         hook.update(dt);
@@ -204,7 +206,8 @@ public final class GameManager implements GameView, CatchResolver {
         int healthBefore = player.getHealth();
 
         // POLYMORPHISM: the same call does different things - trash adds
-        // points and rides the line up, a fish costs health and swims away.
+        // points and rides the line up, a fish costs health and then the
+        // tool decides what becomes of it.
         object.onCaught(player, boat.getHook());
         launchResolved = true;
 
@@ -241,19 +244,26 @@ public final class GameManager implements GameView, CatchResolver {
         // The tool ignores this object, so the throw simply carries on.
     }
 
-    /** The hook is back at the boat: unload the catch, or count a miss. */
+    /** The hook is back at the boat: unload the catch, let a fish go, or count a miss. */
     private void onHookReturned(Hook hook) {
         OceanObject carried = hook.getCaughtObject();
-        if (carried != null) {
+        if (carried == null) {
+            if (!launchResolved) {
+                emit(GameEvent.of(EventType.MISSED));
+            }
+            return;
+        }
+        hook.clearCaughtObject();
+        // POLYMORPHISM again: trash stays aboard, a snagged fish goes back into the sea.
+        if (carried.reachBoat()) {
             level.remove(carried);   // the level decides what appears in its place
-            hook.clearCaughtObject();
             emit(GameEvent.about(EventType.DELIVERED, carried, 0));
             if (quotaReached) {
                 status = LevelStatus.CLEARED;
                 emit(GameEvent.of(EventType.LEVEL_CLEARED));
             }
-        } else if (!launchResolved) {
-            emit(GameEvent.of(EventType.MISSED));
+        } else {
+            emit(GameEvent.about(EventType.FISH_FREED, carried, 0));
         }
     }
 
@@ -278,6 +288,11 @@ public final class GameManager implements GameView, CatchResolver {
     @Override
     public List<OceanObject> getObjects() {
         return level.getObjects();
+    }
+
+    @Override
+    public Sea getSea() {
+        return level.getSea();
     }
 
     @Override

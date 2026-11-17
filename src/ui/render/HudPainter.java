@@ -35,6 +35,8 @@ public final class HudPainter {
     private static final double TOOL_ICON_SCALE = 0.55;
     private static final BasicStroke THIN = new BasicStroke(1);
     private static final BasicStroke SELECTED_EDGE = new BasicStroke(2);
+    private static final BasicStroke CURRENT_STROKE = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    private static final double CURRENT_SLACK = 0.3;   // below a tenth of full strength no arrowhead shows
 
     private static final double TOAST_SLIDE_SECONDS = 0.25;
     private static final double TOAST_FADE_SECONDS = 0.4;
@@ -74,6 +76,7 @@ public final class HudPainter {
         TextDraw.centered(g, String.valueOf(game.getScore()), 747, 48);
 
         drawSpeaker(g, sound);
+        drawCurrent(g, game.getSea().getCurrent(), game.getSea().getStrength());
         if (GameConstants.EQUIPMENT_ENABLED) {
             drawToolBar(g, game, time);
         }
@@ -105,6 +108,41 @@ public final class HudPainter {
             g.drawLine(x + 15, y + 5, x + 22, y + 13);
             g.drawLine(x + 22, y + 5, x + 15, y + 13);
         }
+    }
+
+    /**
+     * Which way the current flows and how hard, next to the speaker: up to
+     * three arrowheads pointing with the flow. Trash and fish drift that way.
+     *
+     * @param current  the current right now, in pixels per second; positive flows right
+     * @param strength the fastest it gets in this level
+     */
+    private void drawCurrent(Graphics2D g, double current, double strength) {
+        int x = 632;
+        int y = 64;
+        g.setColor(UiPalette.PANEL);
+        g.fillRoundRect(x, y, 118, 26, 10, 10);
+        g.setFont(Fonts.SMALL);
+        if (strength <= 0) {
+            g.setColor(UiPalette.DIM_TEXT);
+            TextDraw.centered(g, StoryText.HUD_CALM, x + 59, y + 18);
+            return;
+        }
+        g.setColor(UiPalette.DIM_TEXT);
+        g.drawString(StoryText.HUD_CURRENT, x + 8, y + 18);
+
+        // One arrowhead for a weak current, three for the strongest this level has.
+        int heads = (int) Math.ceil(Math.abs(current) / strength * 3 - CURRENT_SLACK);
+        int direction = (current < 0) ? -1 : 1;
+        int middle = x + 92;
+        g.setColor(UiPalette.ACCENT);
+        g.setStroke(CURRENT_STROKE);
+        for (int i = 0; i < heads; i++) {
+            int tip = middle + direction * (i * 8 - (heads - 1) * 4 + 3);
+            g.drawLine(tip - direction * 5, y + 8, tip, y + 13);
+            g.drawLine(tip, y + 13, tip - direction * 5, y + 18);
+        }
+        g.setStroke(THIN);
     }
 
     /** One slot per tool along the bottom: its key, its picture and its name. */
