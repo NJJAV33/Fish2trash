@@ -18,6 +18,7 @@ public final class WaterPainter {
     private static final int W = GameConstants.WORLD_WIDTH;
     private static final int WATER_Y = GameConstants.WATER_Y;
     private static final int WAVE_STEP = 16;        // pixels between points along a wave
+    private static final double SWELL_HEIGHT = 8;   // waves grow by this many times their height per radian of swell
     private static final int RAY_COUNT = 5;
     private static final int RAY_DEPTH = 380;       // how far down a sunbeam reaches
     private static final int RAY_SLICES = 19;       // a beam fades out in this many steps
@@ -30,16 +31,25 @@ public final class WaterPainter {
     // The wave colours of each look, worked out once.
     private final Map<ChapterPalette, Color[]> waveColors = new HashMap<>();
 
-    /** The far row of waves. Drawn before the boat, so the boat sits in front of it. */
-    public void paintBackWaves(Graphics2D g, ChapterPalette palette, double time) {
+    /**
+     * The far row of waves. Drawn before the boat, so the boat sits in front of it.
+     *
+     * @param swell how rough the sea is, in radians of boat tilt; 0 on a quiet sea. Rough seas have taller waves.
+     */
+    public void paintBackWaves(Graphics2D g, ChapterPalette palette, double time, double swell) {
         g.setColor(colorsFor(palette)[0]);
-        fillWave(g, WATER_Y - 3, 4, 0.020, time * 1.3, 18);
+        fillWave(g, WATER_Y - 3, 4 * heightIn(swell), 0.020, time * 1.3, 18);
     }
 
     /** The near row of waves. Drawn after the boat, so it laps over the hull. */
-    public void paintFrontWaves(Graphics2D g, ChapterPalette palette, double time) {
+    public void paintFrontWaves(Graphics2D g, ChapterPalette palette, double time, double swell) {
         g.setColor(colorsFor(palette)[1]);
-        fillWave(g, WATER_Y + 2, 3, 0.027, -time * 1.7, 9);
+        fillWave(g, WATER_Y + 2, 3 * heightIn(swell), 0.027, -time * 1.7, 9);
+    }
+
+    /** How many times taller than usual the waves are in a sea this rough. */
+    private static double heightIn(double swell) {
+        return 1 + SWELL_HEIGHT * swell;
     }
 
     /**

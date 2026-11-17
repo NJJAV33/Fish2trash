@@ -23,6 +23,20 @@ public final class LevelData {
     public static final int LEVELS_PER_CHAPTER = 5;
     public static final int LEVEL_COUNT = CHAPTER_COUNT * LEVELS_PER_CHAPTER;
 
+    // How rough the sea is in each level, in the order of the story.
+    // The swell: how far the boat tips at most, in degrees. It throws the swing of the hook off.
+    private static final double[] SWELL_DEGREES = {
+        0, 3, 4, 5, 10,
+        4, 5, 6, 7, 9,
+        5, 6, 7, 8, 11
+    };
+    // The current: how fast it carries trash and fish along at most, in pixels per second.
+    private static final double[] CURRENT_SPEED = {
+        0, 15, 15, 20, 40,
+        15, 20, 22, 26, 35,
+        15, 20, 25, 28, 38
+    };
+
     private final int chapter;           // 1 to 3
     private final int level;             // 1 to 5 inside the chapter
     private final int quota;
@@ -96,7 +110,9 @@ public final class LevelData {
                                         .speed(30, 60).y(190, 400).build(),
                                 SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(40, 70).y(175, 260).start(4).build(),
                                 SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(50, 80).y(200, 310).start(12).build()),
-                        List.of(TutorialPrompt.at(2, StoryText.TUT_RECALL)));
+                        List.of(
+                                TutorialPrompt.at(2, StoryText.TUT_RECALL),
+                                TutorialPrompt.at(10, StoryText.TUT_CURRENT)));
             case 3:   // The first big, fast fish.
                 return new LevelData(1, 3, 70, 70, health, bottle,
                         List.of(
@@ -104,7 +120,9 @@ public final class LevelData {
                                         .speed(35, 70).y(190, 420).build(),
                                 SpawnRule.of(ObjectKind.SMALL_FISH).count(3, 3).speed(45, 80).y(175, 290).start(4).build(),
                                 SpawnRule.of(ObjectKind.BIG_FISH).speed(80, 110).y(200, 330).start(14).build()),
-                        List.of(TutorialPrompt.at(15, StoryText.TUT_BIGFISH)));
+                        List.of(
+                                TutorialPrompt.at(2, StoryText.TUT_SWELL),
+                                TutorialPrompt.at(15, StoryText.TUT_BIGFISH)));
             case 4:   // Bottles lie deep, under a school of fish near the surface.
                 return new LevelData(1, 4, 80, 80, health, bottle,
                         List.of(
@@ -116,13 +134,13 @@ public final class LevelData {
                                         .start(8).build(),
                                 SpawnRule.of(ObjectKind.BIG_FISH).speed(90, 120).y(185, 290).start(20).build()),
                         List.of(TutorialPrompt.at(1, StoryText.TUT_DEEP)));
-            default:  // After the storm: fast bottles and seven fish.
+            default:  // After the storm: a rough sea, fast bottles and nine fish.
                 return new LevelData(1, 5, GameConstants.QUOTA_CH1, 95, health, bottle,
                         List.of(
                                 SpawnRule.of(bottle).count(5, 5).supply(15).min(3).respawn(1.5, 3)
                                         .speed(50, 95).y(180, 430).build(),
-                                SpawnRule.of(ObjectKind.SMALL_FISH).count(3, 3).speed(60, 100).y(170, 290).start(2).build(),
-                                SpawnRule.of(ObjectKind.SMALL_FISH).count(2, 2).speed(70, 110).y(200, 300).start(14).build(),
+                                SpawnRule.of(ObjectKind.SMALL_FISH).count(4, 4).speed(60, 100).y(170, 290).start(2).build(),
+                                SpawnRule.of(ObjectKind.SMALL_FISH).count(3, 3).speed(70, 110).y(200, 300).start(14).build(),
                                 SpawnRule.of(ObjectKind.BIG_FISH).speed(100, 150).y(180, 320).start(8).build(),
                                 SpawnRule.of(ObjectKind.BIG_FISH).speed(120, 160).y(200, 340).start(30).build()),
                         List.of(TutorialPrompt.at(1, StoryText.TUT_FAST)));
@@ -327,6 +345,16 @@ public final class LevelData {
 
     public int getStartHealth() {
         return startHealth;
+    }
+
+    /** How far the swell tips the boat at most in this level, in degrees. */
+    public double getSwellDegrees() {
+        return SWELL_DEGREES[getNumber() - 1];
+    }
+
+    /** How fast the current flows at most in this level, in pixels per second. */
+    public double getCurrentSpeed() {
+        return CURRENT_SPEED[getNumber() - 1];
     }
 
     public ObjectKind getPrimaryKind() {

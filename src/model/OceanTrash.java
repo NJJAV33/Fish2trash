@@ -25,6 +25,12 @@ public abstract class OceanTrash extends OceanObject {
         hook.attach(this);
     }
 
+    /** Trash stays aboard: that is the whole point. */
+    @Override
+    public boolean reachBoat() {
+        return true;
+    }
+
     @Override
     public int getPoints() {
         return points;

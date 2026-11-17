@@ -30,7 +30,13 @@ public final class ParticleSystem {
     private final Random random = new Random(7);   // only decoration, so a fixed seed is fine
     private double untilNextBubble;
 
+    /** Lets time pass on a still sea. */
     public void update(double dt) {
+        update(dt, 0);
+    }
+
+    /** @param current how fast the water flows sideways, in pixels per second; the bubbles go with it */
+    public void update(double dt, double current) {
         untilNextBubble -= dt;
         if (untilNextBubble <= 0) {
             spawn();
@@ -41,7 +47,7 @@ public final class ParticleSystem {
                 continue;
             }
             y[i] -= speed[i] * dt;
-            x[i] += Math.sin(wobble[i] + y[i] * 0.05) * 12 * dt;
+            x[i] += (Math.sin(wobble[i] + y[i] * 0.05) * 12 + current) * dt;
             if (y[i] < GameConstants.WATER_Y + radius[i]) {
                 alive[i] = false;   // popped at the surface; the slot is free again
             }

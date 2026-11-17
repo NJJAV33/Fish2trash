@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import model.Boat;
 import model.LevelData;
 import model.ObjectView;
+import model.Sea;
 import util.GameConstants;
 
 /**
@@ -23,6 +24,9 @@ public final class SceneRenderer {
     private final PainterRegistry painters = new PainterRegistry();
     private final BoatPainter boatPainter = new BoatPainter();
     private final HookPainter hookPainter = new HookPainter(painters);
+    private final AmbientLifePainter ambient = new AmbientLifePainter();
+    private double current;   // how fast the water flowed sideways in the scene shown last
+    private double driftX;    // how far that current has carried loose things so far
 
     /**
      * Moves the animation forward. Called every frame, also on menus and
@@ -30,7 +34,8 @@ public final class SceneRenderer {
      */
     public void update(double dt) {
         time += dt;
-        bubbles.update(dt);
+        driftX += current * dt;
+        bubbles.update(dt, current);
     }
 
     /** The painters for objects and tools, for screens that draw one on its own. */
@@ -57,11 +62,12 @@ public final class SceneRenderer {
         double levelsDone = level.getLevel() - 1 + (double) game.getScore() / game.getQuota();
         ChapterPalette palette = ChapterPalette.forChapter(level.getChapter())
                 .cleanedBy(levelsDone / LevelData.LEVELS_PER_CHAPTER);
-        background.paint(g, palette);
-        water.paintBackWaves(g, palette, time);
+        Sea sea = game.getSea();
+        current = sea.getCurrent();
+        paintBehind(g, palette, sea.getSwell());
 
         Boat boat = game.getBoat();
-        boatPainter.paint(g, boat.getX(), boat.getY(), boat.getFacing(), time);
+        boatPainter.paint(g, boat.getX(), boat.getY(), boat.getFacing(), time, boat.getTilt(), sea.getSwell());
         hookPainter.paintRope(g, boat.getHook(), time);
         for (ObjectView object : game.getObjects()) {
             if (catchSquash != 0 && object.isCaught()) {
@@ -72,7 +78,7 @@ public final class SceneRenderer {
         }
         hookPainter.paintHead(g, boat.getHook(), time);
 
-        paintWaterOnTop(g, palette);
+        paintInFront(g, palette, sea.getSwell());
     }
 
     /** Draws an object stretched sideways and flattened by the same factor, around its own middle. */
@@ -86,24 +92,33 @@ public final class SceneRenderer {
         stretched.dispose();
     }
 
-    /** A backdrop with the boat idling at the given place. The menu uses it. */
+    /** A backdrop with the boat idling at the given place, on a quiet sea. The menu uses it. */
     public void paintBackdropWithBoat(Graphics2D g, ChapterPalette palette, double boatX) {
-        background.paint(g, palette);
-        water.paintBackWaves(g, palette, time);
+        current = 0;
+        paintBehind(g, palette, 0);
         boatPainter.paint(g, boatX, GameConstants.WATER_Y, 1, time);
-        paintWaterOnTop(g, palette);
+        paintInFront(g, palette, 0);
     }
 
-    /** The scene without boat or objects. Menus and story screens use it as a backdrop. */
+    /** The scene without boat or objects, on a quiet sea. Menus and story screens use it as a backdrop. */
     public void paintBackdrop(Graphics2D g, ChapterPalette palette) {
-        background.paint(g, palette);
-        water.paintBackWaves(g, palette, time);
-        paintWaterOnTop(g, palette);
+        current = 0;
+        paintBehind(g, palette, 0);
+        paintInFront(g, palette, 0);
     }
 
-    /** What lies in front of the boat and the objects: near waves, sunbeams and bubbles. */
-    private void paintWaterOnTop(Graphics2D g, ChapterPalette palette) {
-        water.paintFrontWaves(g, palette, time);
+    /** What lies behind the boat and the objects: sky, sea, far waves and far-off sea life. */
+    private void paintBehind(Graphics2D g, ChapterPalette palette, double swell) {
+        background.paint(g, palette);
+        ambient.paintSky(g, palette, time);
+        water.paintBackWaves(g, palette, time, swell);
+        ambient.paintBehind(g, palette, time, driftX);
+    }
+
+    /** What lies in front of the boat and the objects: plants on the sea floor, near waves, sunbeams and bubbles. */
+    private void paintInFront(Graphics2D g, ChapterPalette palette, double swell) {
+        ambient.paintFront(g, palette, time, current);
+        water.paintFrontWaves(g, palette, time, swell);
         water.paintRays(g, palette, time);
         bubbles.paint(g);
     }

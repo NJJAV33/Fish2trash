@@ -36,6 +36,7 @@ public final class BoatPainter {
     private static final double BOB_PIXELS = 2.5;
     private static final double ROLL_RADIANS = 0.025;
     private static final double BOB_SPEED = 1.6;
+    private static final double SWELL_LIFT = 15;   // extra pixels of bobbing per radian of swell
 
     private static final int HALF = GameConstants.BOAT_WIDTH / 2;
     private static final int DECK = DECK_Y;
@@ -52,16 +53,24 @@ public final class BoatPainter {
     private final int[] pennantX = new int[3];
     private final int[] pennantY = new int[3];
 
+    /** The boat on a quiet sea, rolling only a little by itself. Menus use this. */
+    public void paint(Graphics2D g, double x, double waterline, int facing, double time) {
+        paint(g, x, waterline, facing, time, 0, 0);
+    }
+
     /**
      * @param x         the middle of the boat
      * @param waterline the y where the hull meets the water
      * @param facing    1 = bow to the right, -1 = bow to the left
      * @param time      seconds of animation so far
+     * @param tilt      how far the swell tips the boat right now, in radians
+     * @param swell     how rough the sea is: the widest tilt, in radians. A rough sea also lifts the boat higher.
      */
-    public void paint(Graphics2D g, double x, double waterline, int facing, double time) {
+    public void paint(Graphics2D g, double x, double waterline, int facing, double time, double tilt, double swell) {
         Graphics2D g2 = (Graphics2D) g.create();
-        g2.translate(x, waterline + BOB_PIXELS * Math.sin(BOB_SPEED * time));
-        g2.rotate(ROLL_RADIANS * Math.sin(BOB_SPEED * time + 1.2));
+        double bob = BOB_PIXELS + SWELL_LIFT * swell;
+        g2.translate(x, waterline + bob * Math.sin(BOB_SPEED * time));
+        g2.rotate(tilt + ROLL_RADIANS * Math.sin(BOB_SPEED * time + 1.2));
         g2.scale(facing, 1);   // drawn with the bow to the right
 
         // Mast and pennant. The free corner of the pennant flutters.

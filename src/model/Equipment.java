@@ -38,6 +38,13 @@ public abstract class Equipment {
         return usualDamage;
     }
 
+    /**
+     * What this tool does to a fish it touches, after the health is lost.
+     * Each tool is different: one snags the fish, one knocks it out, one
+     * kills it. The tool also decides what the hook does next.
+     */
+    public abstract void strike(Fish fish, Hook hook);
+
     /** True for a tool that stingrays can feel. Only the Magnet is. */
     public boolean isMagnetic() {
         return false;

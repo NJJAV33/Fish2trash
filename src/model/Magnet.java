@@ -3,9 +3,10 @@ package model;
 import util.GameConstants;
 
 /**
- * A magnet on the line. Only metal sticks to it: it lifts cans and goes
- * straight past bottles and nets. It is heavy, so it knocks any fish it
- * touches - and stingrays can feel it coming.
+ * A magnet on the line. Only metal sticks to it: it lifts cans, pulls cans
+ * that are close toward it (see Can), and goes straight past bottles and
+ * nets. It is heavy, so it knocks out any fish it touches - and stingrays
+ * can feel it coming.
  */
 public class Magnet extends Equipment {
 
@@ -25,5 +26,12 @@ public class Magnet extends Equipment {
     @Override
     public boolean isMagnetic() {
         return true;
+    }
+
+    /** A heavy block of steel: the fish is knocked out and the line comes back empty. */
+    @Override
+    public void strike(Fish fish, Hook hook) {
+        fish.daze();
+        hook.beginRetractEmpty();
     }
 }

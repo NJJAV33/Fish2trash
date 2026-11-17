@@ -102,6 +102,7 @@ public final class EffectsSystem implements GameListener {
         reactions.put(EventType.QUOTA_REACHED, this::onQuotaReached);
         reactions.put(EventType.HOOK_LAUNCHED, event -> splash(LAUNCH_DROPLETS));
         reactions.put(EventType.DELIVERED, event -> splash(DELIVERY_DROPLETS));
+        reactions.put(EventType.FISH_FREED, event -> splash(DELIVERY_DROPLETS));   // the fish goes back in
     }
 
     /** Clears everything for a new attempt at a level. */

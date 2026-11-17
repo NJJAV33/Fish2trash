@@ -11,6 +11,7 @@ import model.LevelData;
 import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
+import model.Sea;
 import ui.GamePanel;
 import ui.render.BackgroundPainter;
 import ui.render.ChapterPalette;
@@ -144,7 +145,7 @@ public final class ScalingTest {
     private static void aNetLooksTheSameEveryTimeAndGrowsWithTheWindow() {
         PainterRegistry painters = new PainterRegistry();
         OceanObject net = ObjectKind.FISHING_NET.create(100, 100, 0);
-        net.update(1, W);   // let it finish fading in
+        net.update(1, Sea.CALM);   // let it finish fading in
 
         int[] first = objectPixels(painters, net, 1);
         int[] again = objectPixels(painters, net, 1);
@@ -243,7 +244,7 @@ public final class ScalingTest {
     /** How bright one object of this kind is in total, drawn on black at depth y. */
     private static long brightness(PainterRegistry painters, ObjectKind kind, int y) {
         OceanObject object = kind.create(100, y, 20);
-        object.update(1, W);   // let it finish fading in
+        object.update(1, Sea.CALM);   // let it finish fading in
         object.moveTo(100, y);
         BufferedImage image = new BufferedImage(200, H, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();

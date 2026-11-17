@@ -38,6 +38,7 @@ public final class TestRunner {
         run("ScalingTest", ScalingTest::run);
         run("ScoreFlowTest", ScoreFlowTest::run);
         run("ScreenFlowTest", ScreenFlowTest::run);
+        run("SeaTest", SeaTest::run);
         run("SessionTest", SessionTest::run);
         run("StoryTextTest", StoryTextTest::run);
         run("SynthTest", SynthTest::run);

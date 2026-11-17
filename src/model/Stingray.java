@@ -49,11 +49,11 @@ public class Stingray extends Fish {
     }
 
     @Override
-    protected void move(double dt) {
+    protected void swim(double dt) {
         phaseTime += dt;
         switch (phase) {
             case REST:
-                super.move(dt);   // a slow glide over the sand
+                super.swim(dt);   // a slow glide over the sand
                 if (magnetFelt) {
                     enter(Phase.WARNING);
                 }
@@ -78,6 +78,7 @@ public class Stingray extends Fish {
             case SINK:
                 swimToward(getX(), homeY, GameConstants.STINGRAY_SINK_SPEED * dt);
                 if (getY() >= homeY) {
+                    settleAt(homeY);
                     enter(Phase.REST);
                 }
                 break;
@@ -96,6 +97,20 @@ public class Stingray extends Fish {
         double newY = Mathx.clamp(getY() + dy / distance * step,
                 GameConstants.WATER_Y + getRadius(), homeY);
         moveTo(getX() + dx / distance * step, newY);
+    }
+
+    /** It only changes its mind on the sand, and then it just turns around. */
+    @Override
+    protected void wander(double roll) {
+        if (phase == Phase.REST) {
+            turnAround();
+        }
+    }
+
+    /** Let go at the boat, it sinks back to the sand. */
+    @Override
+    protected void onFreed() {
+        enter(Phase.SINK);
     }
 
     private void enter(Phase next) {

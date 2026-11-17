@@ -42,6 +42,8 @@ public final class GameConstants {
     public static final double TOOL_SWAP_COOLDOWN_S = 1.0;   // wait between two tool changes
     public static final int CUTTER_FISH_DAMAGE = 2;      // the Net Cutter's blades: every fish it touches costs this much
     public static final double SLIP_IMMUNITY_S = 1.5;   // an object that slipped off can't be touched for this long
+    public static final double MAGNET_PULL_RANGE = 70;  // a can this close to the Magnet on its way slides toward it
+    public static final double MAGNET_PULL_SPEED = 90;  // pixels per second
     // false = one hook catches every kind of trash; true = each kind needs its own tool
     public static final boolean EQUIPMENT_ENABLED = true;
 
@@ -61,6 +63,19 @@ public final class GameConstants {
     public static final double RADIUS_PUFFER = 22;
     public static final double RADIUS_BARRACUDA = 22;
     public static final double FISH_RELEASE_IMMUNITY_S = 1.5;   // a hooked fish can't be hooked again for this long
+
+    // ---- Fish with a mind of their own ----
+    public static final double FISH_WHIMS_PER_S = 0.16;       // on average a fish changes its mind every six seconds
+    public static final double FISH_TURN_ACCEL = 260;         // pixels per second, per second: turning takes a moment
+    public static final double FISH_DEPTH_SPEED = 45;         // pixels per second when it changes depth
+    public static final double FISH_DEPTH_ROAM = 45;          // it roams this far above and below its own depth
+    public static final double FISH_EDGE_SHY = 70;            // no turning this close to the edge of the screen
+    public static final double FISH_FLEE_BOOST = 1.8;         // let go at the boat, it darts off this much faster
+
+    // ---- What each tool does to a fish it touches ----
+    public static final double DAZE_S = 3.0;                  // the Magnet knocks a fish out for this long
+    public static final double LIFELESS_RISE_SPEED = 55;      // a fish cut by the Net Cutter floats up this fast
+    public static final double LIFELESS_FADE_S = 1.5;         // and fades away at the surface in this time
 
     // ---- Pufferfish: weaves up and down, swells when the hook is near ----
     public static final double PUFFER_WEAVE_AMPLITUDE = 55;   // pixels above and below its depth
@@ -83,6 +98,21 @@ public final class GameConstants {
     public static final double STINGRAY_WARNING_S = 0.8;      // sparks fly this long before it moves
     public static final double STINGRAY_CHASE_SPEED = 120;    // pixels per second toward the Magnet; the boat is faster
     public static final double STINGRAY_SINK_SPEED = 80;      // going back down to the sand
+
+    // ---- The sea: a swell that rocks the boat and a current that carries everything along ----
+    // How strong they are in each level is in model.LevelData.
+    public static final double SWELL_PERIOD_S = 4.6;          // seconds for one roll of the boat
+    public static final double SWELL_CHOP = 0.45;             // a smaller, faster wave on top makes the roll uneven
+    public static final double CURRENT_PERIOD_S = 46;         // the current swings round and back in this time
+    public static final double CURRENT_FLOOR_SHARE = 0.1;     // near the sea floor only this much of it is left
+    public static final double FISH_CURRENT_SHARE = 0.4;      // fish swim against it, so it moves them less
+
+    // ---- Coming and going: nothing appears in the middle of the screen ----
+    public static final double ENTRY_OUTSIDE = 45;            // arrivals start this far outside the screen
+    public static final double EXIT_OUTSIDE = 90;             // and whatever gets this far outside is gone
+    public static final double ENTRY_MIN_SPEED = 20;          // slow things come in at least this fast
+    public static final double RETURN_MIN_S = 0.5;            // after something leaves, another arrives...
+    public static final double RETURN_MAX_S = 2.0;            // ...between these many seconds later
 
     // ---- Chapters: every chapter has five levels (the tables are in model.LevelData) ----
     // The last level of a chapter asks for the chapter's full quota; the earlier ones build up to it.
@@ -127,7 +157,7 @@ public final class GameConstants {
     public static final double SPAWN_MARGIN_X = 40;        // default: keep spawns off the screen edges
     public static final double MIN_SPAWN_Y = 210;          // default spawn depth range
     public static final double MAX_SPAWN_Y = 540;          // the hook cannot reach much deeper
-    public static final double SPAWN_FADE_IN_S = 0.5;      // new objects fade in and can't be hooked meanwhile
+    public static final double SPAWN_FADE_IN_S = 0.5;      // at the start of a level objects fade in and can't be hooked meanwhile
     public static final double SPAWN_MIN_DIST_TRASH = 100; // nothing appears closer to the hook than this
     public static final double SPAWN_MIN_DIST_FISH = 150;
     public static final int SPAWN_PLACEMENT_TRIES = 8;     // attempts to find a spot away from the hook

@@ -15,6 +15,7 @@ import model.ObjectKind;
 import model.OceanObject;
 import model.PlainHook;
 import model.PlasticBottle;
+import model.Sea;
 
 /** Checks what the hook does to each kind of object, and how a slip plays out. */
 public final class EquipmentTest {
@@ -52,7 +53,7 @@ public final class EquipmentTest {
         OceanObject bottle = new PlasticBottle(100, 300, 20);
         bottle.grantImmunity(1);
         Check.assertEquals("immune object", CatchOutcome.PASS, hook.attempt(bottle));
-        bottle.update(1.1, 800);
+        bottle.update(1.1, Sea.CALM);
         Check.assertEquals("immunity runs out", CatchOutcome.CATCH, hook.attempt(bottle));
         bottle.markCaught();
         Check.assertEquals("already caught object", CatchOutcome.PASS, hook.attempt(bottle));

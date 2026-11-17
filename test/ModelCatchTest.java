@@ -6,6 +6,7 @@ import model.ObjectKind;
 import model.OceanObject;
 import model.PlasticBottle;
 import model.Player;
+import model.Sea;
 import model.SmallFish;
 import util.GameConstants;
 
@@ -21,7 +22,7 @@ public final class ModelCatchTest {
 
     public static void run() {
         trashGivesPointsAndRidesTheHook();
-        fishCostsHealthAndSwimsAway();
+        fishCostsHealthAndIsLetGoAtTheBoat();
         everyKindBuildsItsOwnObject();
     }
 
@@ -45,7 +46,7 @@ public final class ModelCatchTest {
         Check.assertEquals("trash never costs health", 3, player.getHealth());
     }
 
-    private static void fishCostsHealthAndSwimsAway() {
+    private static void fishCostsHealthAndIsLetGoAtTheBoat() {
         Player player = new Player(3);
         Hook hook = launchedHook();
         OceanObject fish = new SmallFish(100, 300, 50);
@@ -53,13 +54,17 @@ public final class ModelCatchTest {
         fish.onCaught(player, hook);
         Check.assertEquals("fish costs 1 health", 2, player.getHealth());
         Check.assertEquals("fish gives no points", 0, player.getScore());
-        Check.assertTrue("fish is not kept on the hook", hook.getCaughtObject() == null);
-        Check.assertTrue("hook reels in empty", hook.getState() == Hook.State.RETRACTING);
-        Check.assertTrue("fish swims free", !fish.isCaught());
-        Check.assertTrue("fish cannot be hooked again right away", !fish.isCatchable());
+        Check.assertTrue("the Hook really hooks it", hook.getCaughtObject() == fish);
+        Check.assertTrue("hook reels in", hook.getState() == Hook.State.RETRACTING);
+        Check.assertTrue("the fish rides the line", fish.isCaught());
 
-        fish.update(GameConstants.FISH_RELEASE_IMMUNITY_S + 0.1, GameConstants.WORLD_WIDTH);
+        Check.assertTrue("a fish does not stay aboard", !fish.reachBoat());
+        Check.assertTrue("it swims free again", !fish.isCaught());
+        Check.assertTrue("fish cannot be hooked again right away", !fish.isCatchable());
+        fish.update(GameConstants.FISH_RELEASE_IMMUNITY_S + 0.1, Sea.CALM);
         Check.assertTrue("fish can be hooked again later", fish.isCatchable());
+
+        Check.assertTrue("trash does stay aboard", new PlasticBottle(100, 300, 20).reachBoat());
     }
 
     private static void everyKindBuildsItsOwnObject() {

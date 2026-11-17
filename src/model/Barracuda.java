@@ -42,11 +42,11 @@ public class Barracuda extends Fish {
     }
 
     @Override
-    protected void move(double dt) {
+    protected void swim(double dt) {
         phaseTime += dt;
         switch (phase) {
             case PATROL:
-                super.move(dt);
+                super.swim(dt);
                 break;
 
             case TELEGRAPH:
@@ -63,12 +63,13 @@ public class Barracuda extends Fish {
                         GameConstants.WATER_Y + getRadius(), GameConstants.SEABED_Y - getRadius());
                 moveTo(getX() + chargeDirX * step, newY);
                 if (phaseTime >= GameConstants.BARRACUDA_CHARGE_S) {
+                    settleAt(getY());   // it patrols on at the depth the charge took it to
                     enter(Phase.COOLDOWN);
                 }
                 break;
 
             case COOLDOWN:
-                super.move(dt);
+                super.swim(dt);
                 if (phaseTime >= GameConstants.BARRACUDA_COOLDOWN_S) {
                     enter(Phase.PATROL);
                 }
@@ -89,8 +90,21 @@ public class Barracuda extends Fish {
             chargeDirY = dy / distance;
         }
         // Keep the patrol speed, but point it the way the charge goes.
-        double patrolSpeed = Math.abs(getSpeedX());
-        setSpeedX(chargeDirX < 0 ? -patrolSpeed : patrolSpeed);
+        headTo(chargeDirX < 0 ? -1 : 1);
+    }
+
+    /** It only changes its mind while patrolling, and then it just turns around. */
+    @Override
+    protected void wander(double roll) {
+        if (phase == Phase.PATROL) {
+            turnAround();
+        }
+    }
+
+    /** Let go at the boat, it needs a rest before it hunts again. */
+    @Override
+    protected void onFreed() {
+        enter(Phase.COOLDOWN);
     }
 
     private void enter(Phase next) {

@@ -42,10 +42,11 @@ public final class StoryText {
             + "\n"
             + "Each kind of trash needs its own tool:\n"
             + "Hook - bottle 10.   Magnet - can 20.   Net Cutter - net 50.\n"
-            + "Any tool that touches a fish costs health. Some cost double.\n"
-            + "Rays chase the Magnet. The Net Cutter costs 2 per fish.\n"
-            + "Fill the quota before time or health runs out.\n"
-            + "End a chapter well for a badge. Fast, healthy runs score higher.";
+            + "A fish costs health. The Hook hauls it up, the Magnet stuns it,\n"
+            + "the Net Cutter kills it (2 health). Rays chase the Magnet.\n"
+            + "Waves rock the boat and shift the swing. The current carries\n"
+            + "trash and fish across the screen: the arrows show which way.\n"
+            + "Fill the quota before time or health runs out.";
     public static final String BACK_PROMPT = "ENTER: back to menu";
 
     // ---- Tools ----
@@ -285,19 +286,21 @@ public final class StoryText {
     public static final String TUT_FISH = "Fish are not trash! Each one you hook costs 1 health.";
     public static final String TUT_QUOTA = "Fill the quota before time or health runs out.";
     public static final String TUT_RECALL = "SPACE again pulls the line back early.";
+    public static final String TUT_CURRENT = "The arrows show the current. Trash drifts that way.";
+    public static final String TUT_SWELL = "Waves rock the boat and shift the swing. Watch the hook.";
     public static final String TUT_BIGFISH = "Big fish are fast. Wait for a gap before you drop.";
     public static final String TUT_DEEP = "Deep bottles: steer the boat right over them first.";
     public static final String TUT_FAST = "Fast bottles: drop a little ahead of them.";
     public static final String TUT_MAGNET = "The Magnet is on: cans stick to it. 1 = Hook for bottles.";
     public static final String TUT_MAGNET_ALT = "Cans are worth 20 points. Hook them!";
-    public static final String TUT_MAGNET_FISH = "The Magnet hits fish too. Check the lane first.";
+    public static final String TUT_MAGNET_FISH = "The Magnet stuns fish and costs health. Check the lane.";
     public static final String TUT_SWITCH = "Cans and bottles mixed? Switch tools before you drop.";
     public static final String TUT_RAY = "Rays feel the Magnet. Use the Hook when one is close.";
     public static final String TUT_RAY_ALT = "A ray rests on the sand. Hooking it costs 2 health.";
     public static final String TUT_RAY_SPARKS = "Sparks on a ray? Switch to the Hook, or steer away.";
     public static final String TUT_CUTTER = "The Net Cutter is on: it frees nets. 1 Hook, 2 Magnet.";
     public static final String TUT_CUTTER_ALT = "Nets are worth 50 points. Hook them!";
-    public static final String TUT_CUTTER_FISH = "Net Cutter blades hurt fish more. Cut in clear lanes.";
+    public static final String TUT_CUTTER_FISH = "Net Cutter blades kill fish: 2 health. Cut in clear lanes.";
     public static final String TUT_PUFFER = "Pufferfish swell up near the hook. Steer clear!";
     public static final String TUT_BARRACUDA = "Barracuda flash, then charge. Dodge or recall!";
     public static final String TUT_THREE = "Hook: bottles. Magnet: cans. Net Cutter: nets.";
@@ -422,6 +425,8 @@ public final class StoryText {
     public static final String PLAY_HINT = "A / D: move    SPACE: drop or recall    1 2 3: tool    H: last tip    P: pause    M: sound";
     public static final String HUD_OBJECTIVE = "Hook trash, spare the fish";
     public static final String HUD_SCORE = "SCORE";
+    public static final String HUD_CURRENT = "CURRENT";
+    public static final String HUD_CALM = "NO CURRENT";
 
     // What Captain Dolor says when a level is lost, looked up by chapter (see failText below).
     private static final String[] GEAR_PAGES = {"", GEAR_MAGNET, GEAR_CUTTER};   // chapter 1 has no new tool

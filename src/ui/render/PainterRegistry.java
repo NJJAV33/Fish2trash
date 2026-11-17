@@ -1,9 +1,11 @@
 package ui.render;
 
 import java.awt.AlphaComposite;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.EnumMap;
 import java.util.Map;
+import model.Condition;
 import model.EquipmentType;
 import model.ObjectKind;
 import model.ObjectView;
@@ -18,6 +20,11 @@ import util.GameConstants;
 public final class PainterRegistry {
 
     private static final double DEPTH_HAZE = 0.25;   // how much of an object the sea hides at the very bottom
+    private static final float LIFELESS_OPACITY = 0.7f;   // a dead fish is pale
+    private static final double HOOKED_HANG = 0.8;        // a hooked fish hangs this many radii below the tool
+    private static final double HOOKED_THRASH = 0.28;     // and swings this far each way, in radians
+    private static final double DAZED_TILT = 0.5;         // a dazed fish hangs nose down by this much, in radians
+    private static final Color STAR = new Color(255, 225, 90);
 
     private final Map<ObjectKind, ObjectPainter> painters = new EnumMap<>(ObjectKind.class);
     private final Map<EquipmentType, ToolPainter> toolPainters = new EnumMap<>(EquipmentType.class);
@@ -52,16 +59,56 @@ public final class PainterRegistry {
 
     public void paint(Graphics2D g, ObjectView object, double time) {
         ObjectPainter painter = painters.get(object.getKind());
+        Condition condition = object.getCondition();
+        boolean onTheHook = object.isCaught() && !object.getKind().isTrash();
         float opacity = (float) (object.getOpacity() * clarityAt(object.getY()));
-        if (opacity >= 1f) {
+        if (condition == Condition.LIFELESS) {
+            opacity *= LIFELESS_OPACITY;
+        }
+        if (opacity >= 1f && condition == Condition.NORMAL && !onTheHook) {
             painter.paint(g, object, time);
             return;
         }
-        // Fading in, or deep down: draw it see-through on a copy of the graphics.
-        Graphics2D faded = (Graphics2D) g.create();
-        faded.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
-        painter.paint(faded, object, time);
-        faded.dispose();
+
+        // Faded, or a fish in trouble: draw it on a copy of the graphics, see-through or turned.
+        Graphics2D posed = (Graphics2D) g.create();
+        if (opacity < 1f) {
+            posed.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, opacity)));
+        }
+        double x = object.getX();
+        double y = object.getY();
+        if (onTheHook) {
+            // Hooked by the mouth: it hangs head up under the tool and thrashes.
+            y += object.getRadius() * HOOKED_HANG;
+            posed.translate(0, object.getRadius() * HOOKED_HANG);
+            posed.rotate(-object.getFacing() * Math.PI / 2 + HOOKED_THRASH * Math.sin(time * 19 + object.getPhase()), x, y);
+        } else if (condition == Condition.DAZED) {
+            // Knocked out: nose down, rocking slowly.
+            posed.rotate(object.getFacing() * (DAZED_TILT + 0.2 * Math.sin(time * 2.4 + object.getPhase())), x, y);
+        } else if (condition == Condition.LIFELESS) {
+            // Belly up.
+            posed.rotate(0.12 * Math.sin(time * 1.4 + object.getPhase()), x, y);
+            posed.translate(0, 2 * y);
+            posed.scale(1, -1);
+        }
+        painter.paint(posed, object, time);
+        posed.dispose();
+
+        if (condition == Condition.DAZED) {
+            paintStars(g, object, time);
+        }
+    }
+
+    /** Three small stars circling over a dazed fish's head. */
+    private void paintStars(Graphics2D g, ObjectView object, double time) {
+        g.setColor(STAR);
+        double top = object.getY() - object.getRadius() - 9;
+        for (int i = 0; i < 3; i++) {
+            double angle = time * 4 + i * 2 * Math.PI / 3;
+            int starX = (int) Math.round(object.getX() + Math.cos(angle) * object.getRadius() * 0.8);
+            int starY = (int) Math.round(top + Math.sin(angle) * 3);
+            g.fillOval(starX - 2, starY - 2, 5, 5);
+        }
     }
 
     /**

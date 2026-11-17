@@ -49,6 +49,7 @@ public final class BalanceBotTest {
     private static final double LOOK_AHEAD_STEP = 0.04;  // seconds between the moments it checks
     private static final double SIDE_MARGIN = 14;        // pixels of room it wants beside the line
     private static final double DEPTH_MARGIN = 26;       // and above and below (fish may weave)
+    private static final double EDGE_REACH = 10;         // how far past the boat's last position a straight drop still hits
     private static final double RECALL_RANGE = 150;      // a charging barracuda this close: pull the line back
     private static final double RAY_KEEP_AWAY = GameConstants.STINGRAY_SENSE_RANGE + 20;
     private static final double RAY_TOO_NEAR = 190;      // a sparking ray this close to the tool: change tools
@@ -277,6 +278,9 @@ public final class BalanceBotTest {
             if (onlySafe && style.looksAtFish && rayIsTooClose(game, object)) {
                 continue;
             }
+            if (!canBeReached(object)) {
+                continue;   // still outside the screen, or about to drift out of it
+            }
             double travel = Math.abs(object.getX() - boatX) + (object.getY() - GameConstants.WATER_Y);
             double worth = object.getPoints() / (200 + travel);
             if (worth > bestWorth) {
@@ -285,6 +289,13 @@ public final class BalanceBotTest {
             }
         }
         return best;
+    }
+
+    /** True if the piece will be under a spot the boat can get to by the time the line is down there. */
+    private static boolean canBeReached(OceanObject trash) {
+        double depth = trash.getY() - GameConstants.WATER_Y;
+        double arrivesAt = trash.getX() + trash.getSpeedX() * (depth - GameConstants.HOOK_REST) / GameConstants.HOOK_EXTEND;
+        return arrivesAt >= GameConstants.BOAT_MIN_X - EDGE_REACH && arrivesAt <= GameConstants.BOAT_MAX_X + EDGE_REACH;
     }
 
     /** True if lifting this piece needs the Magnet and a stingray would feel the Magnet above it. */
@@ -324,8 +335,8 @@ public final class BalanceBotTest {
         double startY = GameConstants.WATER_Y + GameConstants.HOOK_REST;
         double flightSeconds = (targetY - startY) / GameConstants.HOOK_EXTEND;
         for (OceanObject fish : game.getObjects()) {
-            if (fish.getKind().isTrash()) {
-                continue;
+            if (fish.getKind().isTrash() || !fish.isCatchable()) {
+                continue;   // trash is no danger, and a dazed or dead fish cannot be touched
             }
             double reach = fish.getRadius() + toolRadius;
             for (double t = 0; t <= flightSeconds; t += LOOK_AHEAD_STEP) {

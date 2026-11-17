@@ -70,6 +70,7 @@ public final class StoryTextTest {
 
         String[] tips = {
             StoryText.TUT_AIM, StoryText.TUT_FISH, StoryText.TUT_QUOTA, StoryText.TUT_RECALL,
+            StoryText.TUT_CURRENT, StoryText.TUT_SWELL,
             StoryText.TUT_BIGFISH, StoryText.TUT_DEEP, StoryText.TUT_FAST,
             StoryText.TUT_MAGNET, StoryText.TUT_MAGNET_ALT, StoryText.TUT_MAGNET_FISH, StoryText.TUT_SWITCH,
             StoryText.TUT_RAY, StoryText.TUT_RAY_ALT, StoryText.TUT_RAY_SPARKS,

@@ -24,8 +24,9 @@ to zoom, move around, or open it at full size.
 
 ## 1. Things in the ocean (package `model`)
 
-The inheritance tree. `onCaught`, `move` and `sense` are the polymorphic methods:
-the game calls them on an `OceanObject` and each subclass answers in its own way.
+The inheritance tree. `onCaught`, `reachBoat`, `move`, `sense` and `changeCourse`
+are the polymorphic methods: the game calls them on an `OceanObject` and each
+subclass answers in its own way. A fish also has a `Condition`: what a tool did to it.
 
 ```mermaid
 classDiagram
@@ -39,8 +40,16 @@ classDiagram
         +getRadius() double
         +getFacing() int
         +getAlert() double
+        +getCondition() Condition
         +getOpacity() double
         +isCaught() boolean
+    }
+
+    class Condition {
+        <<enumeration>>
+        NORMAL
+        DAZED
+        LIFELESS
     }
 
     class OceanObject {
@@ -49,44 +58,69 @@ classDiagram
         -y double
         -radius double
         -speedX double
+        -drift double
         -facing int
         -caught boolean
         -immuneTimer double
         -age double
-        +update(dt, worldWidth)
+        +update(dt, sea)
         #move(dt)
+        #getCurrentShare() double
         +sense(hook)
+        +changeCourse(roll)
+        +isGone() boolean
         +collidesWith(x, y, radius) boolean
         +isCatchable() boolean
         +release(immunitySeconds)
         +getPoints() int
         +getKind()* ObjectKind
         +onCaught(player, hook)*
+        +reachBoat()* boolean
     }
 
     class OceanTrash {
         <<abstract>>
         -points int
         +onCaught(player, hook)
+        +reachBoat() boolean
         +getPoints() int
     }
 
     class Fish {
         <<abstract>>
         -damage int
+        -cruiseSpeed double
+        -goalSpeed double
+        -depth double
+        -goalDepth double
+        -condition Condition
         +onCaught(player, hook)
+        +reachBoat() boolean
+        +snag(hook)
+        +daze()
+        +cut()
+        #move(dt)
+        #swim(dt)
+        #wander(roll)
+        +changeCourse(roll)
+        +isGone() boolean
     }
 
     class PlasticBottle
-    class Can
+    class Can {
+        -pulled boolean
+        #move(dt)
+        +sense(hook)
+    }
     class FishingNet
     class SmallFish
     class BigFish
 
     class Pufferfish {
-        -homeY double
+        -weaveTime double
         -inflate double
-        #move(dt)
+        #swim(dt)
+        #wander(roll)
         +sense(hook)
         +getRadius() double
         +getAlert() double
@@ -95,7 +129,8 @@ classDiagram
     class Barracuda {
         -phase Phase
         -phaseTime double
-        #move(dt)
+        #swim(dt)
+        #wander(roll)
         +sense(hook)
         +getAlert() double
     }
@@ -103,7 +138,8 @@ classDiagram
     class Stingray {
         -phase Phase
         -homeY double
-        #move(dt)
+        #swim(dt)
+        #wander(roll)
         +sense(hook)
         +getAlert() double
     }
@@ -143,7 +179,13 @@ classDiagram
     Fish <|-- Stingray
     ObjectKind ..> OceanObject : creates
     OceanObject ..> HookSensor : senses
+    OceanObject ..> Sea : carried by the current
+    Fish --> Condition
+    ObjectView ..> Condition
 ```
+
+`Sea` is drawn in section 3. `Fish.move` is final: it handles a dazed or lifeless
+fish and otherwise calls `swim`, the step each kind of fish replaces (template method).
 
 ## 2. Player, boat, hook and tools (package `model`)
 
@@ -165,7 +207,9 @@ classDiagram
         -x double
         -y double
         -facing int
+        -tilt double
         +moveBy(direction, dt)
+        +rock(tilt)
     }
 
     class Hook {
@@ -173,6 +217,8 @@ classDiagram
         -angle double
         -length double
         -anchorX double
+        -sway double
+        +setSway(radians)
         +launch()
         +recall()
         +attach(object)
@@ -221,16 +267,19 @@ classDiagram
         +attempt(object) CatchOutcome
         #outcomeFor(kind)* CatchOutcome
         +fishDamage(usualDamage) int
+        +strike(fish, hook)*
         +isMagnetic() boolean
     }
 
     class PlainHook {
         -outcomes Map
         #outcomeFor(kind) CatchOutcome
+        +strike(fish, hook)
     }
 
     class Magnet {
         #outcomeFor(kind) CatchOutcome
+        +strike(fish, hook)
         +isMagnetic() boolean
     }
 
@@ -238,6 +287,7 @@ classDiagram
         -outcomes Map
         #outcomeFor(kind) CatchOutcome
         +fishDamage(usualDamage) int
+        +strike(fish, hook)
     }
 
     class CatchOutcome {
@@ -309,6 +359,20 @@ classDiagram
         +getNumber() int
         +isChapterFinale() boolean
         +getTitle() String
+        +getSwellDegrees() double
+        +getCurrentSpeed() double
+    }
+
+    class Sea {
+        +CALM Sea$
+        -swell double
+        -strength double
+        -time double
+        +update(dt)
+        +getTilt() double
+        +getCurrent() double
+        +getCurrentAt(y) double
+        +getSwell() double
     }
 
     class SpawnRule {
@@ -330,9 +394,13 @@ classDiagram
     class Level {
         -elapsed double
         +update(dt, hook)
+        -placeInTheWater(rule, hook) OceanObject
+        -arriveFromASide(rule) OceanObject
+        -takeOutWhatIsGone()
         +remove(object)
         +pollTutorialPrompts() List
         +getObjects() List
+        +getSea() Sea
     }
 
     class ObjectKind {
@@ -353,8 +421,13 @@ classDiagram
     SpawnRule --> ObjectKind : spawns
     Level --> LevelData : reads
     Level o-- OceanObject : 0 or more
+    Level *-- Sea
     Level ..> HookSensor : keeps spawns away from
 ```
+
+At the start of a level the water is already stocked. After that every object comes
+in from the left or the right edge, and whatever swims or drifts out of view is
+taken out and replaced by a new arrival, so the level always holds what its table says.
 
 ## 4. The rules (package `game`)
 
@@ -400,6 +473,7 @@ classDiagram
         +getLevelData() LevelData
         +getBoat() Boat
         +getObjects() List
+        +getSea() Sea
         +getScore() int
         +getQuota() int
         +getHealth() int
@@ -725,6 +799,13 @@ classDiagram
 
     class BoatPainter {
         +paint(g, x, waterline, facing, time)
+        +paint(g, x, waterline, facing, time, tilt, swell)
+    }
+
+    class AmbientLifePainter {
+        +paintSky(g, palette, time)
+        +paintBehind(g, palette, time, driftX)
+        +paintFront(g, palette, time, current)
     }
 
     class HookPainter {
@@ -733,14 +814,14 @@ classDiagram
     }
 
     class WaterPainter {
-        +paintBackWaves(g, palette, time)
-        +paintFrontWaves(g, palette, time)
+        +paintBackWaves(g, palette, time, swell)
+        +paintFrontWaves(g, palette, time, swell)
         +paintRays(g, palette, time)
     }
 
     class ParticleSystem {
         +MAX_BUBBLES int$
-        +update(dt)
+        +update(dt, current)
         +paint(g)
         +getActiveCount() int
     }
@@ -800,6 +881,7 @@ classDiagram
     SceneRenderer *-- BackgroundPainter
     SceneRenderer *-- WaterPainter
     SceneRenderer *-- ParticleSystem
+    SceneRenderer *-- AmbientLifePainter
     BackgroundPainter ..> ChapterPalette : one cached picture per look
     BackgroundPainter ..> PixelImages : makes and copies pictures with
     SpriteCache ..> PixelImages : makes and copies pictures with
@@ -830,10 +912,19 @@ sparks, a fast fish's speed lines and a swelling pufferfish.
 
 Bottles, cans and nets each come in several designs (water bottle, soda bottle,
 milk jug, iced tea, crushed bottle; soda, energy drink, lemon soda, food tin,
-crushed can; gill net, nylon net, rope knot, kelp net). Each painter keeps its
+crushed can; gill net, nylon net, rope knot, kelp net), and so do the small fish
+(clownfish, blue tang, butterflyfish, sergeant major, fusilier) and the big fish
+(grouper, parrotfish, snapper, trevally, tuna). Each painter keeps its
 designs as an enum whose constants draw themselves, and
 `ObjectPainter.designOf()` picks one from the object's phase, so an object
 keeps its look and the game rules never need to know about it.
+
+`AmbientLifePainter` draws life that is only decoration: gulls, far-off schools of
+tiny fish, jellyfish, a turtle on the recovered reef, a crab, and plants that lean
+with the current. All of it is dim and small on purpose, so it is never mistaken
+for a fish the hook can touch. `PainterRegistry` also shows what a tool did to a
+fish: hooked (hanging head up and thrashing), dazed (nose down, stars circling) or
+lifeless (belly up and pale).
 
 ## 6. Sound (package `util`)
 

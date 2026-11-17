@@ -88,7 +88,7 @@ next time you play; delete that file to lock the levels again.
 | 1-2 | Faster Tide | faster bottles, four fish | 60 s |
 | 1-3 | Big Shadows | the first big, fast fish | 70 s |
 | 1-4 | Under the School | bottles lie deep under a school of fish | 80 s |
-| 1-5 | Storm Drain | fast bottles, seven fish | 95 s |
+| 1-5 | Storm Drain | a rough sea, fast bottles, nine fish | 95 s |
 | 2-1 | Cans at the Wreck | the Magnet; not enough cans, so bottles too | 65 s |
 | 2-2 | Two Tools | cans and bottles in the same water | 70 s |
 | 2-3 | The Ray Wakes | the first stingray | 85 s |
@@ -104,9 +104,9 @@ What each tool does:
 
 | Tool | Bottle | Can | Net | Any fish it touches |
 |---|---|---|---|---|
-| Hook | catches | slips off | slips off | costs health |
-| Magnet | passes through | catches | passes through | costs health, and stingrays come for it |
-| Net Cutter | slips off | slips off | catches | costs 2 health, even a small fish |
+| Hook | catches | slips off | slips off | costs health; the fish is hooked, hauled up and let go at the boat |
+| Magnet | passes through | catches, and pulls close ones in | passes through | costs health; the fish is knocked out for 3 seconds. Stingrays come for the Magnet |
+| Net Cutter | slips off | slips off | catches | costs 2 health, even a small fish; the fish dies |
 
 - Trash is limited. Each level holds only so many pieces, and from chapter 2 on no
   single kind is enough to fill the quota, so you have to change tools.
@@ -114,10 +114,24 @@ What each tool does:
   swinging, and at most once a second.
 - When trash slips off the wrong tool, the throw is wasted but no health is lost.
 
-- No tool is safe for fish. Touching one costs 1 health and the fish swims away.
-  Pufferfish, barracuda and stingrays cost 2, and so does every fish the Net Cutter
-  touches. A pufferfish swells when the line is near; a barracuda flashes, then
-  charges.
+- No tool is safe for fish. Touching one costs 1 health; pufferfish, barracuda and
+  stingrays cost 2, and so does every fish the Net Cutter touches. What happens to
+  the fish depends on the tool. The Hook really hooks it: it rides the line up (a
+  slow trip that costs time) and the crew lets it go at the boat. The Magnet knocks
+  it out: it hangs dazed for three seconds, and nothing can touch it meanwhile. The
+  Net Cutter kills it: it floats up and is gone, and another fish swims in.
+- A pufferfish swells when the line is near; a barracuda flashes, then charges.
+- The sea moves. Nothing appears in the middle of the screen: after the start of a
+  level, trash and fish come in from the left or right edge and leave at the other.
+  A **current** carries everything along, strongest near the surface and almost gone
+  at the sea floor; it turns round every 23 seconds or so, and the arrows under the
+  clock show which way it flows and how hard. A **swell** rocks the boat, which
+  leans the swing of the hook to one side, so the moment it points straight down
+  keeps shifting. Both get stronger toward the end of a chapter; level 1-1 has neither.
+- Fish have a mind of their own: now and then one slows, turns around, or changes
+  depth. Leave more room than you think you need.
+- The Magnet pulls cans that are close to it on its way down, so a near miss can
+  still be a catch.
 - A stingray rests on the sand. While the Magnet is on the line and the boat is
   near, it throws sparks, then swims up at the Magnet and stays there. Put another
   tool on the line, or steer away (the boat is faster), and it sinks back.
@@ -169,11 +183,13 @@ FISH2TRASH/
 ├── src/
 │   ├── Main.java            opens the window on the Swing thread
 │   ├── model/               the things in the game - no drawing code
-│   │   ├── OceanObject      abstract base: position, movement, collision
+│   │   ├── OceanObject      abstract base: position, movement, drifting, collision
 │   │   ├── OceanTrash       abstract: gives points, rides the hook
 │   │   │   └── PlasticBottle, Can, FishingNet
-│   │   ├── Fish             abstract: costs health, swims away
+│   │   ├── Fish             abstract: costs health, wanders, and suffers what the tool does
 │   │   │   └── SmallFish, BigFish, Pufferfish, Barracuda, Stingray
+│   │   ├── Condition        enum: a fish is normal, dazed or lifeless
+│   │   ├── Sea              the swell that rocks the boat and the current
 │   │   ├── ObjectKind       enum: builds each object, lookup key for painters
 │   │   ├── ObjectView, HookSensor   small read-only interfaces
 │   │   ├── Player, Boat, Hook, TimeLimit
@@ -238,12 +254,15 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 4. `GameScreen` asks the session for a `GameManager` for the current level.
 5. `GameManager` owns the `Player`, the `Boat` (which owns the `Hook`), a `TimeLimit`
    and a `Level`. The `Level` reads the level's spawn table from `LevelData` and
-   puts the objects in the water, until each rule's supply is used up.
+   puts the objects in the water, until each rule's supply is used up. It also owns
+   the `Sea` (swell and current), brings later arrivals in from the sides, and takes
+   out whatever leaves the screen.
 6. When the hook tip touches an object, the tool on the line (`Equipment`) answers with
    a `CatchOutcome`: catch, slip or pass. The outcome calls back into the manager.
 7. On a catch the manager calls `object.onCaught(player, hook)`. Trash adds points and
    attaches itself to the hook; a fish costs health (it asks the tool how much:
-   `tool.fishDamage(...)`) and swims away. The manager never checks which one it was.
+   `tool.fishDamage(...)`) and then lets the tool decide what becomes of it
+   (`tool.strike(fish, hook)`). The manager never checks which one it was.
 8. The manager announces what happened as `GameEvent`s to its `GameListener`s
    (the stats counter, the effects, the sounds, and the screen that shows tips).
    The `HintEngine` reads the stats and, when a `HintRule` is triggered, a hint goes out
@@ -263,7 +282,7 @@ A class diagram is in [docs/class-diagram.md](docs/class-diagram.md).
 | Encapsulation | Every field is private. `Player` only changes through `addPoints()` and `loseHealth()`, which enforce the rules. Lists are handed out read-only. |
 | Inheritance | `OceanObject` → `OceanTrash` → `PlasticBottle`, `Can`, `FishingNet`, and `OceanObject` → `Fish` → `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`, `Stingray`. `Equipment` → `PlainHook`, `Magnet`, `NetCutter`. |
 | Abstraction | `OceanObject`, `OceanTrash`, `Fish` and `Equipment` are abstract. `GameView`, `ObjectView`, `HookSensor`, `Screen`, `GameListener`, `CatchResolver`, `HintRule`, `ObjectPainter`, `ToolPainter` and `AudioPlayer` are interfaces that hide what is behind them. |
-| Polymorphism | `object.onCaught(player, hook)`, `object.move(dt)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges, a stingray rises at the Magnet), `tool.attempt(object)`, `tool.fishDamage(...)`, `outcome.resolve(...)`, `rule.isTriggered(stats, game)`, `badge.isEarnedBy(result)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
+| Polymorphism | `object.onCaught(player, hook)`, `object.reachBoat()`, `tool.strike(fish, hook)` (snag, daze or kill), `object.move(dt)`, `object.changeCourse(roll)` and `object.sense(hook)` (a pufferfish weaves and swells, a barracuda charges, a stingray rises at the Magnet), `tool.attempt(object)`, `tool.fishDamage(...)`, `outcome.resolve(...)`, `rule.isTriggered(stats, game)`, `badge.isEarnedBy(result)`, `screen.paint(g)`, `painter.paint(...)`: one call, different behaviour per class. |
 | Composition | `Boat` owns its `Hook`; the `Hook` carries a `Loadout` of tools; `GameManager` owns a `Level`. |
 | Custom exception | `Loadout.select()` throws the checked `EquipmentLockedException` for a tool the crew does not have yet. `GameManager.selectTool()` catches it and turns it into a message on screen. `HighScoreStore` and `ScoreEntry.parse()` throw the checked `HighScoreException` (it wraps the `IOException`); `HighScoreTable` catches it, skips a damaged line or carries on without the file. |
 | Comparable and collections | `ScoreEntry implements Comparable<ScoreEntry>`, so `Collections.sort` orders the list. `ArrayList` for lists, `EnumMap` and `EnumSet` for lookups and sets keyed by an enum. |
@@ -289,7 +308,8 @@ no test library is needed. The script exits with an error if any check fails.
 | Test | What it checks |
 |---|---|
 | `ArchitectureTest` | The design rules above, by reading the source files |
-| `PlayerTest`, `OceanObjectTest`, `BoatHookTest` | Health and score rules, movement, bouncing, collision, the hook's swing, launch and recall |
+| `PlayerTest`, `OceanObjectTest`, `BoatHookTest` | Health and score rules, movement, leaving the screen, collision, the hook's swing, launch and recall |
+| `SeaTest` | The swell and the current; trash drifting more than fish and less near the sea floor; the rocking boat leaning the swing; arrivals coming in from the sides and leavers being replaced; fish turning and changing depth; what the Hook, the Magnet and the Net Cutter each do to a fish; the Magnet pulling cans |
 | `ModelCatchTest`, `DangerousFishTest` | What each kind of object does when hooked; pufferfish, barracuda and stingray behaviour; the Net Cutter costing double |
 | `EquipmentMatrixTest` | Every cell of the tool table above: three tools against eight kinds of object; no tool passes through a fish |
 | `EquipmentTest`, `LoadoutTest` | How a slip plays out; which tools each chapter has; the swap rules (locked tool, wait, not while the line is out) |
@@ -343,7 +363,16 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
       the next page tells how that shift ended.
 - [ ] Bottle +10; it rides the hook up. Trash is limited: lifting pieces does not
       refill the water at once.
-- [ ] A fish costs 1 health, gives no points, and swims away.
+- [ ] A fish touched by the Hook costs 1 health, gives no points, rides the line up
+      thrashing, and is let go at the boat with a splash. It swims back down.
+- [ ] Level 1-1 has no waves and shows "NO CURRENT". From level 1-2 the arrows next
+      to the speaker show the current, and bottles drift that way, faster near the
+      surface than near the sea floor.
+- [ ] From level 1-3 the boat rocks and the swing of the hook leans with it. In
+      level 1-5 the waves are tall and the boat rocks hard.
+- [ ] After the first seconds of a level, nothing appears in the middle of the
+      screen: fish and trash come in from the left or right edge and leave again.
+- [ ] Now and then a fish slows and turns around, or changes depth.
 - [ ] Level 1-1 tips appear at about 1, 8 and 16 seconds.
 - [ ] At the quota the timer stops; the level clears when the catch reaches the boat.
 - [ ] The murky green water clears a little with every catch and every level.
@@ -354,6 +383,9 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 **Chapter 2 (levels 2-1 to 2-5)**
 - [ ] Level 2-1 starts with the chapter page and a NEW GEAR page; the Magnet is on the line.
 - [ ] The Magnet lifts cans, passes through bottles, and costs health on any fish.
+      A fish it touches hangs dazed with stars over it for 3 seconds; the Magnet goes
+      through it meanwhile. Then it swims off the other way.
+- [ ] A can close to the Magnet on its way down slides toward it.
 - [ ] There are not enough cans for the quota: bottles with the Hook (`1`) are needed.
 - [ ] `1` puts the Hook on: it catches bottles, and cans slip off it (sparks, no health lost).
 - [ ] A second tool change within a second is refused. So is one while the line is out.
@@ -366,7 +398,8 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 **Chapter 3 (levels 3-1 to 3-5)**
 - [ ] The Net Cutter is on the line at the start of 3-1. Health 5. Nets are worth 50.
 - [ ] Cans and bottles slip off the Net Cutter. Any fish it touches costs 2, even a
-      small one.
+      small one; the fish turns belly up, floats to the surface and fades, and
+      another fish swims in from a side.
 - [ ] `Q` and `E` step through all three tools.
 - [ ] A pufferfish swells when the line is near. Touching it costs 2.
 - [ ] Level 3-2: a barracuda flashes, then charges. Touching it costs 2.

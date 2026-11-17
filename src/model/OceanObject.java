@@ -19,7 +19,8 @@ public abstract class OceanObject implements ObjectView {
     private double x;
     private double y;
     private final double radius;
-    private double speedX;   // pixels per second, negative = moving left
+    private double speedX;   // its own speed in pixels per second, negative = moving left
+    private double drift;    // how fast the current carried it in the last step
     private int facing;      // 1 = looking right, -1 = looking left
     private boolean caught;
     private double immuneTimer;   // seconds left during which the hook cannot grab it
@@ -40,10 +41,13 @@ public abstract class OceanObject implements ObjectView {
      * Advances the object by dt seconds.
      *
      * TEMPLATE METHOD: this method is final, so every object follows the same
-     * steps - grow older, move, bounce off the screen edges. Only the "move"
+     * steps - grow older, move, get carried by the current. Only the "move"
      * step can be replaced by a subclass.
+     *
+     * Nothing stops at the edge of the screen: objects drift and swim out of
+     * view, and the level brings others in (see isGone).
      */
-    public final void update(double dt, double worldWidth) {
+    public final void update(double dt, Sea sea) {
         age += dt;
         if (immuneTimer > 0) {
             immuneTimer = Math.max(0, immuneTimer - dt);
@@ -52,19 +56,38 @@ public abstract class OceanObject implements ObjectView {
             return;   // the hook is carrying it now
         }
         move(dt);
-        double r = getRadius();
-        if (x - r < 0) {
-            x = r;
-            turnAround();
-        } else if (x + r > worldWidth) {
-            x = worldWidth - r;
-            turnAround();
-        }
+        drift = sea.getCurrentAt(y) * getCurrentShare();
+        x += drift * dt;
     }
 
-    /** How the object moves in dt seconds. The default is a steady sideways drift. */
+    /** How the object moves by itself in dt seconds. The default is a steady sideways drift. */
     protected void move(double dt) {
         x += speedX * dt;
+    }
+
+    /** How much of the current carries this object along: all of it, unless a subclass swims against it. */
+    protected double getCurrentShare() {
+        return 1;
+    }
+
+    /**
+     * Something made this object think again. Trash cannot think, so nothing
+     * happens; fish override this to turn around or change depth.
+     *
+     * @param roll a random number from 0 to 1 that decides what it does
+     */
+    public void changeCourse(double roll) {
+        // nothing by default
+    }
+
+    /**
+     * True once the object is out of the game: so far outside the screen
+     * that it will not be seen again. The level takes it out and lets
+     * another one come in.
+     */
+    public boolean isGone() {
+        return !caught && (x < -GameConstants.EXIT_OUTSIDE
+                || x > GameConstants.WORLD_WIDTH + GameConstants.EXIT_OUTSIDE);
     }
 
     /**
@@ -75,7 +98,7 @@ public abstract class OceanObject implements ObjectView {
         // nothing by default
     }
 
-    /** Changes the sideways speed; the object turns to face the way it now swims. */
+    /** Changes the object's own sideways speed; it turns to face the way it now swims. */
     protected void setSpeedX(double speedX) {
         this.speedX = speedX;
         if (speedX != 0) {
@@ -83,9 +106,9 @@ public abstract class OceanObject implements ObjectView {
         }
     }
 
-    private void turnAround() {
-        speedX = -speedX;
-        facing = -facing;
+    /** The object's own speed, without the current. */
+    protected double getOwnSpeedX() {
+        return speedX;
     }
 
     /** Circle-vs-circle collision: true if the two circles overlap. */
@@ -145,9 +168,16 @@ public abstract class OceanObject implements ObjectView {
         return facing;
     }
 
+    /** How fast it really moves sideways: its own speed plus what the current adds. */
     @Override
     public double getSpeedX() {
-        return speedX;
+        return speedX + drift;
+    }
+
+    /** Trash never changes; fish override this. */
+    @Override
+    public Condition getCondition() {
+        return Condition.NORMAL;
     }
 
     @Override
@@ -161,7 +191,7 @@ public abstract class OceanObject implements ObjectView {
         return 0;
     }
 
-    /** New objects fade in: 0 = invisible, 1 = fully there. */
+    /** At the start of a level objects fade in: 0 = invisible, 1 = fully there. */
     @Override
     public double getOpacity() {
         return Math.min(1.0, age / GameConstants.SPAWN_FADE_IN_S);
@@ -175,9 +205,16 @@ public abstract class OceanObject implements ObjectView {
     /**
      * What happens when the hook catches this object. Each subclass decides:
      * trash gives the player points and rides the hook, a fish costs health
-     * and swims away.
+     * and what becomes of it depends on the tool.
      */
     public abstract void onCaught(Player player, Hook hook);
+
+    /**
+     * The line has brought this object up to the boat.
+     *
+     * @return true if it stays aboard (trash), false if it goes back into the sea (a fish)
+     */
+    public abstract boolean reachBoat();
 
     @Override
     public String toString() {

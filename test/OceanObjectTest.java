@@ -1,8 +1,9 @@
 import model.OceanObject;
+import model.Sea;
 import model.SmallFish;
 import util.GameConstants;
 
-/** Checks the behaviour every ocean object shares: movement, bouncing and collision. */
+/** Checks the behaviour every ocean object shares: movement, leaving the screen and collision. */
 public final class OceanObjectTest {
 
     private static final double TINY = 1e-9;
@@ -13,41 +14,43 @@ public final class OceanObjectTest {
 
     public static void run() {
         movesAtItsSpeed();
-        bouncesOffBothEdgesAndTurnsAround();
+        swimsOutOfViewAndIsGone();
         aCaughtObjectStaysWhereTheHookPutsIt();
         collisionIsCircleAgainstCircle();
     }
 
     private static void movesAtItsSpeed() {
         OceanObject fish = new SmallFish(100, 300, 50);
-        fish.update(2, GameConstants.WORLD_WIDTH);
+        fish.update(2, Sea.CALM);
         Check.assertEquals("x after 2 s at 50 px/s", 200.0, fish.getX(), TINY);
         Check.assertEquals("y does not change", 300.0, fish.getY(), TINY);
         Check.assertEquals("faces right when swimming right", 1, fish.getFacing());
     }
 
-    private static void bouncesOffBothEdgesAndTurnsAround() {
-        double r = GameConstants.RADIUS_SMALL_FISH;
-
+    private static void swimsOutOfViewAndIsGone() {
         OceanObject goingRight = new SmallFish(790, 300, 50);
-        goingRight.update(1, GameConstants.WORLD_WIDTH);
-        Check.assertEquals("stops at the right edge", GameConstants.WORLD_WIDTH - r, goingRight.getX(), TINY);
-        Check.assertEquals("turns to face left", -1, goingRight.getFacing());
-        goingRight.update(1, GameConstants.WORLD_WIDTH);
-        Check.assertTrue("swims back left", goingRight.getX() < GameConstants.WORLD_WIDTH - r);
+        goingRight.update(1, Sea.CALM);
+        Check.assertEquals("nothing stops it at the right edge", 840.0, goingRight.getX(), TINY);
+        Check.assertEquals("it keeps facing the way it swims", 1, goingRight.getFacing());
+        Check.assertTrue("just outside the screen it still counts", !goingRight.isGone());
+        goingRight.update(1.1, Sea.CALM);
+        Check.assertTrue("far outside the screen it is gone", goingRight.isGone());
 
         OceanObject goingLeft = new SmallFish(10, 300, -50);
         Check.assertEquals("faces left when swimming left", -1, goingLeft.getFacing());
-        goingLeft.update(1, GameConstants.WORLD_WIDTH);
-        Check.assertEquals("stops at the left edge", r, goingLeft.getX(), TINY);
-        Check.assertEquals("turns to face right", 1, goingLeft.getFacing());
+        goingLeft.update(3, Sea.CALM);
+        Check.assertTrue("the same on the left", goingLeft.isGone());
+
+        OceanObject carried = new SmallFish(-500, 300, 0);
+        carried.markCaught();
+        Check.assertTrue("an object on the hook is never gone", !carried.isGone());
     }
 
     private static void aCaughtObjectStaysWhereTheHookPutsIt() {
         OceanObject fish = new SmallFish(100, 300, 50);
         fish.markCaught();
         fish.moveTo(400, 200);
-        fish.update(1, GameConstants.WORLD_WIDTH);
+        fish.update(1, Sea.CALM);
         Check.assertEquals("a caught object does not swim", 400.0, fish.getX(), TINY);
     }
 
