@@ -5,9 +5,9 @@ import java.util.List;
 import util.GameConstants;
 
 /**
- * Works out the score of a run. Points, time left and health left of every
- * cleared level count; badges add a bonus; every failed attempt costs
- * more than the one before.
+ * Works out the score of a run. Points, time left, health left and combo
+ * streak bonus of every cleared level count (scaled by difficulty); badges
+ * add a bonus; every failed attempt costs more than the one before.
  *
  * All the numbers are in GameConstants, so the scoring can be rebalanced
  * without touching this class.
@@ -23,9 +23,11 @@ public final class ScoreCalculator {
         if (!result.isCleared()) {
             return 0;
         }
-        return GameConstants.SCORE_POINT_MULT * result.getPoints()
+        int base = GameConstants.SCORE_POINT_MULT * result.getPoints()
                 + GameConstants.TIME_BONUS_PER_S * (int) Math.floor(result.getTimeLeft())
-                + GameConstants.HEALTH_BONUS_PER_HP * result.getHealthLeft();
+                + GameConstants.HEALTH_BONUS_PER_HP * result.getHealthLeft()
+                + result.getComboBonus();
+        return (int) Math.round(base * result.getDifficulty().getScoreMultiplier());
     }
 
     /**

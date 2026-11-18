@@ -20,6 +20,7 @@ public final class TestRunner {
         run("LevelFlowTest", LevelFlowTest::run);
         run("DangerousFishTest", DangerousFishTest::run);
         run("DiagramTest", DiagramTest::run);
+        run("DifficultyAndEventsTest", DifficultyAndEventsTest::run);
         run("EffectsTest", EffectsTest::run);
         run("EquipmentMatrixTest", EquipmentMatrixTest::run);
         run("EquipmentTest", EquipmentTest::run);

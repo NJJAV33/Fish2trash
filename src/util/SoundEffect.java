@@ -115,6 +115,32 @@ public enum SoundEffect {
     HINT(60, false,
             Tone.of(Wave.SINE, 880, 1320).gain(0.18).shape(4, 25, 0.2, 30)),
 
+    /** Consecutive trash streak gained: two bright ascending chimes. */
+    COMBO(220, true,
+            Tone.of(Wave.SINE, 659).lasting(90).gain(0.26).shape(3, 30, 0.3, 45),
+            Tone.of(Wave.SINE, 988).from(65).lasting(145).gain(0.30).shape(3, 40, 0.3, 70).overtone(2, 0.2)),
+
+    /** A storm squall rolls in: low swell rumble and wind wash. */
+    EVENT_SQUALL(320, false,
+            Tone.of(Wave.TRIANGLE, 130, 88).glideByRatio().lasting(290).gain(0.32).shape(8, 100, 0.4, 140),
+            Tone.noise().lasting(280).gain(0.18).shape(12, 100, 0.3, 140)),
+
+    /** A trash tide brings bonus debris: bright rising arpeggio. */
+    EVENT_BONUS(280, false,
+            Tone.of(Wave.SINE, 523).lasting(95).gain(0.25).shape(3, 35, 0.25, 40),
+            Tone.of(Wave.SINE, 659).from(70).lasting(95).gain(0.25).shape(3, 35, 0.25, 40),
+            Tone.of(Wave.SINE, 784).from(140).lasting(130).gain(0.28).shape(3, 40, 0.25, 65)),
+
+    /** A feeding frenzy starts: brisk warning double-pulse. */
+    EVENT_FRENZY(230, false,
+            Tone.of(Wave.TRIANGLE, 440, 587).lasting(95).gain(0.28).shape(3, 35, 0.25, 40),
+            Tone.of(Wave.TRIANGLE, 587, 784).from(105).lasting(115).gain(0.28).shape(3, 35, 0.25, 55)),
+
+    /** A slack tide calms the water: gentle warm chord. */
+    EVENT_CALM(300, false,
+            Tone.of(Wave.SINE, 523).lasting(270).gain(0.22).shape(10, 90, 0.4, 140),
+            Tone.of(Wave.SINE, 659).from(40).lasting(240).gain(0.22).shape(10, 80, 0.4, 130)),
+
     /** Moving through a menu: a tiny click. */
     MENU_MOVE(25, true,
             Tone.of(Wave.TRIANGLE, 660).gain(0.18).shape(1, 8, 0.5, 12)),

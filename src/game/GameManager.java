@@ -6,25 +6,28 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import model.ObjectView;
 import model.Boat;
 import model.CatchResolver;
-import model.LevelData;
+import model.Difficulty;
 import model.Equipment;
 import model.EquipmentLockedException;
 import model.EquipmentType;
 import model.Hook;
 import model.Level;
+import model.LevelData;
 import model.Loadout;
+import model.ObjectView;
+import model.OceanEventType;
 import model.OceanObject;
 import model.Player;
 import model.Sea;
+import model.SpawnRule;
 import model.TimeLimit;
 import util.GameConstants;
 
 /**
- * The rules of one attempt at a level: what the hook touches, the countdown, and
- * whether the player has won or lost.
+ * The rules of one attempt at a level: what the hook touches, the countdown,
+ * combo streaks, mid-game ocean events, and whether the player has won or lost.
  *
  * It contains no drawing and no keyboard code - the ui package handles those.
  * A new attempt is simply a new GameManager.
@@ -32,6 +35,7 @@ import util.GameConstants;
 public final class GameManager implements GameView, CatchResolver {
 
     private final LevelData levelData;
+    private final Difficulty difficulty;
     private final Level level;
     private final List<GameListener> listeners = new ArrayList<>();
     private final SessionStats stats = new SessionStats();
@@ -48,19 +52,31 @@ public final class GameManager implements GameView, CatchResolver {
     private boolean quotaReached;
     private int lastAnnouncedSecond;   // the last "seconds left" that was announced as a low-time tick
 
+    private int combo;
+    private int bestCombo;
+    private int comboBonus;
+
     // True once the current launch has touched something or was recalled.
     // A launch that comes back with this still false was a miss.
     private boolean launchResolved;
 
     /**
+     * Starts an attempt on Easy difficulty.
+     *
      * @param levelData the level to play
      * @param loadout the tools the crew has
      * @param random  the random source; a test can pass a fixed seed to get
      *                the same game every time
      */
     public GameManager(LevelData levelData, Loadout loadout, Random random) {
+        this(levelData, loadout, random, Difficulty.EASY);
+    }
+
+    /** Starts an attempt at the chosen difficulty. */
+    public GameManager(LevelData levelData, Loadout loadout, Random random, Difficulty difficulty) {
         this.levelData = levelData;
-        level = new Level(levelData, random);
+        this.difficulty = difficulty;
+        level = new Level(levelData, random, difficulty, true);
         player = new Player(level.getStartHealth());
         boat = new Boat(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y, loadout);
         timeLimit = new TimeLimit(level.getTimeLimitSeconds());
@@ -156,6 +172,8 @@ public final class GameManager implements GameView, CatchResolver {
         hook.update(dt);
         hook.getLoadout().tick(dt);
         level.update(dt, hook);
+        announceOceanEvents();
+        updateHookSpeedScale();
         announceAlerts();
         for (String tip : level.pollTutorialPrompts()) {
             emit(GameEvent.withText(EventType.TUTORIAL_PROMPT, tip));
@@ -166,6 +184,25 @@ public final class GameManager implements GameView, CatchResolver {
             onHookReturned(hook);
         }
         giveHintIfDue(dt);
+    }
+
+    private void announceOceanEvents() {
+        OceanEventType started = level.pollStartedEvent();
+        if (started != OceanEventType.NONE) {
+            emit(GameEvent.withValueAndText(EventType.OCEAN_EVENT_STARTED,
+                    started.ordinal(), started.getAnnouncement()));
+        }
+        OceanEventType ended = level.pollEndedEvent();
+        if (ended != OceanEventType.NONE) {
+            emit(GameEvent.withValueAndText(EventType.OCEAN_EVENT_ENDED,
+                    ended.ordinal(), ended.getLabel()));
+        }
+    }
+
+    private void updateHookSpeedScale() {
+        double eventScale = level.getActiveEvent().getHookSpeedScale();
+        double flowScale = combo >= GameConstants.HOT_STREAK_MIN ? GameConstants.HOT_STREAK_SPEED_MULT : 1.0;
+        boat.getHook().setSpeedScale(eventScale * flowScale);
     }
 
     /** The hint engine watches the stats; when it has something to say, it is announced like any event. */
@@ -231,9 +268,20 @@ public final class GameManager implements GameView, CatchResolver {
 
         // The manager looks at what changed instead of asking what the object is.
         if (player.getScore() > scoreBefore) {
+            combo++;
+            bestCombo = Math.max(bestCombo, combo);
             emit(GameEvent.about(EventType.OBJECT_CAUGHT, object, player.getScore() - scoreBefore));
+            if (combo >= 2) {
+                int stepBonus = Math.min(GameConstants.COMBO_MAX_SCORE_BONUS,
+                        (combo - 1) * GameConstants.COMBO_SCORE_STEP);
+                comboBonus += stepBonus;
+                emit(GameEvent.about(EventType.COMBO_GAINED, object, combo, "+" + stepBonus));
+            }
+            updateHookSpeedScale();
         }
         if (player.getHealth() < healthBefore) {
+            combo = 0;
+            updateHookSpeedScale();
             emit(GameEvent.about(EventType.HEALTH_LOST, object, healthBefore - player.getHealth()));
         }
 
@@ -250,10 +298,12 @@ public final class GameManager implements GameView, CatchResolver {
 
     @Override
     public void onSlip(OceanObject object) {
-        // Wrong tool: nothing is gained or lost except time.
+        // Wrong tool: nothing is gained or lost except time and streak.
         object.grantImmunity(GameConstants.SLIP_IMMUNITY_S);
         boat.getHook().beginRetractEmpty();
         launchResolved = true;
+        combo = 0;
+        updateHookSpeedScale();
         emit(GameEvent.about(EventType.SLIPPED, object, 0));
     }
 
@@ -267,6 +317,8 @@ public final class GameManager implements GameView, CatchResolver {
         OceanObject carried = hook.getCaughtObject();
         if (carried == null) {
             if (!launchResolved) {
+                combo = 0;
+                updateHookSpeedScale();
                 emit(GameEvent.of(EventType.MISSED));
             }
             return;
@@ -298,6 +350,11 @@ public final class GameManager implements GameView, CatchResolver {
     }
 
     @Override
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
+    @Override
     public Boat getBoat() {
         return boat;
     }
@@ -306,6 +363,10 @@ public final class GameManager implements GameView, CatchResolver {
     @Override
     public List<OceanObject> getObjects() {
         return level.getObjects();
+    }
+
+    public List<SpawnRule> getSpawnRules() {
+        return level.getSpawnRules();
     }
 
     @Override
@@ -346,6 +407,31 @@ public final class GameManager implements GameView, CatchResolver {
     @Override
     public LevelStatus getStatus() {
         return status;
+    }
+
+    @Override
+    public int getCombo() {
+        return combo;
+    }
+
+    @Override
+    public int getBestCombo() {
+        return bestCombo;
+    }
+
+    @Override
+    public int getComboBonus() {
+        return comboBonus;
+    }
+
+    @Override
+    public OceanEventType getActiveEvent() {
+        return level.getActiveEvent();
+    }
+
+    @Override
+    public double getActiveEventFraction() {
+        return level.getActiveEventFraction();
     }
 
     @Override

@@ -1,15 +1,19 @@
 package game;
 
+import model.Difficulty;
 import model.LevelData;
 
 /**
- * The outcome of one finished attempt at a level, kept after the GameManager
- * that played it is gone. Immutable: it is a record of what happened.
+ * The numbers from one finished attempt at a level: whether it was cleared,
+ * what was caught and lost, streak bonus, difficulty, and how much time and
+ * health were left.
+ *
+ * All fields are final, so once written down a result never changes.
  */
 public final class LevelResult {
 
-    private final int chapter;   // 1 to 3
-    private final int level;     // 1 to 5 inside the chapter
+    private final int chapter;
+    private final int level;
     private final boolean cleared;
     private final FailCause failCause;
     private final int points;
@@ -21,6 +25,9 @@ public final class LevelResult {
     private final int catches;
     private final int slips;
     private final int fishHits;
+    private final int bestCombo;
+    private final int comboBonus;
+    private final Difficulty difficulty;
 
     /**
      * @param chapter   the chapter the level belongs to
@@ -29,6 +36,13 @@ public final class LevelResult {
      */
     public LevelResult(int chapter, int level, FailCause failCause, int points, double timeLeft, double timeTotal,
             int healthLeft, int maxHealth, int launches, int catches, int slips, int fishHits) {
+        this(chapter, level, failCause, points, timeLeft, timeTotal,
+                healthLeft, maxHealth, launches, catches, slips, fishHits, 0, 0, Difficulty.EASY);
+    }
+
+    public LevelResult(int chapter, int level, FailCause failCause, int points, double timeLeft, double timeTotal,
+            int healthLeft, int maxHealth, int launches, int catches, int slips, int fishHits,
+            int bestCombo, int comboBonus, Difficulty difficulty) {
         this.chapter = chapter;
         this.level = level;
         this.cleared = failCause == FailCause.NONE;
@@ -42,6 +56,9 @@ public final class LevelResult {
         this.catches = catches;
         this.slips = slips;
         this.fishHits = fishHits;
+        this.bestCombo = bestCombo;
+        this.comboBonus = comboBonus;
+        this.difficulty = difficulty;
     }
 
     /** Writes down how a finished attempt went. */
@@ -54,7 +71,8 @@ public final class LevelResult {
                 game.getPlayer().getScore(), game.getTimeLeft(), game.getTimeTotal(),
                 game.getPlayer().getHealth(), game.getPlayer().getMaxHealth(),
                 game.getStats().getLaunches(), game.getStats().getCatches(),
-                game.getStats().getSlips(), game.getStats().getFishHits());
+                game.getStats().getSlips(), game.getStats().getFishHits(),
+                game.getBestCombo(), game.getComboBonus(), game.getDifficulty());
     }
 
     public int getChapter() {
@@ -112,6 +130,18 @@ public final class LevelResult {
 
     public int getFishHits() {
         return fishHits;
+    }
+
+    public int getBestCombo() {
+        return bestCombo;
+    }
+
+    public int getComboBonus() {
+        return comboBonus;
+    }
+
+    public Difficulty getDifficulty() {
+        return difficulty;
     }
 
     /** The share of throws that brought up trash, from 0 to 1. */

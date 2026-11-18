@@ -24,6 +24,7 @@ public class Hook implements HookSensor {
     private double length;
     private double swingTime;   // seconds spent swinging, drives the swing motion
     private double sway;        // how far the rocking boat throws the swing off, in radians
+    private double speedScale = 1.0;
     private OceanObject caughtObject;
     private final Loadout loadout;   // the tools that can go on this line
 
@@ -73,6 +74,11 @@ public class Hook implements HookSensor {
         this.sway = sway;
     }
 
+    /** Multiplies extend and retract speed (for Flow streak or Slack Tide). */
+    public void setSpeedScale(double speedScale) {
+        this.speedScale = Math.max(0.5, speedScale);
+    }
+
     /** Moves the hook forward by dt seconds of game time. */
     public void update(double dt) {
         switch (state) {
@@ -86,7 +92,7 @@ public class Hook implements HookSensor {
 
             case EXTENDING:
                 // The angle is frozen, so the hook travels in a straight line.
-                length += GameConstants.HOOK_EXTEND * dt;
+                length += GameConstants.HOOK_EXTEND * speedScale * dt;
                 if (length >= GameConstants.HOOK_MAX) {
                     length = GameConstants.HOOK_MAX;
                     state = State.RETRACTING;
@@ -94,7 +100,7 @@ public class Hook implements HookSensor {
                 break;
 
             case RETRACTING:
-                double speed = (caughtObject == null) ? GameConstants.HOOK_RETRACT : GameConstants.HOOK_CARRY;
+                double speed = ((caughtObject == null) ? GameConstants.HOOK_RETRACT : GameConstants.HOOK_CARRY) * speedScale;
                 length -= speed * dt;
                 if (length <= GameConstants.HOOK_REST) {
                     length = GameConstants.HOOK_REST;

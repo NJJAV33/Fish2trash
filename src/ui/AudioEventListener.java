@@ -7,6 +7,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import model.Condition;
 import model.ObjectKind;
+import model.OceanEventType;
 import util.AudioPlayer;
 import util.GameConstants;
 import util.SoundEffect;
@@ -23,12 +24,14 @@ public final class AudioEventListener implements GameListener {
     private final AudioPlayer audio;
     private final Map<EventType, SoundEffect> soundForEvent = new EnumMap<>(EventType.class);
     private final Map<ObjectKind, SoundEffect> soundForCatch = new EnumMap<>(ObjectKind.class);
+    private final Map<OceanEventType, SoundEffect> soundForOceanEvent = new EnumMap<>(OceanEventType.class);
 
     public AudioEventListener(AudioPlayer audio) {
         this.audio = audio;
 
         soundForEvent.put(EventType.HOOK_LAUNCHED, SoundEffect.HOOK_LAUNCH);
         soundForEvent.put(EventType.HOOK_RECALLED, SoundEffect.HOOK_RECALL);
+        soundForEvent.put(EventType.COMBO_GAINED, SoundEffect.COMBO);
         soundForEvent.put(EventType.FISH_FREED, SoundEffect.FISH_FREED);
         soundForEvent.put(EventType.HAZARD_ALERT, SoundEffect.THREAT_ALERT);
         soundForEvent.put(EventType.SLIPPED, SoundEffect.WRONG_TOOL);
@@ -45,6 +48,12 @@ public final class AudioEventListener implements GameListener {
         soundForCatch.put(ObjectKind.PLASTIC_BOTTLE, SoundEffect.CATCH_PLASTIC);
         soundForCatch.put(ObjectKind.CAN, SoundEffect.CATCH_CAN);
         soundForCatch.put(ObjectKind.FISHING_NET, SoundEffect.CATCH_NET);
+
+        // Each mid-game ocean event has its own cue.
+        soundForOceanEvent.put(OceanEventType.SQUALL, SoundEffect.EVENT_SQUALL);
+        soundForOceanEvent.put(OceanEventType.TRASH_TIDE, SoundEffect.EVENT_BONUS);
+        soundForOceanEvent.put(OceanEventType.FISH_FRENZY, SoundEffect.EVENT_FRENZY);
+        soundForOceanEvent.put(OceanEventType.SLACK_TIDE, SoundEffect.EVENT_CALM);
     }
 
     @Override
@@ -54,6 +63,11 @@ public final class AudioEventListener implements GameListener {
             effect = soundForCatch.get(event.getKind());
         } else if (event.getType() == EventType.HEALTH_LOST) {
             effect = soundForFishHit(event.getCondition());
+        } else if (event.getType() == EventType.OCEAN_EVENT_STARTED) {
+            OceanEventType[] events = OceanEventType.values();
+            if (event.getValue() >= 0 && event.getValue() < events.length) {
+                effect = soundForOceanEvent.get(events[event.getValue()]);
+            }
         }
         if (event.getType() == EventType.LOW_TIME_TICK && event.getValue() <= GameConstants.URGENT_TIME_S) {
             effect = SoundEffect.LOW_TICK_URGENT;   // the last seconds tick higher

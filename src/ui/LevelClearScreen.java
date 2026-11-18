@@ -101,16 +101,25 @@ public final class LevelClearScreen implements Screen {
         TextDraw.centered(g, StoryText.CLEAR_TITLE, CENTER_X, 148);
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, StoryText.levelTitle(result.getChapter(), result.getLevel()), CENTER_X, 174);
+        TextDraw.centered(g, StoryText.levelTitle(result.getChapter(), result.getLevel()), CENTER_X, 172);
+
+        String diffText = result.getDifficulty().getDisplayName();
+        if (result.getDifficulty().getScoreMultiplier() > 1.0) {
+            diffText += String.format(" (%.2gx)", result.getDifficulty().getScoreMultiplier());
+        }
+        String comboText = result.getBestCombo() >= 2
+                ? "x" + result.getBestCombo() + " (+" + counted(result.getComboBonus()) + ")"
+                : "-";
 
         // The numbers count up from zero when the report appears.
-        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(counted(result.getPoints())), 208);
-        drawRow(g, StoryText.CLEAR_TIME, counted((int) result.getTimeLeft()) + " s", 231);
-        drawRow(g, StoryText.CLEAR_HEALTH, counted(result.getHealthLeft()) + " / " + result.getMaxHealth(), 254);
-        drawRow(g, StoryText.CLEAR_FISH, String.valueOf(counted(result.getFishHits())), 277);
+        drawRow(g, StoryText.CLEAR_DIFFICULTY, diffText, 198);
+        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(counted(result.getPoints())), 218);
+        drawRow(g, StoryText.CLEAR_TIME, counted((int) result.getTimeLeft()) + " s", 238);
+        drawRow(g, StoryText.CLEAR_HEALTH, counted(result.getHealthLeft()) + " / " + result.getMaxHealth(), 258);
+        drawRow(g, StoryText.CLEAR_COMBO, comboText, 278);
         g.setColor(UiPalette.PANEL_EDGE);
-        g.drawLine(LABEL_X, 285, VALUE_X, 285);
-        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.levelScore(result))), 306);
+        g.drawLine(LABEL_X, 286, VALUE_X, 286);
+        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.levelScore(result))), 307);
 
         if (badgeDecided) {
             drawBadge(g);

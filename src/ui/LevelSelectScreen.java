@@ -30,8 +30,8 @@ public final class LevelSelectScreen implements Screen {
     private static final int TILE_HEIGHT = 72;
     private static final int TILE_GAP = 14;
     private static final int FIRST_TILE_X = CENTER_X - (PER_ROW * TILE_WIDTH + (PER_ROW - 1) * TILE_GAP) / 2;
-    private static final int FIRST_ROW_Y = 120;
-    private static final int ROW_SPACING = 125;
+    private static final int FIRST_ROW_Y = 112;
+    private static final int ROW_SPACING = 122;
 
     private static final Color TILE = new Color(255, 255, 255, 28);
     private static final Color TILE_CHOSEN = new Color(79, 209, 197, 60);
@@ -66,6 +66,9 @@ public final class LevelSelectScreen implements Screen {
             move(-PER_ROW);
         } else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_S) {
             move(PER_ROW);
+        } else if (keyCode == KeyEvent.VK_C || keyCode == KeyEvent.VK_TAB) {
+            screens.cycleDifficulty(1);
+            screens.getAudio().play(SoundEffect.MENU_MOVE);
         } else if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_SPACE) {
             play();
         } else if (keyCode == KeyEvent.VK_ESCAPE) {
@@ -99,13 +102,13 @@ public final class LevelSelectScreen implements Screen {
         g.setColor(UiPalette.LIGHT_SHADE);
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
         g.setColor(UiPalette.PANEL_SOLID);
-        g.fillRoundRect(50, 36, 700, 520, 18, 18);
+        g.fillRoundRect(50, 32, 700, 528, 18, 18);
         g.setColor(UiPalette.PANEL_EDGE);
-        g.drawRoundRect(50, 36, 700, 520, 18, 18);
+        g.drawRoundRect(50, 32, 700, 528, 18, 18);
 
         g.setFont(Fonts.BANNER);
         g.setColor(UiPalette.ACCENT);
-        TextDraw.centered(g, StoryText.LEVELS_TITLE, CENTER_X, 90);
+        TextDraw.centered(g, StoryText.LEVELS_TITLE, CENTER_X, 84);
 
         LevelProgress progress = screens.getProgress();
         for (int chapter = 1; chapter <= LevelData.CHAPTER_COUNT; chapter++) {
@@ -122,20 +125,25 @@ public final class LevelSelectScreen implements Screen {
         // What the highlighted level is, or why it cannot be picked yet.
         g.setFont(Fonts.SUBHEADING);
         g.setColor(UiPalette.TEXT);
-        TextDraw.centered(g, StoryText.levelTitle(selected.getChapter(), selected.getLevel()), CENTER_X, 506);
+        TextDraw.centered(g, StoryText.levelTitle(selected.getChapter(), selected.getLevel()), CENTER_X, 496);
         g.setFont(Fonts.BODY);
         if (progress.isUnlocked(chosen)) {
             g.setColor(UiPalette.DIM_TEXT);
             TextDraw.centered(g, String.format(StoryText.LEVELS_DETAILS, selected.getQuota(),
-                    (int) selected.getTimeLimit(), selected.getStartHealth()), CENTER_X, 532);
+                    (int) selected.getTimeLimit(), selected.getStartHealth()), CENTER_X, 520);
         } else {
             g.setColor(UiPalette.DANGER);
-            TextDraw.centered(g, StoryText.LEVELS_LOCKED, CENTER_X, 532);
+            TextDraw.centered(g, StoryText.LEVELS_LOCKED, CENTER_X, 520);
         }
+
+        g.setFont(Fonts.LABEL);
+        g.setColor(UiPalette.GOLD);
+        TextDraw.centered(g, String.format(StoryText.LEVELS_DIFFICULTY, screens.getDifficulty().getDisplayName()),
+                CENTER_X, 545);
 
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, StoryText.LEVELS_HINT, CENTER_X, 580);
+        TextDraw.centered(g, StoryText.LEVELS_HINT, CENTER_X, 582);
     }
 
     /** One level's tile: its number and name, a tick once cleared, a padlock while locked. */

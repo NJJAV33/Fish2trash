@@ -19,33 +19,32 @@ public final class StoryText {
     public static final String MENU_START = "Start";
     public static final String MENU_LEVELS = "Select Level";
     public static final String LEVELS_TITLE = "SELECT LEVEL";
-    public static final String LEVELS_HINT = "ARROWS: choose     ENTER: play from here     ESC: back";
+    public static final String LEVELS_HINT = "ARROWS: choose     C: difficulty     ENTER: play     ESC: back";
     public static final String LEVELS_LOCKED = "Locked. Clear the level before it to open this one.";
     public static final String LEVELS_DETAILS = "Quota %d points     %d s     %d health";
+    public static final String LEVELS_DIFFICULTY = "Difficulty: %s   (C to change)";
     public static final String LEVELS_NEW = "NEW";
     public static final String MENU_HOW_TO = "How to Play";
     public static final String MENU_SCORES = "High Scores";
+    public static final String MENU_DIFFICULTY = "Difficulty: %s";
     public static final String MENU_QUIT = "Quit";
-    public static final String MENU_HINT = "UP / DOWN: choose     ENTER: select     F11: full screen";
+    public static final String MENU_HINT = "UP / DOWN: choose   LEFT / RIGHT or D: difficulty   ENTER: select   F11: full screen";
 
     // ---- How to play ----
     public static final String HOW_TO_TITLE = "HOW TO PLAY";
     public static final String HOW_TO_TEXT =
             "A / D or arrow keys   Move the boat (while the hook swings)\n"
-            + "SPACE                 Drop the hook\n"
-            + "SPACE again           Pull the hook back early\n"
+            + "SPACE / SPACE again   Drop the hook / pull back early\n"
             + "1 2 3  or  Q / E      Change tool (while the hook swings)\n"
-            + "H                     Show the last tip again\n"
-            + "P or ESC              Pause\n"
-            + "M                     Sound on or off\n"
-            + "F11                   Full screen on or off\n"
+            + "H / P / M / F11       Last tip / Pause / Sound / Full screen\n"
             + "\n"
             + "Each kind of trash needs its own tool:\n"
             + "Hook - bottle 10.   Magnet - can 20.   Net Cutter - net 50.\n"
-            + "A fish costs health. The Hook hauls it up, the Magnet stuns it,\n"
-            + "the Net Cutter kills it (2 health). Rays chase the Magnet.\n"
-            + "Waves rock the boat and shift the swing. The current carries\n"
-            + "trash and fish across the screen: the arrows show which way.\n"
+            + "Chain catches for combo points; 3+ triggers a fast Flow reel!\n"
+            + "Early recalls keep your streak; misses, slips & fish reset it.\n"
+            + "Dynamic events: Squalls, Trash Tides, Frenzies & Slack Tides.\n"
+            + "A fish costs health (Cutter 2). Rays chase the Magnet.\n"
+            + "Medium & Hard add bigger waves, more fish, and tighter trash.\n"
             + "Fill the quota before time or health runs out.";
     public static final String BACK_PROMPT = "ENTER: back to menu";
 
@@ -321,6 +320,8 @@ public final class StoryText {
     public static final String CLEAR_TIME = "Time left";
     public static final String CLEAR_HEALTH = "Health left";
     public static final String CLEAR_FISH = "Fish hooked";
+    public static final String CLEAR_DIFFICULTY = "Difficulty";
+    public static final String CLEAR_COMBO = "Best streak";
     public static final String CLEAR_SCORE = "Level score";
     public static final String CONTINUE_PROMPT = "ENTER: continue";
     /** Filled in with the level inside the chapter and the number of levels a chapter has. */
@@ -393,6 +394,8 @@ public final class StoryText {
     public static final String RECAP_FISH = "Fish hooked";
     public static final String RECAP_LEVELS = "Levels cleared";
     public static final String RECAP_SCORE = "Run score";
+    public static final String RECAP_COMBO = "Best streak";
+    public static final String RECAP_DIFFICULTY = "Difficulty";
     public static final String RECAP_BADGES = "Badges";
 
     // ---- High scores ----
@@ -427,6 +430,8 @@ public final class StoryText {
     public static final String HUD_SCORE = "SCORE";
     public static final String HUD_CURRENT = "CURRENT";
     public static final String HUD_CALM = "NO CURRENT";
+    public static final String HUD_COMBO = "STREAK x%d";
+    public static final String HUD_FLOW = "FLOW x%d  +15%%";
 
     // What Captain Dolor says when a level is lost, looked up by chapter (see failText below).
     private static final String[] GEAR_PAGES = {"", GEAR_MAGNET, GEAR_CUTTER};   // chapter 1 has no new tool

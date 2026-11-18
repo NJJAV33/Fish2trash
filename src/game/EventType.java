@@ -8,6 +8,8 @@ public enum EventType {
     HOOK_RECALLED,
     /** The hook grabbed trash. The event's value is the points earned. */
     OBJECT_CAUGHT,
+    /** Consecutive trash catches reached a streak. Value is the combo count, text is the bonus. */
+    COMBO_GAINED,
     /** The hook hit wildlife. The event's value is the health lost. */
     HEALTH_LOST,
     /** Wrong tool: the object slipped off the hook. */
@@ -24,6 +26,10 @@ public enum EventType {
     FISH_FREED,
     /** A dangerous fish just flashed or sparked a warning. */
     HAZARD_ALERT,
+    /** A dynamic mid-game ocean event began. Value is the event ordinal, text is its announcement. */
+    OCEAN_EVENT_STARTED,
+    /** A dynamic mid-game ocean event ended. Value is the event ordinal, text is its label. */
+    OCEAN_EVENT_ENDED,
     /** One more second is gone in the last ten. The event's value is the seconds left. */
     LOW_TIME_TICK,
     /** A tip should be shown. The event's text is the tip. */

@@ -6,12 +6,13 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import model.Difficulty;
 import model.LevelData;
 import model.Loadout;
 
 /**
- * One run through the story: which level the player is on, the levels
- * already cleared, the badges earned, and how many attempts failed.
+ * One run through the story: which level the player is on, the difficulty,
+ * the levels already cleared, the badges earned, and how many attempts failed.
  *
  * A GameManager only lives for one attempt at a level. The session is the
  * memory that lasts across them.
@@ -19,28 +20,35 @@ import model.Loadout;
 public final class GameSession {
 
     private final Random random;
+    private final Difficulty difficulty;
     private final List<LevelResult> clearedLevels = new ArrayList<>();
     private final Set<Badge> badges = EnumSet.noneOf(Badge.class);
     private int levelNumber;   // 1 for level 1-1, up to 15 for level 3-5; 16 once the story is finished
     private int retries;
     private LevelResult lastResult;
 
-    /** A run through the whole story, from level 1-1. */
+    /** A run through the whole story on Easy difficulty, from level 1-1. */
     public GameSession(Random random) {
-        this(random, 1);
+        this(random, 1, Difficulty.EASY);
     }
 
     /**
-     * A run that starts at a level picked from the level select and goes on
-     * from there to the ending.
+     * A run that starts at a level picked from the level select on Easy
+     * difficulty and goes on from there to the ending.
      *
      * @param firstLevel 1 for level 1-1, up to 15 for level 3-5
      */
     public GameSession(Random random, int firstLevel) {
+        this(random, firstLevel, Difficulty.EASY);
+    }
+
+    /** A run starting at firstLevel on the chosen difficulty. */
+    public GameSession(Random random, int firstLevel, Difficulty difficulty) {
         if (firstLevel < 1 || firstLevel > LevelData.LEVEL_COUNT) {
             throw new IllegalArgumentException("No level number " + firstLevel);
         }
         this.random = random;
+        this.difficulty = difficulty;
         this.levelNumber = firstLevel;
     }
 
@@ -48,7 +56,7 @@ public final class GameSession {
     public GameManager startLevel() {
         LevelData level = getLevelData();
         // Tools belong to the chapter: every level starts with the tools the crew has by then.
-        return new GameManager(level, Loadout.forChapter(level.getChapter()), random);
+        return new GameManager(level, Loadout.forChapter(level.getChapter()), random, difficulty);
     }
 
     /**
@@ -85,6 +93,10 @@ public final class GameSession {
         return LevelData.byNumber(levelNumber);
     }
 
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
     public int getRetries() {
         return retries;
     }
@@ -117,6 +129,15 @@ public final class GameSession {
             total += result.getPoints();
         }
         return total;
+    }
+
+    /** Best catch streak achieved in any cleared level of the run. */
+    public int getBestCombo() {
+        int best = 0;
+        for (LevelResult result : clearedLevels) {
+            best = Math.max(best, result.getBestCombo());
+        }
+        return best;
     }
 
     /** The score of the whole run so far: cleared levels, badges and failed attempts. */

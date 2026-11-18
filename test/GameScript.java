@@ -107,6 +107,14 @@ final class GameScript {
         }
     }
 
+    /** Moves every object away and suppresses collisions while simulating empty water. */
+    static void keepWaterEmpty(GameManager game) {
+        for (OceanObject object : game.getObjects()) {
+            object.moveTo(object.getX(), FAR_AWAY);
+            object.grantImmunity(STEP * 2);
+        }
+    }
+
     /**
      * Drops the hook onto the target and plays on until the hook is back at
      * the boat. Everything else is moved out of the way first.

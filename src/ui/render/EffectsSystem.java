@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.function.Consumer;
 import model.Condition;
 import model.Hook;
+import model.OceanEventType;
 import util.GameConstants;
 
 /**
@@ -98,6 +99,8 @@ public final class EffectsSystem implements GameListener {
 
     public EffectsSystem() {
         reactions.put(EventType.OBJECT_CAUGHT, this::onTrashCaught);
+        reactions.put(EventType.COMBO_GAINED, this::onComboGained);
+        reactions.put(EventType.OCEAN_EVENT_STARTED, this::onOceanEventStarted);
         reactions.put(EventType.HEALTH_LOST, this::onFishHooked);
         reactions.put(EventType.SLIPPED, this::onSlip);
         reactions.put(EventType.QUOTA_REACHED, this::onQuotaReached);
@@ -130,6 +133,29 @@ public final class EffectsSystem implements GameListener {
     private void onTrashCaught(GameEvent event) {
         addPopup("+" + event.getValue(), event.getX(), event.getY() - 18, UiPalette.GOLD);
         squashAge = 0;
+    }
+
+    private void onComboGained(GameEvent event) {
+        boolean flow = event.getValue() >= GameConstants.HOT_STREAK_MIN;
+        String label = "x" + event.getValue() + (flow ? " FLOW! " : " ") + event.getText();
+        Color badgeColor = flow ? UiPalette.ACCENT : UiPalette.GOLD;
+        addPopup(label, event.getX(), event.getY() - 36, badgeColor);
+        if (event.getValue() == GameConstants.HOT_STREAK_MIN) {
+            burst(event.getX(), event.getY(), 6, UiPalette.ACCENT);
+        }
+    }
+
+    private void onOceanEventStarted(GameEvent event) {
+        OceanEventType[] events = OceanEventType.values();
+        if (event.getValue() < 0 || event.getValue() >= events.length) {
+            return;
+        }
+        OceanEventType started = events[event.getValue()];
+        if (started == OceanEventType.SQUALL) {
+            shakeAge = 0;
+        } else if (started == OceanEventType.TRASH_TIDE || started == OceanEventType.SLACK_TIDE) {
+            burst(GameConstants.WORLD_WIDTH / 2.0, GameConstants.WATER_Y + 12, 8, UiPalette.ACCENT);
+        }
     }
 
     private void onFishHooked(GameEvent event) {

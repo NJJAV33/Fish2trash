@@ -201,7 +201,7 @@ public final class HintTest {
         double[] dropAt = {13, 33, 53, 73};
         int nextDrop = 0;
         while (game.isPlaying()) {
-            GameScript.clearTheWater(game);
+            GameScript.keepWaterEmpty(game);
             if (nextDrop < dropAt.length && now[0] >= dropAt[nextDrop]) {
                 game.spaceAction();
                 nextDrop++;
@@ -273,7 +273,7 @@ public final class HintTest {
 
     private static void playWithEmptyWater(GameManager game, double seconds) {
         for (double t = 0; t < seconds; t += STEP) {
-            GameScript.clearTheWater(game);
+            GameScript.keepWaterEmpty(game);
             game.update(STEP);
         }
     }

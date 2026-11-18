@@ -4,8 +4,11 @@ import game.LevelStatus;
 import game.GameView;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
+import model.Difficulty;
 import model.EquipmentType;
+import model.OceanEventType;
 import model.LevelData;
 import util.GameConstants;
 import util.Mathx;
@@ -75,6 +78,9 @@ public final class HudPainter {
         g.setColor(UiPalette.TEXT);
         TextDraw.centered(g, String.valueOf(game.getScore()), 747, 48);
 
+        drawDifficultyBadge(g, game.getDifficulty());
+        drawComboBadge(g, game.getCombo(), time);
+        drawOceanEventBanner(g, game.getActiveEvent(), game.getActiveEventFraction(), time);
         drawSpeaker(g, sound);
         drawCurrent(g, game.getSea().getCurrent(), game.getSea().getStrength());
         if (GameConstants.EQUIPMENT_ENABLED) {
@@ -88,6 +94,78 @@ public final class HudPainter {
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
         TextDraw.centered(g, StoryText.PLAY_HINT, GameConstants.WORLD_WIDTH / 2, 597);
+    }
+
+    private void drawDifficultyBadge(Graphics2D g, Difficulty difficulty) {
+        int x = 10;
+        int y = 64;
+        int width = 104;
+        Color badgeColor = difficulty == Difficulty.HARD ? UiPalette.DANGER
+                : difficulty == Difficulty.MEDIUM ? UiPalette.GOLD : UiPalette.ACCENT;
+        g.setColor(UiPalette.PANEL);
+        g.fillRoundRect(x, y, width, 26, 10, 10);
+        g.setColor(badgeColor);
+        g.drawRoundRect(x, y, width, 26, 10, 10);
+        g.setFont(Fonts.LABEL);
+        String label = difficulty.getDisplayName().toUpperCase();
+        if (difficulty.getScoreMultiplier() > 1.0) {
+            label = label + " " + String.format("%.2gx", difficulty.getScoreMultiplier());
+        }
+        TextDraw.centered(g, label, x + width / 2, y + 18);
+    }
+
+    private void drawComboBadge(Graphics2D g, int combo, double time) {
+        if (combo < 2) {
+            return;
+        }
+        int x = 122;
+        int y = 64;
+        int width = 132;
+        boolean flow = combo >= GameConstants.HOT_STREAK_MIN;
+        g.setColor(UiPalette.PANEL);
+        g.fillRoundRect(x, y, width, 26, 10, 10);
+        Color accent = flow ? UiPalette.ACCENT : UiPalette.GOLD;
+        if (flow) {
+            float pulse = (float) (0.65 + 0.35 * Math.sin(time * 7));
+            g.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * pulse)));
+        } else {
+            g.setColor(accent);
+        }
+        g.drawRoundRect(x, y, width, 26, 10, 10);
+        g.setFont(Fonts.LABEL);
+        String label = flow
+                ? String.format(StoryText.HUD_FLOW, combo)
+                : String.format(StoryText.HUD_COMBO, combo);
+        TextDraw.centered(g, label, x + width / 2, y + 18);
+    }
+
+    private void drawOceanEventBanner(Graphics2D g, OceanEventType event, double fraction, double time) {
+        if (event == OceanEventType.NONE || fraction <= 0) {
+            return;
+        }
+        int x = 264;
+        int y = 64;
+        int width = 356;
+        int height = 28;
+        Color accent = (event == OceanEventType.SQUALL || event == OceanEventType.FISH_FRENZY)
+                ? UiPalette.DANGER : UiPalette.ACCENT;
+        g.setColor(UiPalette.PANEL_SOLID);
+        g.fillRoundRect(x, y, width, height, 10, 10);
+        float pulse = (float) (0.7 + 0.3 * Math.sin(time * 6));
+        g.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), (int) (255 * pulse)));
+        g.drawRoundRect(x, y, width, height, 10, 10);
+
+        g.setFont(Fonts.LABEL);
+        g.setColor(UiPalette.TEXT);
+        TextDraw.centered(g, event.getAnnouncement(), x + width / 2, y + 17);
+
+        int barX = x + 12;
+        int barY = y + 22;
+        int barWidth = width - 24;
+        g.setColor(UiPalette.BAR_TRACK);
+        g.fillRoundRect(barX, barY, barWidth, 3, 2, 2);
+        g.setColor(accent);
+        g.fillRoundRect(barX, barY, (int) Math.round(barWidth * fraction), 3, 2, 2);
     }
 
     /** A small speaker under the HUD bar: with sound waves when on, crossed out when not. */
