@@ -66,10 +66,15 @@ public final class BoatPainter {
      * @param tilt      how far the swell tips the boat right now, in radians
      * @param swell     how rough the sea is: the widest tilt, in radians. A rough sea also lifts the boat higher.
      */
+    /** Vertical wave heave of the boat at the given animation time and sea swell. */
+    public static double bobAt(double time, double swell) {
+        double bob = BOB_PIXELS + SWELL_LIFT * swell;
+        return bob * Math.sin(BOB_SPEED * time);
+    }
+
     public void paint(Graphics2D g, double x, double waterline, int facing, double time, double tilt, double swell) {
         Graphics2D g2 = (Graphics2D) g.create();
-        double bob = BOB_PIXELS + SWELL_LIFT * swell;
-        g2.translate(x, waterline + bob * Math.sin(BOB_SPEED * time));
+        g2.translate(x, waterline + bobAt(time, swell));
         g2.rotate(tilt + ROLL_RADIANS * Math.sin(BOB_SPEED * time + 1.2));
         g2.scale(facing, 1);   // drawn with the bow to the right
 

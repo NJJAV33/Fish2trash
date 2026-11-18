@@ -1,5 +1,6 @@
 package game;
 
+import model.Condition;
 import model.ObjectKind;
 import model.ObjectView;
 
@@ -12,15 +13,18 @@ import model.ObjectView;
 public final class GameEvent {
 
     private final EventType type;
-    private final ObjectKind kind;   // the object involved, or null if there is none
+    private final ObjectKind kind;     // the object involved, or null if there is none
+    private final Condition condition; // the object's condition when the event happened
     private final double x;
     private final double y;
-    private final int value;         // points earned or health lost; 0 if not used
-    private final String text;       // extra message; empty if not used
+    private final int value;           // points earned or health lost; 0 if not used
+    private final String text;         // extra message; empty if not used
 
-    private GameEvent(EventType type, ObjectKind kind, double x, double y, int value, String text) {
+    private GameEvent(EventType type, ObjectKind kind, Condition condition,
+                      double x, double y, int value, String text) {
         this.type = type;
         this.kind = kind;
+        this.condition = condition;
         this.x = x;
         this.y = y;
         this.value = value;
@@ -29,22 +33,23 @@ public final class GameEvent {
 
     /** An event with no extra details. */
     public static GameEvent of(EventType type) {
-        return new GameEvent(type, null, 0, 0, 0, "");
+        return new GameEvent(type, null, Condition.NORMAL, 0, 0, 0, "");
     }
 
     /** An event about one ocean object, at that object's position. */
     public static GameEvent about(EventType type, ObjectView object, int value) {
-        return new GameEvent(type, object.getKind(), object.getX(), object.getY(), value, "");
+        return new GameEvent(type, object.getKind(), object.getCondition(),
+                object.getX(), object.getY(), value, "");
     }
 
     /** An event that carries only a number. */
     public static GameEvent withValue(EventType type, int value) {
-        return new GameEvent(type, null, 0, 0, value, "");
+        return new GameEvent(type, null, Condition.NORMAL, 0, 0, value, "");
     }
 
     /** An event that carries a message. */
     public static GameEvent withText(EventType type, String text) {
-        return new GameEvent(type, null, 0, 0, 0, text);
+        return new GameEvent(type, null, Condition.NORMAL, 0, 0, 0, text);
     }
 
     public EventType getType() {
@@ -53,6 +58,10 @@ public final class GameEvent {
 
     public ObjectKind getKind() {
         return kind;
+    }
+
+    public Condition getCondition() {
+        return condition;
     }
 
     public double getX() {

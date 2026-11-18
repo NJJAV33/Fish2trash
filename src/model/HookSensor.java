@@ -14,6 +14,9 @@ public interface HookSensor {
     /** True while the hook is away from the boat (going out or coming back). */
     boolean isLineOut();
 
+    /** True while the hook is shooting downward toward the water. */
+    boolean isExtending();
+
     /** True while the tool on the line is a magnet, whether the line is out or not. Stingrays can feel that. */
     boolean isMagnetic();
 }

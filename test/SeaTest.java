@@ -384,6 +384,10 @@ public final class SeaTest {
         other.sense(new FakeLine(400, 300, false, true));
         other.update(0.2, Sea.CALM);
         Check.assertEquals("nor does a Magnet that is still at the boat", 440.0, other.getX(), TINY);
+
+        other.sense(new FakeLine(400, 300, true, false, true));
+        other.update(0.2, Sea.CALM);
+        Check.assertEquals("nor does a Magnet that is already coming back up", 440.0, other.getX(), TINY);
     }
 
     // ---- helpers ----
@@ -423,18 +427,24 @@ public final class SeaTest {
     private static final HookSensor RESTING_HOOK = new FakeLine(
             W / 2.0, GameConstants.WATER_Y + GameConstants.HOOK_REST, false, false);
 
-    /** A stand-in for the line: a tip at a fixed place, out or not, magnetic or not. */
+    /** A stand-in for the line: a tip at a fixed place, out or not, extending or not, magnetic or not. */
     private static final class FakeLine implements HookSensor {
 
         private final double tipX;
         private final double tipY;
         private final boolean lineOut;
+        private final boolean extending;
         private final boolean magnetic;
 
         private FakeLine(double tipX, double tipY, boolean lineOut, boolean magnetic) {
+            this(tipX, tipY, lineOut, lineOut, magnetic);
+        }
+
+        private FakeLine(double tipX, double tipY, boolean lineOut, boolean extending, boolean magnetic) {
             this.tipX = tipX;
             this.tipY = tipY;
             this.lineOut = lineOut;
+            this.extending = extending;
             this.magnetic = magnetic;
         }
 
@@ -451,6 +461,11 @@ public final class SeaTest {
         @Override
         public boolean isLineOut() {
             return lineOut;
+        }
+
+        @Override
+        public boolean isExtending() {
+            return extending;
         }
 
         @Override

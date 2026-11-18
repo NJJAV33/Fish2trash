@@ -59,7 +59,7 @@ public final class StoryText {
     public static final String TOOL_LOCKED_SHORT = "Chapter %d";
     public static final String GEAR_TITLE = "NEW GEAR";
     public static final String GEAR_MAGNET =
-            "Santos hands Nico a heavy red horseshoe: the Magnet.\n"
+            "Santos hands Nico a heavy red salvage magnet.\n"
             + "Cans stick to it. Bottles and nets do not.\n"
             + "It still knocks fish, and rays can feel it.\n"
             + "Press 1 for the Hook, 2 for the Magnet.\n"

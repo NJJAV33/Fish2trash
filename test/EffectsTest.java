@@ -4,9 +4,11 @@ import game.GameManager;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
+import model.Fish;
 import model.LevelData;
 import model.Loadout;
 import model.OceanObject;
+import model.SmallFish;
 import ui.render.EffectsSystem;
 import util.GameConstants;
 
@@ -74,6 +76,7 @@ public final class EffectsTest {
 
         theLineSplashesAndLeavesBubbles();
         aFreshCatchWobblesAndSettles();
+        stunAndCutThrowToolSparks();
     }
 
     private static void theLineSplashesAndLeavesBubbles() {
@@ -136,6 +139,27 @@ public final class EffectsTest {
 
         effects.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, something, 1));
         Check.assertEquals("a hooked fish does not wobble: it swims away", 0.0, effects.getCatchSquash(), 1e-9);
+    }
+
+    private static void stunAndCutThrowToolSparks() {
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(4));
+        EffectsSystem effects = new EffectsSystem();
+        effects.reset(game);
+
+        Fish dazed = new SmallFish(200, 300, 50);
+        dazed.daze();
+        effects.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, dazed, 1));
+        Check.assertEquals("a stunned fish shows a popup plus eight stun sparks", 9, effects.getActiveCount());
+
+        effects.reset(game);
+        Fish cut = new SmallFish(200, 300, 50);
+        cut.cut();
+        effects.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, cut, 2));
+        Check.assertEquals("a cut fish shows a popup plus eight slash sparks", 9, effects.getActiveCount());
+
+        effects.reset(game);
+        effects.onGameEvent(GameEvent.about(EventType.HAZARD_ALERT, cut, 0));
+        Check.assertEquals("a hazard alert throws six warning sparks", 6, effects.getActiveCount());
     }
 
     private static void play(EffectsSystem effects, double seconds) {

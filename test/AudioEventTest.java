@@ -4,9 +4,11 @@ import game.GameManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import model.Fish;
 import model.LevelData;
 import model.Loadout;
 import model.ObjectKind;
+import model.SmallFish;
 import ui.AudioEventListener;
 import util.GameConstants;
 import util.SoundEffect;
@@ -28,11 +30,21 @@ public final class AudioEventTest {
         RecordingAudioPlayer audio = new RecordingAudioPlayer();
         AudioEventListener listener = new AudioEventListener(audio);
 
+        Fish dazed = new SmallFish(0, 0, 0);
+        dazed.daze();
+        Fish cut = new SmallFish(0, 0, 0);
+        cut.cut();
+
         listener.onGameEvent(GameEvent.of(EventType.HOOK_LAUNCHED));
+        listener.onGameEvent(GameEvent.of(EventType.HOOK_RECALLED));
         listener.onGameEvent(GameEvent.about(EventType.OBJECT_CAUGHT, ObjectKind.PLASTIC_BOTTLE.create(0, 0, 0), 10));
         listener.onGameEvent(GameEvent.about(EventType.OBJECT_CAUGHT, ObjectKind.CAN.create(0, 0, 0), 20));
         listener.onGameEvent(GameEvent.about(EventType.OBJECT_CAUGHT, ObjectKind.FISHING_NET.create(0, 0, 0), 50));
         listener.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, ObjectKind.SMALL_FISH.create(0, 0, 0), 1));
+        listener.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, dazed, 1));
+        listener.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, cut, 2));
+        listener.onGameEvent(GameEvent.about(EventType.FISH_FREED, ObjectKind.SMALL_FISH.create(0, 0, 0), 0));
+        listener.onGameEvent(GameEvent.about(EventType.HAZARD_ALERT, ObjectKind.BARRACUDA.create(0, 0, 0), 0));
         listener.onGameEvent(GameEvent.about(EventType.SLIPPED, ObjectKind.CAN.create(0, 0, 0), 0));
         listener.onGameEvent(GameEvent.withText(EventType.TOOL_SWITCHED, "Magnet"));
         listener.onGameEvent(GameEvent.of(EventType.SWAP_DENIED));
@@ -43,8 +55,11 @@ public final class AudioEventTest {
         listener.onGameEvent(GameEvent.withValue(EventType.LOW_TIME_TICK, 8));
         listener.onGameEvent(GameEvent.withValue(EventType.LOW_TIME_TICK, 3));
         Check.assertEquals("sounds for the events, in order", List.of(
-                SoundEffect.HOOK_LAUNCH, SoundEffect.CATCH_PLASTIC, SoundEffect.CATCH_CAN, SoundEffect.CATCH_NET,
-                SoundEffect.FISH_HIT, SoundEffect.WRONG_TOOL, SoundEffect.TOOL_SWITCH, SoundEffect.WRONG_TOOL,
+                SoundEffect.HOOK_LAUNCH, SoundEffect.HOOK_RECALL,
+                SoundEffect.CATCH_PLASTIC, SoundEffect.CATCH_CAN, SoundEffect.CATCH_NET,
+                SoundEffect.FISH_HIT, SoundEffect.FISH_STUN, SoundEffect.FISH_CUT,
+                SoundEffect.FISH_FREED, SoundEffect.THREAT_ALERT,
+                SoundEffect.WRONG_TOOL, SoundEffect.TOOL_SWITCH, SoundEffect.WRONG_TOOL,
                 SoundEffect.HINT, SoundEffect.QUOTA, SoundEffect.LEVEL_CLEAR, SoundEffect.LEVEL_FAIL,
                 SoundEffect.LOW_TICK, SoundEffect.LOW_TICK_URGENT), audio.getPlayed());
 
@@ -52,7 +67,6 @@ public final class AudioEventTest {
         int before = audio.getPlayed().size();
         listener.onGameEvent(GameEvent.of(EventType.DELIVERED));
         listener.onGameEvent(GameEvent.of(EventType.MISSED));
-        listener.onGameEvent(GameEvent.of(EventType.HOOK_RECALLED));
         Check.assertEquals("events without a sound play nothing", before, audio.getPlayed().size());
     }
 

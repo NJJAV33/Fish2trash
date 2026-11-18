@@ -22,6 +22,8 @@ public enum EventType {
     DELIVERED,
     /** A fish snagged by the Hook reached the boat and was let go. */
     FISH_FREED,
+    /** A dangerous fish just flashed or sparked a warning. */
+    HAZARD_ALERT,
     /** One more second is gone in the last ten. The event's value is the seconds left. */
     LOW_TIME_TICK,
     /** A tip should be shown. The event's text is the tip. */

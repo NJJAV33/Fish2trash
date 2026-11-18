@@ -67,8 +67,9 @@ public final class SceneRenderer {
         paintBehind(g, palette, sea.getSwell());
 
         Boat boat = game.getBoat();
+        double boatBob = BoatPainter.bobAt(time, sea.getSwell());
         boatPainter.paint(g, boat.getX(), boat.getY(), boat.getFacing(), time, boat.getTilt(), sea.getSwell());
-        hookPainter.paintRope(g, boat.getHook(), time);
+        hookPainter.paintRope(g, boat.getHook(), time, boatBob);
         for (ObjectView object : game.getObjects()) {
             if (catchSquash != 0 && object.isCaught()) {
                 paintSquashed(g, object, catchSquash);

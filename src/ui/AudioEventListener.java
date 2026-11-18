@@ -5,6 +5,7 @@ import game.GameEvent;
 import game.GameListener;
 import java.util.EnumMap;
 import java.util.Map;
+import model.Condition;
 import model.ObjectKind;
 import util.AudioPlayer;
 import util.GameConstants;
@@ -27,7 +28,9 @@ public final class AudioEventListener implements GameListener {
         this.audio = audio;
 
         soundForEvent.put(EventType.HOOK_LAUNCHED, SoundEffect.HOOK_LAUNCH);
-        soundForEvent.put(EventType.HEALTH_LOST, SoundEffect.FISH_HIT);
+        soundForEvent.put(EventType.HOOK_RECALLED, SoundEffect.HOOK_RECALL);
+        soundForEvent.put(EventType.FISH_FREED, SoundEffect.FISH_FREED);
+        soundForEvent.put(EventType.HAZARD_ALERT, SoundEffect.THREAT_ALERT);
         soundForEvent.put(EventType.SLIPPED, SoundEffect.WRONG_TOOL);
         soundForEvent.put(EventType.TOOL_SWITCHED, SoundEffect.TOOL_SWITCH);
         soundForEvent.put(EventType.SWAP_DENIED, SoundEffect.WRONG_TOOL);
@@ -49,6 +52,8 @@ public final class AudioEventListener implements GameListener {
         SoundEffect effect = soundForEvent.get(event.getType());
         if (event.getType() == EventType.OBJECT_CAUGHT) {
             effect = soundForCatch.get(event.getKind());
+        } else if (event.getType() == EventType.HEALTH_LOST) {
+            effect = soundForFishHit(event.getCondition());
         }
         if (event.getType() == EventType.LOW_TIME_TICK && event.getValue() <= GameConstants.URGENT_TIME_S) {
             effect = SoundEffect.LOW_TICK_URGENT;   // the last seconds tick higher
@@ -56,5 +61,15 @@ public final class AudioEventListener implements GameListener {
         if (effect != null) {
             audio.play(effect);   // events with no sound are simply skipped
         }
+    }
+
+    private static SoundEffect soundForFishHit(Condition condition) {
+        if (condition == Condition.DAZED) {
+            return SoundEffect.FISH_STUN;
+        }
+        if (condition == Condition.LIFELESS) {
+            return SoundEffect.FISH_CUT;
+        }
+        return SoundEffect.FISH_HIT;
     }
 }

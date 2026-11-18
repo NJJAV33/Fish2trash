@@ -150,13 +150,20 @@ public class Level {
         double speed = Math.max(between(rule.getSpeedMin(), rule.getSpeedMax()), GameConstants.ENTRY_MIN_SPEED);
         boolean fromLeft = random.nextBoolean();
 
-        // Trash is brought by the current. A fish picks its own side, unless the current is too strong for it.
+        // Trash is brought by the current. A fish picks its own side unless the current
+        // would stall it outside the screen instead of carrying it in.
         double current = sea.getCurrentAt(y);
+        double drift = rule.getKind().isTrash() ? current : current * GameConstants.FISH_CURRENT_SHARE;
         boolean carriedIn = rule.getKind().isTrash()
                 ? Math.abs(current) > GameConstants.ENTRY_MIN_SPEED / 4
-                : Math.abs(current) * GameConstants.FISH_CURRENT_SHARE >= speed * 0.9;
+                : Math.abs(drift) >= speed * 0.9;
         if (carriedIn) {
-            fromLeft = current > 0;
+            fromLeft = drift > 0;
+        } else {
+            double netInward = speed + (fromLeft ? drift : -drift);
+            if (netInward < GameConstants.ENTRY_MIN_SPEED * 0.5 && Math.abs(drift) > 0) {
+                fromLeft = drift > 0;
+            }
         }
 
         double x = fromLeft ? -GameConstants.ENTRY_OUTSIDE : GameConstants.WORLD_WIDTH + GameConstants.ENTRY_OUTSIDE;
