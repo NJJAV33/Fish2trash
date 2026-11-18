@@ -80,6 +80,7 @@ public final class SceneRenderer {
         hookPainter.paintHead(g, boat.getHook(), time);
 
         paintInFront(g, palette, sea.getSwell());
+        water.paintEventAtmosphere(g, game.getActiveEvent(), time, game.getActiveEventFraction());
     }
 
     /** Draws an object stretched sideways and flattened by the same factor, around its own middle. */

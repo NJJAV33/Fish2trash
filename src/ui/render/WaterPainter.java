@@ -6,6 +6,8 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
+import java.awt.BasicStroke;
+import model.OceanEventType;
 import util.GameConstants;
 
 /**
@@ -103,6 +105,45 @@ public final class WaterPainter {
             }
         }
         rays.dispose();
+    }
+
+    /**
+     * Subtle atmospheric cues while a mid-game ocean event is active.
+     */
+    public void paintEventAtmosphere(Graphics2D g, OceanEventType event, double time, double fraction) {
+        if (event == OceanEventType.NONE || fraction <= 0) {
+            return;
+        }
+        float edgeFade = (float) Math.min(1.0, Math.min(fraction * 5.0, (1.0 - fraction) * 6.0 + 0.2));
+        if (event == OceanEventType.SQUALL) {
+            g.setColor(new Color(14, 24, 38, (int) (48 * edgeFade)));
+            g.fillRect(0, 0, W, WATER_Y);
+            Graphics2D rain = (Graphics2D) g.create();
+            rain.setColor(new Color(205, 226, 240, (int) (85 * edgeFade)));
+            rain.setStroke(new BasicStroke(1.3f));
+            for (int i = 0; i < 24; i++) {
+                double rx = ((i * 53 + time * 260) % (W + 40)) - 20;
+                double ry = ((i * 37 + time * 420) % (WATER_Y + 30)) - 10;
+                rain.drawLine((int) rx, (int) ry, (int) (rx - 10), (int) (ry + 18));
+            }
+            rain.dispose();
+        } else if (event == OceanEventType.TRASH_TIDE) {
+            Graphics2D drift = (Graphics2D) g.create();
+            drift.setColor(new Color(79, 209, 197, (int) (70 * edgeFade)));
+            drift.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            for (int i = 0; i < 6; i++) {
+                int y = 180 + i * 56;
+                double x = ((time * 130 + i * 150) % (W + 120)) - 80;
+                drift.drawLine((int) x, y, (int) (x + 52), y);
+            }
+            drift.dispose();
+        } else if (event == OceanEventType.FISH_FRENZY) {
+            g.setColor(new Color(255, 110, 88, (int) (32 * edgeFade)));
+            g.fillRect(0, WATER_Y, W, 16);
+        } else if (event == OceanEventType.SLACK_TIDE) {
+            g.setColor(new Color(255, 224, 130, (int) (26 * edgeFade)));
+            g.fillRect(0, 0, W, WATER_Y);
+        }
     }
 
     /** [0] = far waves, [1] = near waves: the surface colour, lightened and see-through. */

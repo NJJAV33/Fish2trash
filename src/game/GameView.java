@@ -2,9 +2,11 @@ package game;
 
 import java.util.List;
 import model.Boat;
-import model.LevelData;
+import model.Difficulty;
 import model.EquipmentType;
+import model.LevelData;
 import model.ObjectView;
+import model.OceanEventType;
 import model.Sea;
 
 /**
@@ -17,6 +19,9 @@ public interface GameView {
 
     /** The level being played: its chapter, its number and its numbers. */
     LevelData getLevelData();
+
+    /** The selected difficulty for this run. */
+    Difficulty getDifficulty();
 
     Boat getBoat();
 
@@ -38,6 +43,21 @@ public interface GameView {
     double getTimeTotal();
 
     LevelStatus getStatus();
+
+    /** Current consecutive trash catch streak. */
+    int getCombo();
+
+    /** Highest consecutive trash catch streak reached this attempt. */
+    int getBestCombo();
+
+    /** Extra run score earned from catch combos this attempt. */
+    int getComboBonus();
+
+    /** Currently active mid-game ocean event, or OceanEventType.NONE. */
+    OceanEventType getActiveEvent();
+
+    /** Remaining fraction of the active ocean event (1 down to 0). */
+    double getActiveEventFraction();
 
     /** The tool on the line right now. */
     EquipmentType getSelectedTool();

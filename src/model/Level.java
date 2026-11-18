@@ -9,8 +9,8 @@ import util.GameConstants;
 
 /**
  * The ocean of one level: it reads the level's spawn table and puts the
- * right objects in the water at the right time, and it owns the sea they
- * are in (swell and current).
+ * right objects in the water at the right time, owns the sea they are in
+ * (swell and current), and drives dynamic mid-game ocean events.
  *
  * Nothing appears in the middle of the screen. When a level starts the
  * water is already stocked; after that everything comes in from the left or
@@ -23,33 +23,197 @@ import util.GameConstants;
  */
 public class Level {
 
+    private static final OceanEventType[] EVENTS = {
+        OceanEventType.SQUALL,
+        OceanEventType.TRASH_TIDE,
+        OceanEventType.FISH_FRENZY,
+        OceanEventType.SLACK_TIDE
+    };
+
     private final LevelData data;
     private final Random random;
+    private final Random eventRandom;
+    private final Difficulty difficulty;
+    private final boolean eventsEnabled;
     private final List<OceanObject> objects = new ArrayList<>();
+    private final List<OceanObject> eventObjects = new ArrayList<>();
     private final List<RuleState> ruleStates = new ArrayList<>();
     private final List<TutorialPrompt> waitingPrompts;
     private final Sea sea;
     private double elapsed;
 
+    private OceanEventType activeEvent = OceanEventType.NONE;
+    private OceanEventType lastEvent = OceanEventType.NONE;
+    private OceanEventType pendingStartedEvent = OceanEventType.NONE;
+    private OceanEventType pendingEndedEvent = OceanEventType.NONE;
+    private double eventRemaining;
+    private double nextEventDelay;
+    private double eventSpawnTimer;
+    private int eventSpawnsLeft;
+
     public Level(LevelData data, Random random) {
+        this(data, random, Difficulty.EASY, false);
+    }
+
+    public Level(LevelData data, Random random, Difficulty difficulty, boolean eventsEnabled) {
         this.data = data;
         this.random = random;
-        this.sea = new Sea(data.getSwellDegrees(), data.getCurrentSpeed(), random.nextDouble() * 2 * Math.PI);
+        this.difficulty = difficulty;
+        this.eventsEnabled = eventsEnabled && (data.getNumber() >= 2 || difficulty != Difficulty.EASY);
+        double seaPhase = random.nextDouble() * 2 * Math.PI;
+        this.eventRandom = new Random(
+                Double.doubleToLongBits(seaPhase) ^ (data.getNumber() * 0x9E3779B97F4A7C15L) ^ difficulty.ordinal());
+        this.sea = new Sea(
+                difficulty.scaleSwellDegrees(data.getSwellDegrees()),
+                difficulty.scaleCurrentSpeed(data.getCurrentSpeed()),
+                seaPhase);
         this.waitingPrompts = new ArrayList<>(data.getPrompts());
-        for (SpawnRule rule : data.getSpawnRules()) {
+        for (SpawnRule rule : buildRules(data, difficulty)) {
             ruleStates.add(new RuleState(rule));
         }
+        this.nextEventDelay = this.eventsEnabled
+                ? betweenEvent(difficulty.getEventDelayMin(), difficulty.getEventDelayMax())
+                : Double.POSITIVE_INFINITY;
+    }
+
+    /**
+     * Scales spawn rules for the chosen difficulty: Easy keeps the story
+     * table unchanged; Medium and Hard add more and faster fish while trimming
+     * excess trash without ever dropping below a safe winnable margin.
+     */
+    private static List<SpawnRule> buildRules(LevelData data, Difficulty difficulty) {
+        List<SpawnRule> base = data.getSpawnRules();
+        if (difficulty == Difficulty.EASY) {
+            return base;
+        }
+
+        int ruleCount = base.size();
+        int[] trashSupplies = new int[ruleCount];
+        int[] trashPoints = new int[ruleCount];
+        int totalTrashPoints = 0;
+        int firstFishIndex = -1;
+
+        for (int i = 0; i < ruleCount; i++) {
+            SpawnRule rule = base.get(i);
+            if (rule.getKind().isTrash()) {
+                trashSupplies[i] = rule.getSupply();
+                trashPoints[i] = rule.getKind().create(0, 0, 0).getPoints();
+                totalTrashPoints += trashSupplies[i] * trashPoints[i];
+            } else if (firstFishIndex < 0) {
+                firstFishIndex = i;
+            }
+        }
+
+        int surplus = Math.max(0, totalTrashPoints - data.getQuota());
+        int keepSurplus = Math.max(difficulty.getTrashMinSurplus(),
+                (int) Math.floor(surplus * difficulty.getTrashSurplusKeep()));
+        int targetPoints = Math.min(totalTrashPoints, data.getQuota() + keepSurplus);
+        totalTrashPoints = trimTrashSupplies(base, trashSupplies, trashPoints, totalTrashPoints, targetPoints);
+
+        List<SpawnRule> scaled = new ArrayList<>(ruleCount);
+        for (int i = 0; i < ruleCount; i++) {
+            SpawnRule rule = base.get(i);
+            if (rule.getKind().isTrash()) {
+                scaled.add(scaleTrashRule(rule, trashSupplies[i], difficulty));
+            } else {
+                scaled.add(scaleFishRule(rule, i == firstFishIndex, difficulty));
+            }
+        }
+        return scaled;
+    }
+
+    private static int trimTrashSupplies(List<SpawnRule> base, int[] supplies, int[] points,
+            int totalPoints, int targetPoints) {
+        while (totalPoints > targetPoints) {
+            int pick = pickRuleToTrim(base, supplies, points, totalPoints, targetPoints, 2);
+            if (pick < 0) {
+                pick = pickRuleToTrim(base, supplies, points, totalPoints, targetPoints, 1);
+            }
+            if (pick < 0) {
+                break;
+            }
+            supplies[pick]--;
+            totalPoints -= points[pick];
+        }
+        return totalPoints;
+    }
+
+    private static int pickRuleToTrim(List<SpawnRule> base, int[] supplies, int[] points,
+            int totalPoints, int targetPoints, int minKeep) {
+        int bestIndex = -1;
+        int bestSupply = 0;
+        for (int i = 0; i < base.size(); i++) {
+            SpawnRule rule = base.get(i);
+            if (!rule.getKind().isTrash()) {
+                continue;
+            }
+            int keep = Math.min(minKeep, rule.getSupply());
+            if (supplies[i] > keep && totalPoints - points[i] >= targetPoints && supplies[i] > bestSupply) {
+                bestSupply = supplies[i];
+                bestIndex = i;
+            }
+        }
+        return bestIndex;
+    }
+
+    private static SpawnRule scaleTrashRule(SpawnRule rule, int newSupply, Difficulty difficulty) {
+        int trim = (rule.isRespawning() && (rule.getInitialCount() >= 3 || rule.getMaxCount() >= 3))
+                ? difficulty.getTrashScreenTrim() : 0;
+        int newInitial = rule.isRespawning()
+                ? Math.min(newSupply, Math.max(1, rule.getInitialCount() - trim))
+                : newSupply;
+        int newMax = rule.isRespawning()
+                ? Math.min(newSupply, Math.max(newInitial, rule.getMaxCount() - trim))
+                : newSupply;
+        int newMin = rule.getMinCount() <= 0 ? 0
+                : Math.min(newInitial, Math.min(rule.getMinCount(), Math.max(1, newMax - 1)));
+        SpawnRule.Builder builder = SpawnRule.of(rule.getKind())
+                .count(newInitial, newMax)
+                .min(newMin)
+                .supply(newSupply)
+                .speed(rule.getSpeedMin(), rule.getSpeedMax())
+                .x(rule.getXMin(), rule.getXMax())
+                .y(rule.getYMin(), rule.getYMax())
+                .start(rule.getStartSeconds());
+        if (rule.isRespawning()) {
+            builder.respawn(rule.getRespawnMin(), rule.getRespawnMax());
+        }
+        return builder.build();
+    }
+
+    private static SpawnRule scaleFishRule(SpawnRule rule, boolean firstFishRule, Difficulty difficulty) {
+        int scaled = (int) Math.round(rule.getInitialCount() * difficulty.getFishScale());
+        int minTarget = rule.getInitialCount() + (firstFishRule ? difficulty.getExtraFishMin() : 0);
+        int newInitial = Math.max(scaled, minTarget);
+        int newMax = Math.max(newInitial, (int) Math.round(rule.getMaxCount() * difficulty.getFishScale()));
+        SpawnRule.Builder builder = SpawnRule.of(rule.getKind())
+                .count(newInitial, newMax)
+                .min(rule.getMinCount())
+                .supply(Math.max(newMax, rule.getSupply()))
+                .speed(rule.getSpeedMin() * difficulty.getFishSpeedScale(),
+                       rule.getSpeedMax() * difficulty.getFishSpeedScale())
+                .x(rule.getXMin(), rule.getXMax())
+                .y(rule.getYMin(), rule.getYMax())
+                .start(rule.getStartSeconds());
+        if (rule.isRespawning()) {
+            builder.respawn(rule.getRespawnMin(), rule.getRespawnMax());
+        }
+        return builder.build();
     }
 
     /**
      * Advances the ocean by dt seconds: wakes up rules whose time has come,
-     * replaces what was collected or left, and moves every object.
+     * updates active ocean events, replaces what was collected or left, and
+     * moves every object.
      *
      * @param hook where the hook is, so nothing appears right on top of it
      */
     public void update(double dt, HookSensor hook) {
         elapsed += dt;
         sea.update(dt);
+        if (eventsEnabled && dt > 0) {
+            updateEvents(dt);
+        }
         for (RuleState state : ruleStates) {
             runRule(state, dt, hook);
         }
@@ -61,6 +225,101 @@ public class Level {
             object.update(dt, sea);
         }
         takeOutWhatIsGone();
+    }
+
+    private void updateEvents(double dt) {
+        if (activeEvent != OceanEventType.NONE) {
+            eventRemaining -= dt;
+            if (eventSpawnsLeft > 0) {
+                eventSpawnTimer -= dt;
+                if (eventSpawnTimer <= 0) {
+                    spawnEventObject();
+                    eventSpawnsLeft--;
+                    eventSpawnTimer = GameConstants.EVENT_SPAWN_GAP_S;
+                }
+            }
+            if (eventRemaining <= 0) {
+                pendingEndedEvent = activeEvent;
+                activeEvent = OceanEventType.NONE;
+                eventRemaining = 0;
+                eventSpawnsLeft = 0;
+                sea.applyEvent(OceanEventType.NONE);
+                nextEventDelay = betweenEvent(difficulty.getEventDelayMin(), difficulty.getEventDelayMax());
+            }
+            return;
+        }
+
+        nextEventDelay -= dt;
+        if (nextEventDelay <= 0) {
+            startEvent(pickNextEvent());
+        }
+    }
+
+    private OceanEventType pickNextEvent() {
+        OceanEventType picked = EVENTS[eventRandom.nextInt(EVENTS.length)];
+        if (picked == lastEvent) {
+            picked = EVENTS[(picked.ordinal()) % EVENTS.length];
+        }
+        return picked;
+    }
+
+    private void startEvent(OceanEventType event) {
+        activeEvent = event;
+        lastEvent = event;
+        eventRemaining = event.getDurationSeconds();
+        pendingStartedEvent = event;
+        sea.applyEvent(event);
+        if (event == OceanEventType.TRASH_TIDE) {
+            eventSpawnsLeft = GameConstants.TRASH_TIDE_COUNT;
+            eventSpawnTimer = 0.25;
+        } else if (event == OceanEventType.FISH_FRENZY) {
+            eventSpawnsLeft = GameConstants.FISH_FRENZY_COUNT;
+            eventSpawnTimer = 0.25;
+        } else {
+            eventSpawnsLeft = 0;
+        }
+    }
+
+    private void spawnEventObject() {
+        ObjectKind kind;
+        double speedMin;
+        double speedMax;
+        double yMin;
+        double yMax;
+        if (activeEvent == OceanEventType.TRASH_TIDE) {
+            // In Chapters 2 and 3, bonus debris uses bottles/cans so single-tool limits still hold.
+            if (data.getChapter() == 3 && eventRandom.nextBoolean()) {
+                kind = ObjectKind.CAN;
+            } else {
+                kind = ObjectKind.PLASTIC_BOTTLE;
+            }
+            speedMin = 40;
+            speedMax = 75;
+            yMin = 185;
+            yMax = 410;
+        } else {
+            if (data.getNumber() >= 3 && eventRandom.nextDouble() < 0.35) {
+                kind = ObjectKind.BIG_FISH;
+            } else {
+                kind = ObjectKind.SMALL_FISH;
+            }
+            speedMin = 70 * difficulty.getFishSpeedScale();
+            speedMax = 120 * difficulty.getFishSpeedScale();
+            yMin = 175;
+            yMax = 380;
+        }
+
+        double y = betweenEvent(yMin, yMax);
+        double speed = Math.max(betweenEvent(speedMin, speedMax), GameConstants.ENTRY_MIN_SPEED);
+        double current = sea.getCurrentAt(y);
+        boolean fromLeft = Math.abs(current) > GameConstants.ENTRY_MIN_SPEED / 2
+                ? current > 0
+                : eventRandom.nextBoolean();
+        double x = fromLeft ? -GameConstants.ENTRY_OUTSIDE : GameConstants.WORLD_WIDTH + GameConstants.ENTRY_OUTSIDE;
+        OceanObject object = kind.create(x, y, fromLeft ? speed : -speed);
+        object.grantImmunity(GameConstants.SPAWN_FADE_IN_S);
+        objects.add(object);
+        eventObjects.add(object);
     }
 
     private void runRule(RuleState state, double dt, HookSensor hook) {
@@ -185,15 +444,27 @@ public class Level {
                 }
             }
         }
+        for (Iterator<OceanObject> each = eventObjects.iterator(); each.hasNext();) {
+            OceanObject object = each.next();
+            if (object.isGone()) {
+                each.remove();
+                objects.remove(object);
+            }
+        }
     }
 
     private double between(double min, double max) {
         return min + random.nextDouble() * (max - min);
     }
 
+    private double betweenEvent(double min, double max) {
+        return min + eventRandom.nextDouble() * (max - min);
+    }
+
     /** Takes an object out of the ocean (it reached the boat). */
     public void remove(OceanObject object) {
         objects.remove(object);
+        eventObjects.remove(object);
         for (RuleState state : ruleStates) {
             state.alive.remove(object);
         }
@@ -208,9 +479,47 @@ public class Level {
         return due;
     }
 
+    /** Returns the ocean event that just began, or NONE. */
+    public OceanEventType pollStartedEvent() {
+        OceanEventType started = pendingStartedEvent;
+        pendingStartedEvent = OceanEventType.NONE;
+        return started;
+    }
+
+    /** Returns the ocean event that just ended, or NONE. */
+    public OceanEventType pollEndedEvent() {
+        OceanEventType ended = pendingEndedEvent;
+        pendingEndedEvent = OceanEventType.NONE;
+        return ended;
+    }
+
     /** Returns a read-only view, so other classes cannot add or remove objects. */
     public List<OceanObject> getObjects() {
         return Collections.unmodifiableList(objects);
+    }
+
+    /** Returns the effective spawn rules for this level and difficulty. */
+    public List<SpawnRule> getSpawnRules() {
+        List<SpawnRule> rules = new ArrayList<>(ruleStates.size());
+        for (RuleState state : ruleStates) {
+            rules.add(state.rule);
+        }
+        return Collections.unmodifiableList(rules);
+    }
+
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
+    public OceanEventType getActiveEvent() {
+        return activeEvent;
+    }
+
+    public double getActiveEventFraction() {
+        if (activeEvent == OceanEventType.NONE || activeEvent.getDurationSeconds() <= 0) {
+            return 0;
+        }
+        return Math.max(0, Math.min(1, eventRemaining / activeEvent.getDurationSeconds()));
     }
 
     /** The swell and the current of this level. */

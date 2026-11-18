@@ -12,14 +12,15 @@ import java.awt.event.KeyEvent;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Random;
+import model.Difficulty;
 import util.AudioPlayer;
 import util.GameConstants;
 
 /**
  * Knows which screen is showing and moves between screens with a short fade.
  * It also holds what every screen needs: the run in progress (the
- * GameSession), the high-score list, how far the player has got (for the
- * level select) and the sound player.
+ * GameSession), the chosen difficulty, the high-score list, how far the
+ * player has got (for the level select) and the sound player.
  */
 public final class ScreenManager {
 
@@ -32,6 +33,7 @@ public final class ScreenManager {
     private double darkness;    // 0 = screen fully visible, 1 = fully black
     private Screen overlay;     // drawn on top while the game is paused, or null
     private GameSession session;
+    private Difficulty difficulty = Difficulty.EASY;
     private final AudioPlayer audio;
     private final HighScoreTable highScores;
     private final LevelProgress progress;
@@ -45,6 +47,18 @@ public final class ScreenManager {
     /** The sound player every screen shares. */
     public AudioPlayer getAudio() {
         return audio;
+    }
+
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(Difficulty difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public void cycleDifficulty(int direction) {
+        difficulty = direction < 0 ? difficulty.previous() : difficulty.next();
     }
 
     public void register(GameState state, Screen screen) {
@@ -154,12 +168,12 @@ public final class ScreenManager {
 
     /** Starts a new run through the story from level 1-1. */
     public void startNewRun() {
-        session = new GameSession(new Random());
+        session = new GameSession(new Random(), 1, difficulty);
     }
 
     /** Starts a new run at a level picked from the level select. */
     public void startRunAt(int levelNumber) {
-        session = new GameSession(new Random(), levelNumber);
+        session = new GameSession(new Random(), levelNumber, difficulty);
     }
 
     /**

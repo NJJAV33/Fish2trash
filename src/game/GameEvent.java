@@ -17,7 +17,7 @@ public final class GameEvent {
     private final Condition condition; // the object's condition when the event happened
     private final double x;
     private final double y;
-    private final int value;           // points earned or health lost; 0 if not used
+    private final int value;           // points earned, combo, or health lost; 0 if not used
     private final String text;         // extra message; empty if not used
 
     private GameEvent(EventType type, ObjectKind kind, Condition condition,
@@ -38,8 +38,13 @@ public final class GameEvent {
 
     /** An event about one ocean object, at that object's position. */
     public static GameEvent about(EventType type, ObjectView object, int value) {
+        return about(type, object, value, "");
+    }
+
+    /** An event about one ocean object, with both a number and text. */
+    public static GameEvent about(EventType type, ObjectView object, int value, String text) {
         return new GameEvent(type, object.getKind(), object.getCondition(),
-                object.getX(), object.getY(), value, "");
+                object.getX(), object.getY(), value, text);
     }
 
     /** An event that carries only a number. */
@@ -50,6 +55,11 @@ public final class GameEvent {
     /** An event that carries a message. */
     public static GameEvent withText(EventType type, String text) {
         return new GameEvent(type, null, Condition.NORMAL, 0, 0, 0, text);
+    }
+
+    /** An event that carries both a number and a message. */
+    public static GameEvent withValueAndText(EventType type, int value, String text) {
+        return new GameEvent(type, null, Condition.NORMAL, 0, 0, value, text);
     }
 
     public EventType getType() {

@@ -21,6 +21,8 @@ final class MenuList {
     private final AudioPlayer audio;
     private final List<Supplier<String>> labels = new ArrayList<>();
     private final List<Runnable> actions = new ArrayList<>();
+    private final List<Runnable> leftActions = new ArrayList<>();
+    private final List<Runnable> rightActions = new ArrayList<>();
     private int selected;
 
     MenuList(AudioPlayer audio) {
@@ -33,8 +35,15 @@ final class MenuList {
 
     /** A choice whose text is asked for each time it is drawn, so it can change (like "Sound: on"). */
     void add(Supplier<String> label, Runnable action) {
+        add(label, action, null, null);
+    }
+
+    /** A choice that can also be stepped left or right with LEFT / RIGHT. */
+    void add(Supplier<String> label, Runnable action, Runnable onPrevious, Runnable onNext) {
         labels.add(label);
         actions.add(action);
+        leftActions.add(onPrevious);
+        rightActions.add(onNext);
     }
 
     /** Puts the highlight back on the first choice. */
@@ -50,6 +59,12 @@ final class MenuList {
         } else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_S) {
             selected = (selected + 1) % count;
             audio.play(SoundEffect.MENU_MOVE);
+        } else if (keyCode == KeyEvent.VK_LEFT && leftActions.get(selected) != null) {
+            audio.play(SoundEffect.MENU_MOVE);
+            leftActions.get(selected).run();
+        } else if (keyCode == KeyEvent.VK_RIGHT && rightActions.get(selected) != null) {
+            audio.play(SoundEffect.MENU_MOVE);
+            rightActions.get(selected).run();
         } else if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_SPACE) {
             audio.play(SoundEffect.MENU_SELECT);
             actions.get(selected).run();

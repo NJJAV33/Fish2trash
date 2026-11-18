@@ -121,39 +121,41 @@ public final class VictoryScreen implements Screen {
         GameSession session = screens.getSession();
 
         g.setColor(UiPalette.PANEL_SOLID);
-        g.fillRoundRect(170, 150, 460, 330, 18, 18);
+        g.fillRoundRect(170, 136, 460, 370, 18, 18);
         g.setColor(UiPalette.PANEL_EDGE);
-        g.drawRoundRect(170, 150, 460, 330, 18, 18);
+        g.drawRoundRect(170, 136, 460, 370, 18, 18);
 
         g.setFont(Fonts.HEADING);
         g.setColor(UiPalette.ACCENT);
-        TextDraw.centered(g, StoryText.RECAP_TITLE, CENTER_X, 200);
+        TextDraw.centered(g, StoryText.RECAP_TITLE, CENTER_X, 184);
 
-        drawRow(g, StoryText.RECAP_TRASH, session.getTotalTrash(), 250);
-        drawRow(g, StoryText.RECAP_FISH, session.getTotalFishHits(), 284);
-        drawRow(g, StoryText.RECAP_LEVELS, session.getLevelsCleared(), 318);
-        drawRow(g, StoryText.RECAP_SCORE, session.getRunScore(), 352);
+        drawRow(g, StoryText.RECAP_DIFFICULTY, session.getDifficulty().getDisplayName(), 226);
+        drawRow(g, StoryText.RECAP_TRASH, String.valueOf(session.getTotalTrash()), 256);
+        drawRow(g, StoryText.RECAP_FISH, String.valueOf(session.getTotalFishHits()), 286);
+        drawRow(g, StoryText.RECAP_COMBO, session.getBestCombo() >= 2 ? "x" + session.getBestCombo() : "-", 316);
+        drawRow(g, StoryText.RECAP_LEVELS, String.valueOf(session.getLevelsCleared()), 346);
+        drawRow(g, StoryText.RECAP_SCORE, String.valueOf(session.getRunScore()), 376);
 
         // The badges of the run: earned ones in colour, the others in grey.
         g.setFont(Fonts.SUBHEADING);
         g.setColor(UiPalette.DIM_TEXT);
-        g.drawString(StoryText.RECAP_BADGES, LABEL_X, 396);
+        g.drawString(StoryText.RECAP_BADGES, LABEL_X, 422);
         Badge[] badges = Badge.values();
         for (int i = 0; i < badges.length; i++) {
             int x = VALUE_X - BADGE_RADIUS - (badges.length - 1 - i) * BADGE_SPACING;
-            badgePainter.paint(g, badges[i], x, 386, BADGE_RADIUS, session.hasBadge(badges[i]));
+            badgePainter.paint(g, badges[i], x, 412, BADGE_RADIUS, session.hasBadge(badges[i]));
         }
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
-        TextDraw.centered(g, StoryText.CONTINUE_PROMPT, CENTER_X, 450);
+        TextDraw.centered(g, StoryText.CONTINUE_PROMPT, CENTER_X, 476);
     }
 
-    private void drawRow(Graphics2D g, String label, int value, int y) {
+    private void drawRow(Graphics2D g, String label, String value, int y) {
         g.setFont(Fonts.SUBHEADING);
         g.setColor(UiPalette.DIM_TEXT);
         g.drawString(label, LABEL_X, y);
         g.setColor(UiPalette.TEXT);
-        TextDraw.rightAligned(g, String.valueOf(value), VALUE_X, y);
+        TextDraw.rightAligned(g, value, VALUE_X, y);
     }
 }

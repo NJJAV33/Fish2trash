@@ -162,4 +162,13 @@ public final class GameConstants {
     public static final double SPAWN_MIN_DIST_FISH = 150;
     public static final int SPAWN_PLACEMENT_TRIES = 8;     // attempts to find a spot away from the hook
     public static final double SUPPLY_MARGIN = 1.3;        // every level holds at least 30% more trash than its quota
+
+    // ---- Combos and mid-game ocean events ----
+    public static final int COMBO_SCORE_STEP = 25;         // extra run score per consecutive catch after the first
+    public static final int COMBO_MAX_SCORE_BONUS = 100;   // cap per catch
+    public static final int HOT_STREAK_MIN = 3;            // consecutive catches to enter Flow
+    public static final double HOT_STREAK_SPEED_MULT = 1.15;   // hook speed boost while in Flow
+    public static final double EVENT_SPAWN_GAP_S = 1.25;   // spacing between bonus spawns during an event
+    public static final int TRASH_TIDE_COUNT = 3;          // bonus pieces carried in by a Trash Tide
+    public static final int FISH_FRENZY_COUNT = 3;         // extra fish rushing through during a Feeding Frenzy
 }

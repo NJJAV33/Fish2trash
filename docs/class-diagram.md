@@ -363,12 +363,36 @@ classDiagram
         +getCurrentSpeed() double
     }
 
+    class Difficulty {
+        <<enumeration>>
+        EASY
+        MEDIUM
+        HARD
+        +scaleSwellDegrees(base) double
+        +scaleCurrentSpeed(base) double
+        +getScoreMultiplier() double
+    }
+
+    class OceanEventType {
+        <<enumeration>>
+        NONE
+        SQUALL
+        TRASH_TIDE
+        FISH_FRENZY
+        SLACK_TIDE
+        +getDurationSeconds() double
+        +getHookSpeedScale() double
+    }
+
     class Sea {
         +CALM Sea$
+        -baseSwell double
+        -baseStrength double
         -swell double
         -strength double
         -time double
         +update(dt)
+        +applyEvent(event)
         +getTilt() double
         +getCurrent() double
         +getCurrentAt(y) double
@@ -420,6 +444,9 @@ classDiagram
     LevelData --> ObjectKind : primary kind
     SpawnRule --> ObjectKind : spawns
     Level --> LevelData : reads
+    Level --> Difficulty : scales with
+    Level --> OceanEventType : runs
+    Sea ..> OceanEventType : adapts to
     Level o-- OceanObject : 0 or more
     Level *-- Sea
     Level ..> HookSensor : keeps spawns away from
@@ -544,18 +571,21 @@ classDiagram
         HOOK_LAUNCHED
         HOOK_RECALLED
         OBJECT_CAUGHT
+        COMBO_GAINED
         HEALTH_LOST
         SLIPPED
         TOOL_SWITCHED
         SWAP_DENIED
         MISSED
         DELIVERED
+        OCEAN_EVENT_STARTED
+        OCEAN_EVENT_ENDED
         LOW_TIME_TICK
         TUTORIAL_PROMPT
         HINT_SHOWN
         QUOTA_REACHED
-        CHAPTER_CLEARED
-        CHAPTER_FAILED
+        LEVEL_CLEARED
+        LEVEL_FAILED
     }
 
     class LevelStatus {
@@ -938,6 +968,12 @@ classDiagram
     class SoundEffect {
         <<enumeration>>
         HOOK_LAUNCH
+        HOOK_RECALL
+        COMBO
+        EVENT_SQUALL
+        EVENT_BONUS
+        EVENT_FRENZY
+        EVENT_CALM
         CATCH_PLASTIC
         CATCH_CAN
         CATCH_NET

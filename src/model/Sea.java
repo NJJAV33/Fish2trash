@@ -8,7 +8,8 @@ import util.Mathx;
  * current that carries along everything in the water.
  *
  * Both follow the clock, so the same level with the same start always gives
- * the same sea. How strong they are comes from the level's data.
+ * the same sea. How strong they are comes from the level data, scaled by
+ * difficulty and temporary ocean events.
  */
 public final class Sea {
 
@@ -17,11 +18,18 @@ public final class Sea {
 
     private static final double FULL_TURN = 2 * Math.PI;
     private static final double DEPTH = GameConstants.SEABED_Y - GameConstants.WATER_Y;
+    private static final double MAX_SWELL = Math.toRadians(22);
+    private static final double SWELL_EASE_RAD_PER_S = Math.toRadians(14);
+    private static final double CURRENT_EASE_PX_PER_S = 40;
 
-    private final double swell;      // the widest the boat tips, in radians
-    private final double strength;   // the fastest the current flows, in pixels per second
-    private final double start;      // where in its rhythm this sea begins
-    private double time;             // seconds since the level began
+    private final double baseSwell;      // the level base swell, in radians
+    private final double baseStrength;   // the level base current peak, in pixels per second
+    private double swell;                // the widest the boat tips right now, in radians
+    private double strength;             // the peak current right now, in pixels per second
+    private double targetSwell;
+    private double targetStrength;
+    private final double start;          // where in its rhythm this sea begins
+    private double time;                 // seconds since the level began
 
     /**
      * @param swellDegrees how far the swell tips the boat at most
@@ -29,13 +37,31 @@ public final class Sea {
      * @param start        where in its rhythm the sea begins, as an angle in radians
      */
     public Sea(double swellDegrees, double currentSpeed, double start) {
-        this.swell = Math.toRadians(swellDegrees);
-        this.strength = currentSpeed;
+        this.baseSwell = Math.min(MAX_SWELL, Math.toRadians(swellDegrees));
+        this.baseStrength = currentSpeed;
+        this.swell = this.baseSwell;
+        this.strength = this.baseStrength;
+        this.targetSwell = this.baseSwell;
+        this.targetStrength = this.baseStrength;
         this.start = start;
     }
 
     public void update(double dt) {
         time += dt;
+        swell = Mathx.approach(swell, targetSwell, SWELL_EASE_RAD_PER_S * dt);
+        strength = Mathx.approach(strength, targetStrength, CURRENT_EASE_PX_PER_S * dt);
+    }
+
+    /** Adjusts target wave height and current for an active mid-game ocean event. */
+    public void applyEvent(OceanEventType event) {
+        if (event == OceanEventType.NONE) {
+            targetSwell = baseSwell;
+            targetStrength = baseStrength;
+            return;
+        }
+        targetSwell = Math.min(MAX_SWELL,
+                Math.max(baseSwell * event.getSwellScale(), Math.toRadians(event.getMinSwellDegrees())));
+        targetStrength = Math.max(baseStrength * event.getCurrentScale(), event.getMinCurrentSpeed());
     }
 
     /**
@@ -60,12 +86,12 @@ public final class Sea {
         return getCurrent() * share;
     }
 
-    /** The widest the boat tips in this sea, in radians. The drawing uses it for the height of the waves. */
+    /** The widest the boat tips in this sea right now, in radians. The drawing uses it for the height of the waves. */
     public double getSwell() {
         return swell;
     }
 
-    /** The fastest the current flows in this sea, in pixels per second. */
+    /** The fastest the current flows in this sea right now, in pixels per second. */
     public double getStrength() {
         return strength;
     }
