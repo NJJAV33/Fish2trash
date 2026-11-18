@@ -25,7 +25,8 @@ public class Can extends OceanTrash {
     public void sense(HookSensor hook) {
         magnetX = hook.getTipX();
         magnetY = hook.getTipY();
-        pulled = hook.isMagnetic() && hook.isLineOut()
+        // Pull cans only while the Magnet is on its way down, not while reeling back up.
+        pulled = hook.isMagnetic() && hook.isExtending()
                 && Math.hypot(magnetX - getX(), magnetY - getY()) <= GameConstants.MAGNET_PULL_RANGE;
     }
 

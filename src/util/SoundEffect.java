@@ -16,6 +16,10 @@ public enum SoundEffect {
     HOOK_LAUNCH(110, true,
             Tone.of(Wave.SINE, 330, 660).glideByRatio().gain(0.30).shape(4, 40, 0.4, 50).hiss(0.08)),
 
+    /** The player reels the line back early: a quick downward zip. */
+    HOOK_RECALL(95, true,
+            Tone.of(Wave.SINE, 480, 260).glideByRatio().gain(0.24).shape(3, 35, 0.3, 45).hiss(0.05)),
+
     /** A bottle is caught: a light upward blip. */
     CATCH_PLASTIC(100, true,
             Tone.of(Wave.SINE, 520, 1040).glideByRatio().gain(0.36).shape(2, 60, 0.2, 30).overtone(2, 0.25)),
@@ -35,6 +39,27 @@ public enum SoundEffect {
     /** A fish is hooked: a falling "oh no". */
     FISH_HIT(180, true,
             Tone.of(Wave.TRIANGLE, 420, 190).glideByRatio().gain(0.36).shape(3, 80, 0.35, 70)),
+
+    /** The Magnet knocks a fish out: a heavy metallic thud. */
+    FISH_STUN(180, true,
+            Tone.of(Wave.TRIANGLE, 190, 95).glideByRatio().gain(0.36).shape(2, 60, 0.3, 90),
+            Tone.of(Wave.SINE, 520, 310).lasting(70).gain(0.18).shape(2, 30, 0.2, 30)),
+
+    /** The Net Cutter strikes a fish: a sharp snip and low drop. */
+    FISH_CUT(160, true,
+            Tone.noise().lasting(55).gain(0.28).shape(1, 25, 0.15, 20),
+            Tone.of(Wave.SQUARE, 1800, 420).lasting(90).gain(0.20).shape(1, 35, 0.2, 40),
+            Tone.of(Wave.TRIANGLE, 300, 140).from(40).lasting(120).gain(0.24).shape(2, 40, 0.2, 60)),
+
+    /** A snagged fish is released back into the water at the boat. */
+    FISH_FREED(110, true,
+            Tone.noise().lasting(45).gain(0.18).shape(3, 20, 0.2, 18),
+            Tone.of(Wave.SINE, 440, 740).glideByRatio().gain(0.30).shape(3, 40, 0.3, 45)),
+
+    /** A dangerous fish flashes or sparks a warning. */
+    THREAT_ALERT(140, false,
+            Tone.of(Wave.SQUARE, 880).lasting(45).gain(0.18).shape(2, 18, 0.3, 18),
+            Tone.of(Wave.SQUARE, 1180).from(65).lasting(75).gain(0.20).shape(2, 25, 0.3, 35)),
 
     /** Wrong tool, the trash slipped off: a dull clunk. */
     WRONG_TOOL(100, true,

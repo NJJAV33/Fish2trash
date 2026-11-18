@@ -1,8 +1,12 @@
 package game;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import model.ObjectView;
 import model.Boat;
 import model.CatchResolver;
 import model.LevelData;
@@ -31,6 +35,8 @@ public final class GameManager implements GameView, CatchResolver {
     private final Level level;
     private final List<GameListener> listeners = new ArrayList<>();
     private final SessionStats stats = new SessionStats();
+    // Objects currently flashing or sparking a warning, so each alert fires once per episode.
+    private final Set<ObjectView> activeAlerts = Collections.newSetFromMap(new IdentityHashMap<>());
     private final HintEngine hints = new HintEngine();
 
     private final Player player;
@@ -150,6 +156,7 @@ public final class GameManager implements GameView, CatchResolver {
         hook.update(dt);
         hook.getLoadout().tick(dt);
         level.update(dt, hook);
+        announceAlerts();
         for (String tip : level.pollTutorialPrompts()) {
             emit(GameEvent.withText(EventType.TUTORIAL_PROMPT, tip));
         }
@@ -167,6 +174,17 @@ public final class GameManager implements GameView, CatchResolver {
         String hint = hints.update(dt, stats, this);
         if (status == LevelStatus.RUNNING && !hint.isEmpty()) {
             emit(GameEvent.withText(EventType.HINT_SHOWN, hint));
+        }
+    }
+
+    /** Announces each object that just began flashing or sparking a warning. */
+    private void announceAlerts() {
+        List<OceanObject> objects = level.getObjects();
+        activeAlerts.removeIf(alerted -> !objects.contains(alerted) || alerted.getAlert() < 1.0);
+        for (OceanObject object : objects) {
+            if (object.getAlert() >= 1.0 && activeAlerts.add(object)) {
+                emit(GameEvent.about(EventType.HAZARD_ALERT, object, 0));
+            }
         }
     }
 

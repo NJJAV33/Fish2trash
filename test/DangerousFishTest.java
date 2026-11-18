@@ -249,6 +249,11 @@ public final class DangerousFishTest {
         }
 
         @Override
+        public boolean isExtending() {
+            return lineOut;
+        }
+
+        @Override
         public boolean isMagnetic() {
             return magnetic;
         }

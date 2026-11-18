@@ -13,6 +13,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Consumer;
+import model.Condition;
 import model.Hook;
 import util.GameConstants;
 
@@ -103,6 +104,7 @@ public final class EffectsSystem implements GameListener {
         reactions.put(EventType.HOOK_LAUNCHED, event -> splash(LAUNCH_DROPLETS));
         reactions.put(EventType.DELIVERED, event -> splash(DELIVERY_DROPLETS));
         reactions.put(EventType.FISH_FREED, event -> splash(DELIVERY_DROPLETS));   // the fish goes back in
+        reactions.put(EventType.HAZARD_ALERT, event -> burst(event.getX(), event.getY(), 6, SPARK_COLOR));
     }
 
     /** Clears everything for a new attempt at a level. */
@@ -134,13 +136,22 @@ public final class EffectsSystem implements GameListener {
         addPopup("-" + event.getValue(), event.getX(), event.getY() - 18, UiPalette.DANGER);
         flashAge = 0;
         shakeAge = 0;
+        if (event.getCondition() == Condition.DAZED) {
+            burst(event.getX(), event.getY(), SPARK_COUNT, SPARK_COLOR);
+        } else if (event.getCondition() == Condition.LIFELESS) {
+            burst(event.getX(), event.getY(), SPARK_COUNT, UiPalette.DANGER);
+        }
     }
 
     private void onSlip(GameEvent event) {
-        for (int i = 0; i < SPARK_COUNT; i++) {
-            double angle = 2 * Math.PI * i / SPARK_COUNT;
-            add(Kind.SPARK, event.getX(), event.getY(),
-                    Math.cos(angle) * SPARK_SPEED, Math.sin(angle) * SPARK_SPEED, 0, SPARK_SECONDS, null, SPARK_COLOR);
+        burst(event.getX(), event.getY(), SPARK_COUNT, SPARK_COLOR);
+    }
+
+    private void burst(double atX, double atY, int count, Color sparkColor) {
+        for (int i = 0; i < count; i++) {
+            double angle = 2 * Math.PI * i / count;
+            add(Kind.SPARK, atX, atY,
+                    Math.cos(angle) * SPARK_SPEED, Math.sin(angle) * SPARK_SPEED, 0, SPARK_SECONDS, null, sparkColor);
         }
     }
 

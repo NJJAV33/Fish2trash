@@ -42,6 +42,11 @@ public final class LevelSpawnTest {
         }
 
         @Override
+        public boolean isExtending() {
+            return false;
+        }
+
+        @Override
         public boolean isMagnetic() {
             return false;
         }

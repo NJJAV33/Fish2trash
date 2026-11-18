@@ -231,9 +231,13 @@ public final class AmbientLifePainter {
         plain.setColor(cast.speck);
         for (int i = 0; i < cast.specks; i++) {
             double size = 1.4 + scatter(i + 40);
-            double x = wrap(scatter(i) * W + (0.6 + 0.4 * scatter(i + 20)) * driftX + 6 * Math.sin(0.5 * time + i), W);
             double y = SPECK_TOP + wrap(scatter(i + 60) * SPECK_RANGE + cast.speckSink * (0.6 + scatter(i + 80)) * time,
                     SPECK_RANGE);
+            double depthFraction = (y - SPECK_TOP) / SPECK_RANGE;
+            // Surface motes drift with the full current; deep ones barely move, matching Sea.getCurrentAt().
+            double depthShare = 1 - 0.85 * depthFraction;
+            double x = wrap(scatter(i) * W + (0.75 + 0.25 * scatter(i + 20)) * depthShare * driftX
+                    + 5 * Math.sin(0.5 * time + i), W);
             speckBox.setRect(x, y, size, size);
             plain.fill(speckBox);
         }

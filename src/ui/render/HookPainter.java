@@ -17,7 +17,12 @@ public final class HookPainter {
     private static final Color ROPE_CORE = new Color(225, 215, 190);
     private static final BasicStroke THIN = new BasicStroke(1);
     private static final BasicStroke ROPE_EDGE_STROKE = new BasicStroke(3);
-    private static final double BEND = 0.03;   // how much a moving line bows, as a share of its length
+    private static final Color AIM_COLOR = new Color(255, 250, 225, 130);
+    private static final BasicStroke AIM_STROKE = new BasicStroke(
+            1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[] {3f, 4f}, 0f);
+    private static final double AIM_START = 14;   // start a short tick past the tool center
+    private static final double AIM_END = 32;     // and stop short of giving a full laser sight
+    private static final double BEND = 0.03;      // how much a moving line bows, as a share of its length
 
     // One reusable curve, so no new shape object is made every frame.
     private final Path2D.Double curve = new Path2D.Double();
@@ -27,10 +32,15 @@ public final class HookPainter {
         this.painters = painters;
     }
 
-    /** The line from the boat to the hook. It bows from side to side while the hook is out. */
+    /** The line from the boat to the hook on a flat sea. */
     public void paintRope(Graphics2D g, Hook hook, double time) {
+        paintRope(g, hook, time, 0);
+    }
+
+    /** The line from the boat to the hook. It follows the boat's heave and bows while out. */
+    public void paintRope(Graphics2D g, Hook hook, double time, double boatBob) {
         double ax = hook.getAnchorX();
-        double ay = hook.getAnchorY();
+        double ay = hook.getAnchorY() + boatBob;
         double tx = hook.getTipX();
         double ty = hook.getTipY();
 
@@ -58,6 +68,11 @@ public final class HookPainter {
         g2.translate(hook.getTipX(), hook.getTipY());
         g2.rotate(-hook.getAngle());   // drawn hanging straight down, then swung to the rope's angle
 
+        if (hook.isSwinging()) {
+            g2.setColor(AIM_COLOR);
+            g2.setStroke(AIM_STROKE);
+            g2.drawLine(0, (int) AIM_START, 0, (int) AIM_END);
+        }
         painters.paintTool(g2, hook.getLoadout().getSelectedType(), time, hook.isExtending());
         g2.dispose();
     }
