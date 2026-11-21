@@ -6,10 +6,12 @@ import java.util.Random;
 import model.LevelData;
 import model.EquipmentType;
 import model.Loadout;
+import model.Stingray;
 import ui.render.ChapterPalette;
 import ui.render.PainterRegistry;
 import ui.render.ParticleSystem;
 import ui.render.SceneRenderer;
+import ui.render.StingrayPainter;
 import util.GameConstants;
 
 /**
@@ -41,6 +43,7 @@ public final class RenderTest {
 
         everyChapterHasItsOwnLook();
         everyToolHasItsOwnPicture();
+        stingraySwimsInBothDirections();
         bubblesStayInsideTheirPool();
     }
 
@@ -86,6 +89,37 @@ public final class RenderTest {
         painters.paintTool(g, tool, 0.3, working);
         g.dispose();
         return image.getRGB(0, 0, 80, 80, null, 0, 80);
+    }
+
+    private static void stingraySwimsInBothDirections() {
+        BufferedImage right = stingrayPicture(1, 0);
+        BufferedImage left = stingrayPicture(-1, 0);
+        BufferedImage next = stingrayPicture(1, 0.7);
+        Check.assertTrue("the visible disc covers the collision centre", right.getRGB(60, 40) >>> 24 > 0);
+        // Only the whip tail reaches this far behind the centre.
+        Check.assertTrue("the tail trails a right-facing ray", hasInk(right, 8, 30) && !hasInk(right, 90, 112));
+        Check.assertTrue("the tail trails a left-facing ray", hasInk(left, 90, 112) && !hasInk(left, 8, 30));
+        Check.assertTrue("the swim pose advances with elapsed time", !Arrays.equals(
+                right.getRGB(0, 0, 120, 80, null, 0, 120), next.getRGB(0, 0, 120, 80, null, 0, 120)));
+    }
+
+    private static BufferedImage stingrayPicture(int direction, double time) {
+        BufferedImage image = new BufferedImage(120, 80, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        new StingrayPainter().paint(g, new Stingray(60, 40, direction), time);
+        g.dispose();
+        return image;
+    }
+
+    private static boolean hasInk(BufferedImage image, int left, int right) {
+        for (int x = left; x < right; x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                if (image.getRGB(x, y) >>> 24 > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static void bubblesStayInsideTheirPool() {

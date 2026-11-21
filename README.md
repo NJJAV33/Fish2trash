@@ -35,14 +35,14 @@ The scripts work from any folder. They look for a JDK 17+ in `JAVA_HOME` first,
 then on the `PATH`, and stop with "Need JDK 17+" if there isn't one.
 
 The window can be resized, and `F11` switches to full screen. The game is laid out
-for 800 x 600 and enlarged to fit; because everything is drawn as shapes, it stays
-sharp at any size. A window of another shape gets black bars at the sides.
+for 800 x 600 and enlarged to fit. A window of another shape gets black bars at the sides.
 
 To build by hand instead, from the project folder:
 
 ```bash
 mkdir -p out
 javac --release 17 -d out $(find src -name '*.java')
+cp src/ui/render/stingray.png out/ui/render/
 java -cp out Main
 ```
 
@@ -461,9 +461,10 @@ LangoyLaban, BSIT 2.
 
 ## Credits
 
-Everything on screen is drawn in code with Java2D, every sound is built from sine,
-triangle and square waves in code (`javax.sound.sampled`), and all text is written by
-the team. The game uses no external images, fonts, sound files or libraries.
+Java2D draws the game. The stingray uses a 12-frame sprite sheet rendered from the
+[editable Blender model](art/models/Stingray.blend). The build includes the sprites,
+so players only need Java. Sound is synthesized with `javax.sound.sampled`, and
+the team wrote the in-game text.
 
 ## Contributing
 
