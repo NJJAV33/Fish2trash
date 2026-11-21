@@ -32,6 +32,7 @@ public final class ScreenManager {
     private GameState next;     // where a fade-out is heading, or null
     private double darkness;    // 0 = screen fully visible, 1 = fully black
     private Screen overlay;     // drawn on top while the game is paused, or null
+    private Screen pendingPause;
     private GameSession session;
     private Difficulty difficulty = Difficulty.EASY;
     private final AudioPlayer audio;
@@ -76,6 +77,7 @@ public final class ScreenManager {
         if (next == null) {
             next = target;
             overlay = null;
+            pendingPause = null;
         }
     }
 
@@ -89,11 +91,21 @@ public final class ScreenManager {
                 current = next;
                 next = null;
                 screens.get(current).onEnter();
+                if (pendingPause != null) {
+                    overlay = pendingPause;
+                    overlay.onEnter();
+                    pendingPause = null;
+                }
             }
             return;
         }
         if (darkness > 0) {
             darkness = Math.max(0, darkness - dt / FADE_SECONDS);
+        }
+        if (pendingPause != null) {
+            overlay = pendingPause;
+            overlay.onEnter();
+            pendingPause = null;
         }
         if (overlay != null) {
             overlay.update(dt);   // paused: only the overlay runs
@@ -146,22 +158,31 @@ public final class ScreenManager {
 
     /** Freezes the current screen and shows the overlay on top of it. */
     public void pause(Screen pauseOverlay) {
-        if (overlay == null && !isFading()) {
-            overlay = pauseOverlay;
-            overlay.onEnter();
+        if (overlay == null) {
+            if (isFading()) {
+                pendingPause = pauseOverlay;
+            } else {
+                overlay = pauseOverlay;
+                overlay.onEnter();
+            }
         }
     }
 
     public void resume() {
         overlay = null;
+        pendingPause = null;
     }
 
     public boolean isPaused() {
-        return overlay != null;
+        return overlay != null || pendingPause != null;
     }
 
     public GameState getState() {
         return current;
+    }
+
+    public GameState getNext() {
+        return next;
     }
 
     // ---- The run in progress ----

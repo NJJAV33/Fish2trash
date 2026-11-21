@@ -32,6 +32,9 @@ public class Barracuda extends Fish {
 
     @Override
     public void sense(HookSensor hook) {
+        if (getCondition() != Condition.NORMAL) {
+            return;
+        }
         targetX = hook.getTipX();
         targetY = hook.getTipY();
         boolean lineIsNear = hook.isLineOut()
@@ -113,7 +116,22 @@ public class Barracuda extends Fish {
     }
 
     @Override
+    public void daze() {
+        super.daze();
+        enter(Phase.COOLDOWN);
+    }
+
+    @Override
+    public void cut() {
+        super.cut();
+        enter(Phase.PATROL);
+    }
+
+    @Override
     public double getAlert() {
+        if (getCondition() != Condition.NORMAL) {
+            return 0;
+        }
         return (phase == Phase.TELEGRAPH || phase == Phase.CHARGE) ? 1 : 0;
     }
 }

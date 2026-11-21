@@ -114,4 +114,16 @@ public enum Difficulty {
     public double getScoreMultiplier() {
         return scoreMultiplier;
     }
+
+    /** Formats the multiplier, e.g. "1.25x" or "1.5x", or empty for 1.0. */
+    public String getMultiplierLabel() {
+        if (scoreMultiplier <= 1.0) {
+            return "";
+        }
+        String s = String.format(java.util.Locale.ROOT, "%.2f", scoreMultiplier);
+        if (s.endsWith("0")) {
+            s = s.substring(0, s.length() - 1);
+        }
+        return s + "x";
+    }
 }

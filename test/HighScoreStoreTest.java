@@ -39,6 +39,7 @@ public final class HighScoreStoreTest {
         theBetterRunComesFirst();
         theTableKeepsTheTenBest();
         theListSurvivesARestart();
+        twoWritersBothSurviveInHighScoreTable();
         damagedLinesInTheFileAreSkipped();
         aFailedSaveKeepsTheListInMemory();
         aFileThatCannotBeReadIsLeftAlone();
@@ -179,6 +180,20 @@ public final class HighScoreStoreTest {
         Check.assertEquals("with the best on top", "DOLOR", second.getEntries().get(0).getName());
         Check.assertTrue("nothing counts as just added after a restart", second.getLatest() == null);
         delete(file);
+    }
+
+    private static void twoWritersBothSurviveInHighScoreTable() {
+        Path file = TempScores.newFile();
+        HighScoreStore store = new HighScoreStore(file);
+        HighScoreTable copy1 = new HighScoreTable(store);
+        HighScoreTable copy2 = new HighScoreTable(store);
+        copy1.add(new ScoreEntry("A", 600, 1, noBadges(), 0, DAY));
+        copy2.add(new ScoreEntry("B", 800, 1, noBadges(), 0, DAY));
+        HighScoreTable reopened = new HighScoreTable(store);
+        List<ScoreEntry> entries = reopened.getEntries();
+        Check.assertEquals("both entries survive", 2, entries.size());
+        Check.assertEquals("higher score first", 800, entries.get(0).getScore());
+        Check.assertEquals("lower score second", 600, entries.get(1).getScore());
     }
 
     private static void damagedLinesInTheFileAreSkipped() {

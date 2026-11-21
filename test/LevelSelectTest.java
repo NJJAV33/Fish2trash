@@ -28,6 +28,9 @@ public final class LevelSelectTest {
         onlyTheFirstLevelIsOpenAtFirst();
         aClearedLevelOpensTheNextAndIsRemembered();
         progressNeverGoesBack();
+        twoWritersNeverMoveFurthestClearedBackward();
+        readFailureDoesNotOverwriteValidSave();
+        clearingLevelRetriesPersistingWhenSavedWasFalse();
         aDamagedFileOpensOnlyTheFirstLevel();
         progressIsKeptWhenItCannotBeSaved();
         aRunCanStartAtAnyLevel();
@@ -65,6 +68,60 @@ public final class LevelSelectTest {
         progress.recordCleared(5);
         progress.recordCleared(2);   // replaying an earlier level
         Check.assertEquals("replaying an earlier level keeps the furthest one", 5, progress.getFurthestCleared());
+    }
+
+    private static void twoWritersNeverMoveFurthestClearedBackward() {
+        Path file = TempScores.newFile("progress_two_writers.txt");
+        LevelProgress copy1 = new LevelProgress(new ProgressStore(file));
+        LevelProgress copy2 = new LevelProgress(new ProgressStore(file));
+        copy1.recordCleared(1);
+        copy1.recordCleared(2);
+        Check.assertEquals("copy1 cleared 2", 2, copy1.getFurthestCleared());
+        copy2.recordCleared(1);
+        LevelProgress reopened = new LevelProgress(new ProgressStore(file));
+        Check.assertEquals("furthest cleared never moves backward", 2, reopened.getFurthestCleared());
+    }
+
+    private static void readFailureDoesNotOverwriteValidSave() {
+        try {
+            Path file = TempScores.newFile("progress_issue21.txt");
+            Files.writeString(file, "9\n");
+
+            Path tempDir = Files.createTempDirectory("fish2trash-test-dir");
+            ProgressStore dirStore = new ProgressStore(tempDir);
+            LevelProgress errorProgress = new LevelProgress(dirStore);
+            Check.assertTrue("read failure sets isSaved to false", !errorProgress.isSaved());
+
+            ProgressStore validStore = new ProgressStore(file);
+            LevelProgress progress = new LevelProgress(validStore);
+            progress.recordCleared(1);
+            Check.assertEquals("clearing level 1 keeps furthest 9", 9, progress.getFurthestCleared());
+            Check.assertEquals("on disk remains 9", 9, validStore.read());
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    private static void clearingLevelRetriesPersistingWhenSavedWasFalse() {
+        try {
+            Path blocker = TempScores.newFile("blocker_issue22");
+            Files.writeString(blocker, "not a directory");
+            Path targetFile = blocker.resolve("progress.txt");
+            ProgressStore store = new ProgressStore(targetFile);
+            LevelProgress progress = new LevelProgress(store);
+            progress.recordCleared(1);
+            Check.assertEquals("in memory is 1", 1, progress.getFurthestCleared());
+            Check.assertTrue("isSaved is false after write failure", !progress.isSaved());
+
+            Path writableFile = TempScores.newFile("writable_issue22.txt");
+            ProgressStore writableStore = new ProgressStore(writableFile);
+            LevelProgress progress2 = new LevelProgress(writableStore);
+            progress2.recordCleared(1);
+            Check.assertTrue("isSaved is true when written", progress2.isSaved());
+            Check.assertEquals("written to store", 1, writableStore.read());
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 
     private static void aDamagedFileOpensOnlyTheFirstLevel() {

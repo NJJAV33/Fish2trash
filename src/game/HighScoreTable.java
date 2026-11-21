@@ -67,6 +67,7 @@ public final class HighScoreTable {
         if (rank > 0) {
             latest = entry;
             save();
+            rank = entries.indexOf(entry) + 1;
         }
         return rank;
     }
@@ -81,6 +82,22 @@ public final class HighScoreTable {
     private void save() {
         if (!loaded) {
             return;   // never overwrite a file that could not be read
+        }
+        try {
+            List<String> linesOnDisk = store.readLines();
+            for (String line : linesOnDisk) {
+                try {
+                    ScoreEntry onDisk = ScoreEntry.parse(line);
+                    if (!entries.contains(onDisk)) {
+                        entries.add(onDisk);
+                    }
+                } catch (HighScoreException damaged) {
+                    // skip damaged lines
+                }
+            }
+            sortAndTrim();
+        } catch (HighScoreException ignored) {
+            // keep current list if reading fails
         }
         List<String> lines = new ArrayList<>();
         for (ScoreEntry entry : entries) {

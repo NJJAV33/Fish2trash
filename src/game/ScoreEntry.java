@@ -150,6 +150,25 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ScoreEntry that = (ScoreEntry) o;
+        return score == that.score && levelsCleared == that.levelsCleared
+                && retries == that.retries && name.equals(that.name)
+                && badges.equals(that.badges) && date.equals(that.date);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(name, score, levelsCleared, badges, retries, date);
+    }
+
+    @Override
     public String toString() {
         return name + " " + score + " (" + levelsCleared + " levels, " + badges.size() + " badges, "
                 + retries + " retries, " + date + ")";

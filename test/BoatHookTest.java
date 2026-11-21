@@ -19,6 +19,7 @@ public final class BoatHookTest {
         boatHoldsStillWhileTheLineIsOut();
         hookFliesStraightAndComesBack();
         hookCanBeRecalledOnTheWayOut();
+        hookChecksCollisionOnMaxExtensionFrame();
     }
 
     private static void boatMovesAndTakesTheHookAlong() {
@@ -98,5 +99,17 @@ public final class BoatHookTest {
 
         hook.launch();
         Check.assertTrue("cannot launch again until the hook is back", hook.isRetracting());
+    }
+
+    private static void hookChecksCollisionOnMaxExtensionFrame() {
+        Hook hook = new Hook(400, GameConstants.WATER_Y, Loadout.forChapter(1));
+        hook.launch();
+        while (hook.getLength() < GameConstants.HOOK_MAX) {
+            hook.update(STEP);
+        }
+        Check.assertEquals("hook reached HOOK_MAX", GameConstants.HOOK_MAX, hook.getLength(), TINY);
+        Check.assertTrue("hook is still in EXTENDING on the frame it reaches max", hook.isExtending());
+        hook.update(STEP);
+        Check.assertTrue("hook begins retracting on the subsequent frame", hook.isRetracting());
     }
 }

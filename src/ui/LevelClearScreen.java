@@ -105,7 +105,7 @@ public final class LevelClearScreen implements Screen {
 
         String diffText = result.getDifficulty().getDisplayName();
         if (result.getDifficulty().getScoreMultiplier() > 1.0) {
-            diffText += String.format(" (%.2gx)", result.getDifficulty().getScoreMultiplier());
+            diffText += " (" + result.getDifficulty().getMultiplierLabel() + ")";
         }
         String comboText = result.getBestCombo() >= 2
                 ? "x" + result.getBestCombo() + " (+" + counted(result.getComboBonus()) + ")"

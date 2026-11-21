@@ -88,6 +88,10 @@ public final class ScoreFlowTest {
     private static void theRunScoreNeverGoesBelowZero() {
         Check.assertEquals("failing before clearing anything scores zero, not less",
                 0, ScoreCalculator.runScore(Collections.emptyList(), Collections.emptySet(), 3));
+        Check.assertEquals("an empty run with 2072 retries stays zero without overflow",
+                0, ScoreCalculator.runScore(Collections.emptyList(), Collections.emptySet(), 2072));
+        Check.assertTrue("2072 retries costs >= 2071 retries",
+                ScoreCalculator.retryPenalty(2072) >= ScoreCalculator.retryPenalty(2071));
         Check.assertEquals("a small run with many failed attempts stops at zero",
                 0, ScoreCalculator.runScore(Arrays.asList(cleared(1, 100, 0, 1)), Collections.emptySet(), 20));
     }

@@ -35,18 +35,26 @@ public final class ScoreCalculator {
      * 2 x base for the second, 3 x base for the third, and so on.
      */
     public static int retryPenalty(int retries) {
-        return GameConstants.RETRY_PENALTY_BASE * retries * (retries + 1) / 2;
+        if (retries <= 0) {
+            return 0;
+        }
+        long r = retries;
+        long penalty = (long) GameConstants.RETRY_PENALTY_BASE * r * (r + 1) / 2;
+        return (int) Math.min((long) Integer.MAX_VALUE, penalty);
     }
 
     /** The score of a whole run. It never goes below zero. */
     public static int runScore(List<LevelResult> clearedLevels, Collection<Badge> badges, int retries) {
-        int total = 0;
+        if (clearedLevels.isEmpty()) {
+            return 0;
+        }
+        long total = 0;
         for (LevelResult result : clearedLevels) {
             total += levelScore(result);
         }
         for (Badge badge : badges) {
             total += badge.getBonus();
         }
-        return Math.max(0, total - retryPenalty(retries));
+        return (int) Math.max(0L, total - retryPenalty(retries));
     }
 }
