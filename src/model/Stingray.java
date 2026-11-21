@@ -40,6 +40,11 @@ public class Stingray extends Fish {
 
     @Override
     public void sense(HookSensor hook) {
+        if (getCondition() != Condition.NORMAL) {
+            magnetFelt = false;
+            magnetInReach = false;
+            return;
+        }
         magnetX = hook.getTipX();
         magnetY = hook.getTipY();
         // Only the sideways distance counts: it feels a Magnet that is right above it, however high.
@@ -89,6 +94,9 @@ public class Stingray extends Fish {
     private void swimToward(double targetX, double targetY, double step) {
         double dx = targetX - getX();
         double dy = targetY - getY();
+        if (Math.abs(dx) > 1e-4) {
+            headTo(dx < 0 ? -1 : 1);
+        }
         double distance = Math.hypot(dx, dy);
         if (distance <= step) {
             moveTo(targetX, Math.min(targetY, homeY));
@@ -118,9 +126,24 @@ public class Stingray extends Fish {
         phaseTime = 0;
     }
 
+    @Override
+    public void daze() {
+        super.daze();
+        enter(Phase.SINK);
+    }
+
+    @Override
+    public void cut() {
+        super.cut();
+        enter(Phase.REST);
+    }
+
     /** Sparks while it warns and while it chases. */
     @Override
     public double getAlert() {
+        if (getCondition() != Condition.NORMAL) {
+            return 0;
+        }
         return (phase == Phase.WARNING || phase == Phase.CHASE) ? 1 : 0;
     }
 }

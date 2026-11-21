@@ -31,6 +31,7 @@ public final class DangerousFishTest {
         stingrayWarnsThenRisesAtTheMagnet();
         stingrayGivesUpWhenTheMagnetComesOff();
         theNetCutterMakesEveryFishCostDouble();
+        stingrayFacesChaseDirectionAndSuppressesAlertWhenIncapacitated();
     }
 
     private static void damageDependsOnTheFish() {
@@ -210,6 +211,32 @@ public final class DangerousFishTest {
         Check.assertEquals("a small fish costs 2 with the Net Cutter", 3, player.getHealth());
         new Pufferfish(100, 300, 50).onCaught(player, hook);
         Check.assertEquals("a pufferfish still costs 2, not more", 1, player.getHealth());
+    }
+
+    private static void stingrayFacesChaseDirectionAndSuppressesAlertWhenIncapacitated() {
+        Stingray ray = new Stingray(400, 550, -30);
+        FakeHook magnet = new FakeHook(455, 190, false);
+        magnet.magnetic = true;
+        play(ray, magnet, GameConstants.STINGRAY_WARNING_S + 0.1);
+        Check.assertEquals("chasing to the right faces right", 1, ray.getFacing());
+
+        Stingray rayLeft = new Stingray(400, 550, 30);
+        FakeHook magnetLeft = new FakeHook(345, 190, false);
+        magnetLeft.magnetic = true;
+        play(rayLeft, magnetLeft, GameConstants.STINGRAY_WARNING_S + 0.1);
+        Check.assertEquals("chasing to the left faces left", -1, rayLeft.getFacing());
+
+        Check.assertEquals("alert before stun is 1.0", 1.0, ray.getAlert(), TINY);
+        ray.daze();
+        Check.assertEquals("alert is suppressed while dazed", 0.0, ray.getAlert(), TINY);
+        ray.cut();
+        Check.assertEquals("alert is suppressed while cut", 0.0, ray.getAlert(), TINY);
+
+        Barracuda barracuda = new Barracuda(300, 400, 100);
+        barracuda.cut();
+        FakeHook line = new FakeHook(300, 400, true);
+        barracuda.sense(line);
+        Check.assertEquals("lifeless barracuda does not alert", 0.0, barracuda.getAlert(), TINY);
     }
 
     private static void play(OceanObject fish, HookSensor hook, double seconds) {

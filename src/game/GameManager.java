@@ -244,6 +244,9 @@ public final class GameManager implements GameView, CatchResolver {
         // all of them are OceanObjects. The manager never asks which is which.
         Equipment tool = hook.getLoadout().getSelected();
         for (OceanObject object : level.getObjects()) {
+            if (object.isWhollyOutsideWater()) {
+                continue;
+            }
             if (object.collidesWith(hook.getTipX(), hook.getTipY(), tool.getTipRadius())) {
                 // The tool decides the outcome (catch, slip or pass), and the
                 // outcome calls back onCatch, onSlip or onPass below.

@@ -92,10 +92,20 @@ public class Hook implements HookSensor {
 
             case EXTENDING:
                 // The angle is frozen, so the hook travels in a straight line.
-                length += GameConstants.HOOK_EXTEND * speedScale * dt;
+                // The last outward segment up to maximum reach is checked for a catch
+                // on the frame it reaches HOOK_MAX before retracting begins.
                 if (length >= GameConstants.HOOK_MAX) {
-                    length = GameConstants.HOOK_MAX;
                     state = State.RETRACTING;
+                    double speed = ((caughtObject == null) ? GameConstants.HOOK_RETRACT : GameConstants.HOOK_CARRY) * speedScale;
+                    length = Math.max(GameConstants.HOOK_REST, length - speed * dt);
+                    if (length <= GameConstants.HOOK_REST) {
+                        state = State.SWINGING;
+                    }
+                } else {
+                    length += GameConstants.HOOK_EXTEND * speedScale * dt;
+                    if (length > GameConstants.HOOK_MAX) {
+                        length = GameConstants.HOOK_MAX;
+                    }
                 }
                 break;
 

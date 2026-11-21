@@ -109,7 +109,7 @@ public final class HudPainter {
         g.setFont(Fonts.LABEL);
         String label = difficulty.getDisplayName().toUpperCase();
         if (difficulty.getScoreMultiplier() > 1.0) {
-            label = label + " " + String.format("%.2gx", difficulty.getScoreMultiplier());
+            label = label + " " + difficulty.getMultiplierLabel();
         }
         TextDraw.centered(g, label, x + width / 2, y + 18);
     }

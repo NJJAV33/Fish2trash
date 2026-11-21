@@ -119,6 +119,14 @@ public abstract class OceanObject implements ObjectView {
         return dx * dx + dy * dy <= reach * reach;
     }
 
+    /** True if this object is completely outside the visible water area. */
+    public boolean isWhollyOutsideWater() {
+        return x + getRadius() < 0
+                || x - getRadius() > GameConstants.WORLD_WIDTH
+                || y + getRadius() < GameConstants.WATER_Y
+                || y - getRadius() > GameConstants.WORLD_HEIGHT;
+    }
+
     public void moveTo(double newX, double newY) {
         x = newX;
         y = newY;

@@ -35,6 +35,7 @@ public final class ScreenFlowTest {
         storyPagesLeadIntoTheGame();
         pauseMenuWorks();
         losingTheWindowFocusPauses();
+        losingFocusDuringFadePausesWhenEnteringPlay();
         runningOutOfTimeGetsYouFiredAndYouCanRetry();
         endingTheRunReturnsToTheMenu();
         menusClickAndTheMKeyMutes();
@@ -206,6 +207,23 @@ public final class ScreenFlowTest {
             listener.focusLost(new FocusEvent(panel, FocusEvent.FOCUS_LOST));
         }
         Check.assertTrue("the game pauses when the window loses focus", panel.isPaused());
+    }
+
+    private static void losingFocusDuringFadePausesWhenEnteringPlay() {
+        startGame();
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        expect("story is open", GameState.STORY);
+
+        press(KeyEvent.VK_ESCAPE);   // skip the story: begins transition to PLAYING
+        play(0.26);                  // fade-out complete: level has appeared, fading in
+        Check.assertEquals("level appeared", GameState.PLAYING, panel.getState());
+
+        for (FocusListener listener : panel.getFocusListeners()) {
+            listener.focusLost(new FocusEvent(panel, FocusEvent.FOCUS_LOST));
+        }
+        play(SCREEN_CHANGE);
+        Check.assertTrue("the game pauses even if focus was lost during transition into play", panel.isPaused());
     }
 
     private static void runningOutOfTimeGetsYouFiredAndYouCanRetry() {

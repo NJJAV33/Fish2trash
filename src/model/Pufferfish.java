@@ -27,6 +27,10 @@ public class Pufferfish extends Fish {
 
     @Override
     public void sense(HookSensor hook) {
+        if (getCondition() != Condition.NORMAL) {
+            hookNear = false;
+            return;
+        }
         double distance = Math.hypot(hook.getTipX() - getX(), hook.getTipY() - getY());
         hookNear = distance <= GameConstants.PUFFER_SENSE_RANGE;
     }
@@ -62,6 +66,9 @@ public class Pufferfish extends Fish {
 
     @Override
     public double getAlert() {
+        if (getCondition() != Condition.NORMAL) {
+            return 0;
+        }
         return inflate;
     }
 }

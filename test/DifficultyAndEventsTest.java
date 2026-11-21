@@ -48,6 +48,8 @@ public final class DifficultyAndEventsTest {
     }
 
     public static void run() {
+        Check.assertEquals("Medium multiplier label is 1.25x", "1.25x", Difficulty.MEDIUM.getMultiplierLabel());
+        Check.assertEquals("Hard multiplier label is 1.5x", "1.5x", Difficulty.HARD.getMultiplierLabel());
         difficultyScalingPreservesWinnabilityAndToolConstraints();
         allLevelsWinnableOnMediumAndHard();
         combosTrackStreaksFlowAndScoreBonus();

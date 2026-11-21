@@ -32,15 +32,26 @@ public final class ProgressStore {
         return new ProgressStore(Paths.get(System.getProperty("user.home"), FOLDER, FILE));
     }
 
-    /** The furthest level cleared, or 0 if nothing is saved yet or the file cannot be read. */
-    public int read() {
+    /**
+     * The furthest level cleared, or 0 if nothing is saved yet.
+     *
+     * @throws IOException if the file exists but cannot be read
+     */
+    public int read() throws IOException {
         if (Files.notExists(file)) {
             return 0;
         }
+        byte[] bytes;
         try {
-            return Integer.parseInt(new String(Files.readAllBytes(file), StandardCharsets.UTF_8).trim());
-        } catch (IOException | NumberFormatException e) {
+            bytes = Files.readAllBytes(file);
+        } catch (IOException e) {
             System.err.println("Could not read the saved progress from " + file + ": " + e.getMessage());
+            throw e;
+        }
+        try {
+            return Integer.parseInt(new String(bytes, StandardCharsets.UTF_8).trim());
+        } catch (NumberFormatException e) {
+            System.err.println("Could not parse the saved progress from " + file + ": " + e.getMessage());
             return 0;
         }
     }

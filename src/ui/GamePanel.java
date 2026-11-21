@@ -67,11 +67,16 @@ public final class GamePanel extends JPanel {
         addKeyListener(new KeyHandler());
         addFocusListener(new FocusAdapter() {
             @Override
+            public void focusGained(FocusEvent e) {
+                lastTickNanos = System.nanoTime();
+            }
+
+            @Override
             public void focusLost(FocusEvent e) {
                 // Another window took the keyboard: no key is "still held",
                 // and a level in progress should not run unattended.
                 input.releaseAll();
-                if (screens.getState() == GameState.PLAYING) {
+                if (screens.getState() == GameState.PLAYING || screens.getNext() == GameState.PLAYING) {
                     gameScreen.pause();
                 }
             }
@@ -107,9 +112,21 @@ public final class GamePanel extends JPanel {
         long now = System.nanoTime();
         double dt = (now - lastTickNanos) / 1_000_000_000.0;
         lastTickNanos = now;
-        dt = Math.min(dt, MAX_STEP_SECONDS);   // avoid a huge jump after a pause
 
-        advance(dt);
+        if (screens.isPaused()) {
+            advance(Math.min(dt, MAX_STEP_SECONDS));
+            repaint();
+            return;
+        }
+
+        while (dt > 1e-6) {
+            double step = Math.min(dt, MAX_STEP_SECONDS);
+            advance(step);
+            dt -= step;
+            if (screens.isPaused()) {
+                break;
+            }
+        }
         repaint();
     }
 
