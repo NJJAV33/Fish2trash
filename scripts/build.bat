@@ -17,3 +17,4 @@ rem --release 17 keeps the code compatible with Java 17 even on a newer JDK.
 "%JAVAC%" --release 17 -Xlint:all -d out @out\sources.txt
 if errorlevel 1 exit /b 1
 del out\sources.txt
+copy /y src\ui\render\stingray.png out\ui\render\stingray.png >nul || exit /b 1
