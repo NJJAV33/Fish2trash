@@ -99,7 +99,7 @@ public class Stingray extends Fish {
         }
         double distance = Math.hypot(dx, dy);
         if (distance <= step) {
-            moveTo(targetX, Math.min(targetY, homeY));
+            moveTo(targetX, Mathx.clamp(targetY, GameConstants.WATER_Y + getRadius(), homeY));
             return;
         }
         double newY = Mathx.clamp(getY() + dy / distance * step,
