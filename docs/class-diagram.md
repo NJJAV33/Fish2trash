@@ -473,6 +473,7 @@ classDiagram
         +GameSession(random, firstLevel)
         +startLevel() GameManager
         +onLevelEnded(game) LevelResult
+        +recordRetry()
         +getLevelData() LevelData
         +isFinished() boolean
         +getTotalPoints() int
@@ -505,7 +506,11 @@ classDiagram
         +getQuota() int
         +getHealth() int
         +getTimeLeft() double
+        +isTimeFrozen() boolean
         +getStatus() LevelStatus
+        +getDifficulty() Difficulty
+        +getCombo() int
+        +getActiveEvent() OceanEventType
         +getSelectedTool() EquipmentType
         +isToolUnlocked(type) boolean
         +getSwapCooldownFraction() double
@@ -578,6 +583,8 @@ classDiagram
         SWAP_DENIED
         MISSED
         DELIVERED
+        FISH_FREED
+        HAZARD_ALERT
         OCEAN_EVENT_STARTED
         OCEAN_EVENT_ENDED
         LOW_TIME_TICK
@@ -639,10 +646,11 @@ classDiagram
     class GameState {
         <<enumeration>>
         MENU
+        LEVEL_SELECT
         HOW_TO
         STORY
         PLAYING
-        CHAPTER_CLEAR
+        LEVEL_CLEAR
         GAME_OVER
         ENDING
         NAME_ENTRY
@@ -723,6 +731,10 @@ classDiagram
         +go(target)
         +pause(overlay)
         +resume()
+        +restartLevel()
+        +setDifficulty(difficulty)
+        +cycleDifficulty(direction)
+        +getDifficulty() Difficulty
         +startNewRun()
         +startRunAt(levelNumber)
         +endLevel(game) LevelResult
@@ -730,6 +742,11 @@ classDiagram
         +getHighScores() HighScoreTable
         +getProgress() LevelProgress
         +afterRun(otherwise) GameState
+        +getAccessibleName() String
+        +getAccessibleDescription() String
+        +getAccessibleChoices() List
+        +getAccessibleSelectedIndex() int
+        +activateAccessibleChoice(index)
     }
 
     class Screen {
@@ -741,6 +758,11 @@ classDiagram
         +keyPressed(keyCode)
         +keyTyped(character)
         +isTakingText() boolean
+        +getAccessibleName() String
+        +getAccessibleDescription() String
+        +getAccessibleChoices() List
+        +getAccessibleSelectedIndex() int
+        +activateAccessibleChoice(index)
     }
 
     class MainMenu
@@ -825,6 +847,7 @@ classDiagram
         +getShakeX() double
         +getShakeY() double
         +getCatchSquash() double
+        +getPopupYs() List
     }
 
     class BoatPainter {
@@ -937,8 +960,10 @@ classDiagram
 `BarracudaPainter` and `StingrayPainter`. Most of them draw each pose (a tail
 position, a rocking angle) once into a `SpriteCache` and copy it from then on,
 because copying a picture is several times cheaper than drawing a dozen shapes.
-Only things that change freely are drawn every frame: the stingray's tail and
-sparks, a fast fish's speed lines and a swelling pufferfish.
+`StingrayPainter` slices the 12-frame `stingray.png` sprite sheet rendered from
+`art/models/Stingray.blend` via `art/models/export_stingray.py` into its cache and
+draws live Magnet warning sparks every frame, alongside fast fish speed lines and
+a swelling pufferfish.
 
 Bottles, cans and nets each come in several designs (water bottle, soda bottle,
 milk jug, iced tea, crushed bottle; soda, energy drink, lemon soda, food tin,
@@ -969,25 +994,29 @@ classDiagram
         <<enumeration>>
         HOOK_LAUNCH
         HOOK_RECALL
+        CATCH_PLASTIC
+        CATCH_CAN
+        CATCH_NET
+        FISH_HIT
+        FISH_STUN
+        FISH_CUT
+        FISH_FREED
+        THREAT_ALERT
+        WRONG_TOOL
+        TOOL_SWITCH
+        TOOL_UNLOCK
+        QUOTA
+        LEVEL_CLEAR
+        BADGE
+        LEVEL_FAIL
+        LOW_TICK
+        LOW_TICK_URGENT
+        HINT
         COMBO
         EVENT_SQUALL
         EVENT_BONUS
         EVENT_FRENZY
         EVENT_CALM
-        CATCH_PLASTIC
-        CATCH_CAN
-        CATCH_NET
-        FISH_HIT
-        WRONG_TOOL
-        TOOL_SWITCH
-        TOOL_UNLOCK
-        QUOTA
-        CHAPTER_CLEAR
-        BADGE
-        CHAPTER_FAIL
-        LOW_TICK
-        LOW_TICK_URGENT
-        HINT
         MENU_MOVE
         MENU_SELECT
         HIGH_SCORE
@@ -1079,6 +1108,7 @@ classDiagram
         -entries List
         -latest ScoreEntry
         +qualifies(score) boolean
+        +qualifies(entry) boolean
         +add(entry) int
         +getEntries() List
         +isSaved() boolean

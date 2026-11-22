@@ -92,8 +92,16 @@ public final class HighScoreStoreTest {
             "NICO|100|1|1|0|yesterday",                 // not a date
             "NICO|-5|1|1|0|2026-11-13",                 // a negative score
             "NICO|100|1|8|0|2026-11-13",                // more badges than there are
-            "NICO|100|1|1|-1|2026-11-13"
+            "NICO|100|1|1|-1|2026-11-13",
+            "NICO|100|-1|0|0|2026-01-01",               // negative levels cleared
+            "NICO|100|16|0|0|2026-01-01"                // more than LEVEL_COUNT levels
         };
+        try {
+            ScoreEntry maxCleared = ScoreEntry.parse("NICO|100|15|0|0|2026-01-01");
+            Check.assertEquals("15 cleared levels is valid", 15, maxCleared.getLevelsCleared());
+        } catch (HighScoreException e) {
+            Check.fail("valid 15-level score line must parse: " + e.getMessage());
+        }
         for (String line : damaged) {
             boolean refused = false;
             try {
@@ -143,6 +151,23 @@ public final class HighScoreStoreTest {
 
         Check.assertTrue("a full list refuses a score that only ties the last place", !table.qualifies(300));
         Check.assertTrue("and takes one that beats it", table.qualifies(301));
+
+        ScoreEntry tiedSameRetries = new ScoreEntry("TIE", 300, 1, noBadges(), 0, DAY);
+        Check.assertTrue("tying 10th place with same retries and date does not qualify",
+                !table.qualifies(tiedSameRetries));
+        Check.assertEquals("adding tied entry returns 0", 0, table.add(tiedSameRetries));
+
+        HighScoreTable retryTable = TempScores.newTable();
+        for (int n = 0; n < GameConstants.HIGHSCORE_MAX_ENTRIES; n++) {
+            retryTable.add(new ScoreEntry("R" + n, 800, 1, noBadges(), 2, DAY));
+        }
+        ScoreEntry fewerRetryTie = new ScoreEntry("FAST", 800, 1, noBadges(), 0, DAY);
+        Check.assertTrue("tying 10th place with fewer retries qualifies", retryTable.qualifies(fewerRetryTie));
+        Check.assertTrue("adding fewer-retry tie lands in the table", retryTable.add(fewerRetryTie) > 0);
+        ScoreEntry equalRetryTie = new ScoreEntry("SAME", 800, 1, noBadges(), 2, DAY);
+        Check.assertTrue("tying 10th place with identical retries and date is rejected",
+                !retryTable.qualifies(equalRetryTie));
+        Check.assertEquals("rejected tie returns place 0", 0, retryTable.add(equalRetryTie));
 
         ScoreEntry second = new ScoreEntry("NEW", 1150, 2, noBadges(), 0, DAY);
         Check.assertEquals("a new run is told its place", 2, table.add(second));
@@ -199,10 +224,11 @@ public final class HighScoreStoreTest {
     private static void damagedLinesInTheFileAreSkipped() {
         Path file = TempScores.newFile();
         write(file, "LIA|2500|2|1|1|2026-11-10", "this is not a score", "",
-                "MIGO|900|1|1|2|2026-11-09", "DOLOR|many|3|7|0|2026-11-02", "DOLOR|4200|3|7|0|2026-11-02");
+                "FAKE|9999|16|0|0|2026-01-01", "MIGO|900|1|1|2|2026-11-09",
+                "DOLOR|many|3|7|0|2026-11-02", "DOLOR|4200|3|7|0|2026-11-02");
 
         HighScoreTable table = new HighScoreTable(new HighScoreStore(file));
-        Check.assertEquals("the three good lines are kept", 3, table.getEntries().size());
+        Check.assertEquals("the three good lines are kept (out-of-range levels skipped)", 3, table.getEntries().size());
         Check.assertEquals("and sorted", "DOLOR", table.getEntries().get(0).getName());
         Check.assertTrue("a damaged line is not an error for the whole file", table.isSaved());
         delete(file);

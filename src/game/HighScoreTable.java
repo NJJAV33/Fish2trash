@@ -55,12 +55,24 @@ public final class HighScoreTable {
                 || score > entries.get(entries.size() - 1).getScore();
     }
 
+    /** True if this candidate entry ranks high enough to displace the cutoff on a full table. */
+    public boolean qualifies(ScoreEntry entry) {
+        if (entry == null || entry.getScore() <= 0) {
+            return false;
+        }
+        return entries.size() < GameConstants.HIGHSCORE_MAX_ENTRIES
+                || entry.compareTo(entries.get(entries.size() - 1)) < 0;
+    }
+
     /**
      * Adds a run to the list and saves the list.
      *
      * @return the place the entry took (1 is the top), or 0 if it did not make the list
      */
     public int add(ScoreEntry entry) {
+        if (!qualifies(entry)) {
+            return 0;
+        }
         entries.add(entry);
         sortAndTrim();
         int rank = entries.indexOf(entry) + 1;

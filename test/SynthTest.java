@@ -1,3 +1,8 @@
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import util.AudioPlayer;
 import util.SilentAudioPlayer;
 import util.SoundEffect;
@@ -25,6 +30,42 @@ public final class SynthTest {
         theSameRecipeAlwaysGivesTheSameSound();
         everyEffectIsWellFormed();
         aPlayerWithoutASoundCardDoesNothingSafely();
+        lineOpenerFallsBackWhenLowRateIsRejected();
+    }
+
+    private static void lineOpenerFallsBackWhenLowRateIsRejected() {
+        SynthAudioPlayer player = new SynthAudioPlayer(true);
+        List<Integer> tried = new ArrayList<>();
+        SourceDataLine fakeLine = (SourceDataLine) Proxy.newProxyInstance(
+                SynthTest.class.getClassLoader(),
+                new Class<?>[] {SourceDataLine.class},
+                (proxy, method, args) -> method.getReturnType() == boolean.class ? Boolean.FALSE : null);
+        try {
+            SourceDataLine opened = player.openLine((format, bufferBytes) -> {
+                tried.add((int) format.getSampleRate());
+                if ((int) format.getSampleRate() == ToneSynth.SAMPLE_RATE) {
+                    throw new IllegalArgumentException("22050 Hz unsupported");
+                }
+                return fakeLine;
+            });
+            Check.assertTrue("opened 44.1 kHz line after 22.05 kHz failed", opened == fakeLine);
+        } catch (LineUnavailableException e) {
+            Check.fail("expected fallback rate to open without throwing: " + e.getMessage());
+        }
+        Check.assertEquals("tried 22050 then 44100 Hz", List.of(22050, 44100), tried);
+        Check.assertEquals("44.1 kHz repeats each 22.05 kHz sample twice", 2, player.getSampleRepeat());
+
+        boolean failed = false;
+        try {
+            player.openLine((format, bufferBytes) -> {
+                throw new IllegalArgumentException("unsupported rate: " + (int) format.getSampleRate());
+            });
+        } catch (IllegalArgumentException expected) {
+            failed = true;
+        } catch (LineUnavailableException e) {
+            failed = true;
+        }
+        Check.assertTrue("propagates exception when all sample rates fail", failed);
     }
 
     private static void aPlayerWithoutASoundCardDoesNothingSafely() {

@@ -6,6 +6,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 import model.LevelData;
 import ui.render.ChapterPalette;
 import ui.render.Fonts;
@@ -197,5 +199,47 @@ public final class LevelSelectScreen implements Screen {
         g.drawArc(x - 5, y, 10, 12, 0, 180);
         g.setStroke(EDGE);
         g.fillRoundRect(x - 8, y + 6, 16, 12, 4, 4);
+    }
+
+    @Override
+    public String getAccessibleName() {
+        return StoryText.LEVELS_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        LevelData selected = LevelData.byNumber(chosen);
+        LevelProgress progress = screens.getProgress();
+        String status = progress.isCleared(chosen) ? "cleared"
+                : progress.isUnlocked(chosen) ? "unlocked" : "locked";
+        return StoryText.levelTitle(selected.getChapter(), selected.getLevel()) + " (" + status
+                + "), Difficulty: " + screens.getDifficulty().getDisplayName();
+    }
+
+    @Override
+    public List<String> getAccessibleChoices() {
+        LevelProgress progress = screens.getProgress();
+        List<String> choices = new ArrayList<>(LevelData.LEVEL_COUNT);
+        for (int number = 1; number <= LevelData.LEVEL_COUNT; number++) {
+            LevelData level = LevelData.byNumber(number);
+            String state = progress.isCleared(number) ? "cleared"
+                    : progress.isUnlocked(number) ? "open" : "locked";
+            choices.add(level.getChapter() + "-" + level.getLevel() + " "
+                    + StoryText.levelName(level.getChapter(), level.getLevel()) + " (" + state + ")");
+        }
+        return choices;
+    }
+
+    @Override
+    public int getAccessibleSelectedIndex() {
+        return chosen - 1;
+    }
+
+    @Override
+    public void activateAccessibleChoice(int index) {
+        if (index >= 0 && index < LevelData.LEVEL_COUNT) {
+            chosen = index + 1;
+            play();
+        }
     }
 }

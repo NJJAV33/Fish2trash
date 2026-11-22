@@ -3,6 +3,7 @@ package ui;
 import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.util.List;
 import ui.render.ChapterPalette;
 import ui.render.Fonts;
 import ui.render.SceneRenderer;
@@ -54,12 +55,42 @@ public final class MainMenu implements Screen {
 
     @Override
     public void keyPressed(int keyCode) {
-        if (keyCode == KeyEvent.VK_D) {
+        if (keyCode == KeyEvent.VK_D || keyCode == KeyEvent.VK_RIGHT) {
             screens.cycleDifficulty(1);
             screens.getAudio().play(SoundEffect.MENU_MOVE);
             return;
         }
+        if (keyCode == KeyEvent.VK_LEFT) {
+            screens.cycleDifficulty(-1);
+            screens.getAudio().play(SoundEffect.MENU_MOVE);
+            return;
+        }
         menu.keyPressed(keyCode);
+    }
+
+    @Override
+    public String getAccessibleName() {
+        return "Main Menu";
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        return "Selected: " + menu.getSelectedLabel() + ". Difficulty: " + screens.getDifficulty().getDisplayName();
+    }
+
+    @Override
+    public List<String> getAccessibleChoices() {
+        return menu.getLabels();
+    }
+
+    @Override
+    public int getAccessibleSelectedIndex() {
+        return menu.getSelectedIndex();
+    }
+
+    @Override
+    public void activateAccessibleChoice(int index) {
+        menu.selectAndActivate(index);
     }
 
     @Override

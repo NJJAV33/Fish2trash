@@ -7,11 +7,15 @@ import game.GameState;
 import game.LevelResult;
 import game.LevelStatus;
 import game.ScoreCalculator;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import model.Difficulty;
@@ -22,6 +26,7 @@ import model.LevelData;
 import model.Loadout;
 import model.ObjectKind;
 import model.OceanEventType;
+import model.OceanObject;
 import model.Sea;
 import model.SpawnRule;
 import ui.AudioEventListener;
@@ -31,9 +36,13 @@ import ui.MainMenu;
 import ui.ScreenManager;
 import ui.VictoryScreen;
 import ui.render.EffectsSystem;
+import ui.render.Fonts;
+import ui.render.HudPainter;
+import ui.render.PainterRegistry;
 import ui.render.SceneRenderer;
 import util.GameConstants;
 import util.SoundEffect;
+import util.SoundState;
 
 /**
  * Checks difficulty scaling, catch combos/Flow, dynamic ocean events,
@@ -54,8 +63,111 @@ public final class DifficultyAndEventsTest {
         allLevelsWinnableOnMediumAndHard();
         combosTrackStreaksFlowAndScoreBonus();
         oceanEventsCycleAffectSeaHookAndSpawns();
+        trashTideNeverLetsOneKindReachQuotaInChaptersTwoOrThree();
         audioEffectsAndHudRenderCleanly();
+        hudClearsBoatMastAcrossPositionsAndCombos();
+        levelClearRowsLeaveRoomForSubheadingFont();
         uiMenusCycleDifficultyAndPaintReports();
+        mainMenuArrowsCycleDifficultyOnAnyRow();
+    }
+
+    private static void trashTideNeverLetsOneKindReachQuotaInChaptersTwoOrThree() {
+        boolean sawTrashTide = false;
+        for (int chapter = 2; chapter <= LevelData.CHAPTER_COUNT; chapter++) {
+            for (int lv = 1; lv <= LevelData.LEVELS_PER_CHAPTER; lv++) {
+                LevelData data = LevelData.of(chapter, lv);
+                long seed = (chapter == 3 && lv == 2) ? 42L : (chapter * 100L + lv);
+                sawTrashTide |= checkSingleKindUnderQuota(data, Difficulty.EASY, seed);
+            }
+        }
+        sawTrashTide |= checkSingleKindUnderQuota(LevelData.of(3, 2), Difficulty.HARD, 42L);
+        Check.assertTrue("TRASH_TIDE occurred during chapter 2-3 checks", sawTrashTide);
+    }
+
+    private static boolean checkSingleKindUnderQuota(LevelData data, Difficulty difficulty, long seed) {
+        Level level = new Level(data, new Random(seed), difficulty, true);
+        Hook hook = new Hook(400, 120, Loadout.forChapter(data.getChapter()));
+        Map<ObjectKind, Integer> liftedPoints = new EnumMap<>(ObjectKind.class);
+        boolean sawTrashTide = false;
+
+        int steps = (int) (data.getTimeLimit() * 30) + 120;
+        for (int s = 0; s < steps; s++) {
+            level.update(1.0 / 30.0, hook);
+            if (level.pollStartedEvent() == OceanEventType.TRASH_TIDE) {
+                sawTrashTide = true;
+            }
+            for (OceanObject obj : new ArrayList<>(level.getObjects())) {
+                if (obj.getKind().isTrash() && obj.isCatchable()) {
+                    level.remove(obj);
+                    liftedPoints.merge(obj.getKind(), obj.getPoints(), Integer::sum);
+                }
+            }
+        }
+        for (OceanObject obj : level.getObjects()) {
+            if (obj.getKind().isTrash()) {
+                liftedPoints.merge(obj.getKind(), obj.getPoints(), Integer::sum);
+            }
+        }
+        for (Map.Entry<ObjectKind, Integer> entry : liftedPoints.entrySet()) {
+            String label = difficulty + " " + data.getChapter() + "-" + data.getLevel() + " " + entry.getKey();
+            Check.assertTrue(label + " total (" + entry.getValue()
+                            + ") stays strictly below quota (" + data.getQuota() + ")",
+                    entry.getValue() < data.getQuota());
+        }
+        return sawTrashTide;
+    }
+
+    private static void hudClearsBoatMastAcrossPositionsAndCombos() {
+        GameManager game = new GameManager(LevelData.of(2, 3), Loadout.forChapter(2), new Random(4), Difficulty.HARD);
+        for (int i = 0; i < 3; i++) {
+            GameScript.hookOnto(game, GameScript.firstCatchable(game, true));
+        }
+        for (int i = 0; i < 2500 && game.getActiveEvent() == OceanEventType.NONE && game.isPlaying(); i++) {
+            GameScript.keepWaterEmpty(game);
+            game.update(STEP);
+        }
+
+        HudPainter hud = new HudPainter(new PainterRegistry());
+        BufferedImage overlay = new BufferedImage(
+                GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = overlay.createGraphics();
+        hud.paint(g, game, 0.25, SoundState.ON, 0);
+        g.dispose();
+
+        for (int y = 57; y <= 135; y++) {
+            for (int x = 0; x < GameConstants.WORLD_WIDTH; x++) {
+                Check.assertEquals("HUD must leave boat mast band clear at (" + x + ", " + y + ")",
+                        0, overlay.getRGB(x, y) >>> 24);
+            }
+        }
+    }
+
+    private static void levelClearRowsLeaveRoomForSubheadingFont() {
+        BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        FontMetrics fm = g.getFontMetrics(Fonts.SUBHEADING);
+        int height = fm.getHeight();
+        g.dispose();
+        Check.assertTrue("LevelClearScreen.ROW_SPACING (" + LevelClearScreen.ROW_SPACING
+                        + ") must be >= SUBHEADING height (" + height + ")",
+                LevelClearScreen.ROW_SPACING >= height);
+    }
+
+    private static void mainMenuArrowsCycleDifficultyOnAnyRow() {
+        ScreenManager screens = new ScreenManager(new RecordingAudioPlayer(), TempScores.newTable(), TempScores.newProgress());
+        MainMenu menu = new MainMenu(screens, new SceneRenderer());
+        screens.register(GameState.MENU, menu);
+        screens.start(GameState.MENU);
+        menu.onEnter();
+
+        Check.assertEquals("starts on first menu row (Start)", 0, menu.getAccessibleSelectedIndex());
+        menu.keyPressed(KeyEvent.VK_RIGHT);
+        Check.assertEquals("RIGHT on Start row cycles Easy -> Medium", Difficulty.MEDIUM, screens.getDifficulty());
+        menu.keyPressed(KeyEvent.VK_LEFT);
+        Check.assertEquals("LEFT on Start row cycles Medium -> Easy", Difficulty.EASY, screens.getDifficulty());
+        menu.keyPressed(KeyEvent.VK_DOWN);
+        menu.keyPressed(KeyEvent.VK_D);
+        Check.assertEquals("D on Select Level row cycles Easy -> Medium", Difficulty.MEDIUM, screens.getDifficulty());
     }
 
     private static void difficultyScalingPreservesWinnabilityAndToolConstraints() {

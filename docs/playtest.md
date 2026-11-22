@@ -68,7 +68,8 @@ After every change, run `scripts/test.sh` (or `scripts\test.bat`):
 
 ## What the bots say
 
-`BalanceBotTest` plays every level 50 times with each of four computer players:
+`BalanceBotTest` plays every level 50 times on `Easy` difficulty (with dynamic
+ocean events enabled) using each of four computer players:
 
 - The **careful bot** picks the right tool, steers over the trash, waits until no
   fish is about to cross the line, pulls back from a charging barracuda, and takes
@@ -116,6 +117,16 @@ long levels were raised until the careful bot cleared at least 3 runs in 5.
 - The stingray. The careful bot simply never puts the Magnet near one. Watch
   whether people notice the sparks in time, and whether "the Magnet wakes the ray"
   is clear from the story page and the tip alone.
+- Difficulty presets (`Easy` 1.0x / `Medium` 1.25x / `Hard` 1.5x): Medium and Hard
+  scale swell, current, fish count/speed, tighten spare trash, and unlock ocean
+  events on `1-1`. `BalanceBotTest` runs `Easy` difficulty with ocean events on;
+  check whether Medium and Hard feel fair for real players.
+- Catch combos and Flow: consecutive trash catches add +25 to +100 bonus points
+  per catch (`COMBO_STEP_BONUS`, `COMBO_MAX_BONUS`), and reaching a 3-catch streak
+  ("Flow") speeds the hook up by 15% (`FLOW_SPEED_MULTIPLIER`).
+- Dynamic ocean events (`Squall`, `Trash Tide`, `Feeding Frenzy`, `Slack Tide`):
+  watch whether `Trash Tide` ever makes chapter 2–3 too easy or too cluttered
+  while honoring the cap keeping each single trash kind strictly below quota.
 - Hints, badges and score values.
 
 - The swell and the current. The bots wait until the hook points straight down,

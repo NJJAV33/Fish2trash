@@ -101,6 +101,11 @@ public final class GameSession {
         return retries;
     }
 
+    /** Records an abandoned attempt (such as restarting from the pause menu) as a retry. */
+    public void recordRetry() {
+        retries++;
+    }
+
     public LevelResult getLastResult() {
         return lastResult;
     }

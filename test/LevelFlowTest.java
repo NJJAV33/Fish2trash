@@ -2,12 +2,21 @@ import game.LevelStatus;
 import game.EventType;
 import game.GameEvent;
 import game.GameManager;
+import game.GameSession;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import model.LevelData;
 import model.Loadout;
+import model.ObjectKind;
+import model.OceanObject;
 import model.TimeLimit;
+import ui.render.HudPainter;
+import ui.render.PainterRegistry;
 import util.GameConstants;
+import util.SoundState;
 
 /** Checks how a chapter is won and lost: quota, clock and health. */
 public final class LevelFlowTest {
@@ -21,9 +30,58 @@ public final class LevelFlowTest {
     public static void run() {
         timeLimitCountsDownAndFreezes();
         quotaStopsTheClockAndDeliveryWins();
+        frozenTimerMatchesReportAndDoesNotPulseRed();
         runningOutOfTimeLoses();
         runningOutOfHealthLoses();
         nothingMovesAfterTheChapterEnds();
+    }
+
+    private static void frozenTimerMatchesReportAndDoesNotPulseRed() {
+        GameManager game = newGame();
+        while (game.getTimeLeft() > 14.0) {
+            game.update(0.05);
+        }
+        for (int i = 0; i < 3; i++) {
+            GameScript.hookOnto(game, GameScript.firstCatchable(game, ObjectKind.PLASTIC_BOTTLE));
+        }
+        while (game.getTimeLeft() > 4.45) {
+            game.update(0.05);
+        }
+
+        // Catch the quota bottle at ~4.4 s remaining and inspect the HUD mid-retraction.
+        OceanObject winning = GameScript.firstCatchable(game, ObjectKind.PLASTIC_BOTTLE);
+        GameScript.clearTheWater(game);
+        game.getObjects().stream().count(); // no-op readability
+        double tipX = game.getBoat().getHook().getTipX();
+        game.spaceAction();
+        for (int i = 0; i < 400 && !game.isTimeFrozen(); i++) {
+            winning.moveTo(game.getBoat().getHook().getTipX(), Math.max(game.getBoat().getHook().getTipY() + 8, 250));
+            game.update(0.02);
+        }
+        Check.assertTrue("clock freezes as soon as the quota bottle is hooked (tipX=" + tipX + ")", game.isTimeFrozen());
+        Check.assertEquals("whole-second floor matches report for fractional time < 5",
+                4, (int) Math.floor(game.getTimeLeft()));
+
+        HudPainter hud = new HudPainter(new PainterRegistry());
+        int[] firstTimerBox = timerBoxPixels(hud, game, 0.0);
+        int[] quarterPhase = timerBoxPixels(hud, game, 0.25);
+        Check.assertTrue("frozen timer stops pulsing red warning colors", Arrays.equals(firstTimerBox, quarterPhase));
+
+        for (int i = 0; i < 500 && game.isPlaying(); i++) {
+            game.update(0.02);
+        }
+        Check.assertEquals("delivery finishes the level", LevelStatus.CLEARED, game.getStatus());
+        Check.assertEquals("session report sees the exact same floored seconds", 4,
+                (int) Math.floor(new GameSession(new Random(11), 1).onLevelEnded(game).getTimeLeft()));
+    }
+
+    private static int[] timerBoxPixels(HudPainter hud, GameManager game, double phase) {
+        BufferedImage img = new BufferedImage(
+                GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        hud.paint(g, game, phase, SoundState.ON, 0);
+        g.dispose();
+        return img.getRGB(580, 0, 120, 56, null, 0, 120);
     }
 
     private static void timeLimitCountsDownAndFreezes() {

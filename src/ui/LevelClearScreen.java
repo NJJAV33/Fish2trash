@@ -29,14 +29,16 @@ public final class LevelClearScreen implements Screen {
     private static final int CENTER_X = GameConstants.WORLD_WIDTH / 2;
     private static final int LABEL_X = 230;
     private static final int VALUE_X = 570;
+    public static final int FIRST_ROW_Y = 166;
+    public static final int ROW_SPACING = 28;
     private static final double COUNT_SECONDS = 0.7;         // how long the numbers take to count up
-    private static final int BADGE_Y = 352;
+    private static final int BADGE_Y = 382;
     private static final double BADGE_RADIUS = 34;
     private static final double BADGE_DELAY_SECONDS = 0.8;   // the medal arrives a moment after the numbers
     private static final double BADGE_POP_SECONDS = 0.4;
     private static final double SPARKLE_SECONDS = 0.7;
     private static final int SPARKLES = 10;
-    private static final int PIP_Y = 352;                    // the row of level dots
+    private static final int PIP_Y = 374;                    // the row of level dots
     private static final int PIP_RADIUS = 9;
     private static final int PIP_SPACING = 34;
     private static final double PIP_BADGE_RADIUS = 16;
@@ -92,16 +94,16 @@ public final class LevelClearScreen implements Screen {
         g.fillRect(0, 0, GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
 
         g.setColor(UiPalette.PANEL_SOLID);
-        g.fillRoundRect(150, 90, 500, 420, 18, 18);
+        g.fillRoundRect(150, 56, 500, 488, 18, 18);
         g.setColor(UiPalette.PANEL_EDGE);
-        g.drawRoundRect(150, 90, 500, 420, 18, 18);
+        g.drawRoundRect(150, 56, 500, 488, 18, 18);
 
         g.setFont(Fonts.BANNER);
         g.setColor(UiPalette.GOOD);
-        TextDraw.centered(g, StoryText.CLEAR_TITLE, CENTER_X, 148);
+        TextDraw.centered(g, StoryText.CLEAR_TITLE, CENTER_X, 108);
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, StoryText.levelTitle(result.getChapter(), result.getLevel()), CENTER_X, 172);
+        TextDraw.centered(g, StoryText.levelTitle(result.getChapter(), result.getLevel()), CENTER_X, 132);
 
         String diffText = result.getDifficulty().getDisplayName();
         if (result.getDifficulty().getScoreMultiplier() > 1.0) {
@@ -112,14 +114,15 @@ public final class LevelClearScreen implements Screen {
                 : "-";
 
         // The numbers count up from zero when the report appears.
-        drawRow(g, StoryText.CLEAR_DIFFICULTY, diffText, 198);
-        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(counted(result.getPoints())), 218);
-        drawRow(g, StoryText.CLEAR_TIME, counted((int) result.getTimeLeft()) + " s", 238);
-        drawRow(g, StoryText.CLEAR_HEALTH, counted(result.getHealthLeft()) + " / " + result.getMaxHealth(), 258);
-        drawRow(g, StoryText.CLEAR_COMBO, comboText, 278);
+        drawRow(g, StoryText.CLEAR_DIFFICULTY, diffText, FIRST_ROW_Y);
+        drawRow(g, StoryText.CLEAR_POINTS, String.valueOf(counted(result.getPoints())), FIRST_ROW_Y + ROW_SPACING);
+        drawRow(g, StoryText.CLEAR_TIME, counted((int) result.getTimeLeft()) + " s", FIRST_ROW_Y + 2 * ROW_SPACING);
+        drawRow(g, StoryText.CLEAR_HEALTH, counted(result.getHealthLeft()) + " / " + result.getMaxHealth(),
+                FIRST_ROW_Y + 3 * ROW_SPACING);
+        drawRow(g, StoryText.CLEAR_COMBO, comboText, FIRST_ROW_Y + 4 * ROW_SPACING);
         g.setColor(UiPalette.PANEL_EDGE);
-        g.drawLine(LABEL_X, 286, VALUE_X, 286);
-        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.levelScore(result))), 307);
+        g.drawLine(LABEL_X, 290, VALUE_X, 290);
+        drawRow(g, StoryText.CLEAR_SCORE, String.valueOf(counted(ScoreCalculator.levelScore(result))), 318);
 
         if (badgeDecided) {
             drawBadge(g);
@@ -129,7 +132,7 @@ public final class LevelClearScreen implements Screen {
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
-        TextDraw.centered(g, StoryText.CONTINUE_PROMPT, CENTER_X, 494);
+        TextDraw.centered(g, StoryText.CONTINUE_PROMPT, CENTER_X, 528);
     }
 
     /** The part of a number that has been counted so far: 0 at first, the full number after a moment. */
@@ -154,13 +157,13 @@ public final class LevelClearScreen implements Screen {
 
         g.setFont(Fonts.LABEL);
         g.setColor(badgeEarned ? UiPalette.GOLD : UiPalette.DIM_TEXT);
-        TextDraw.centered(g, badgeEarned ? StoryText.BADGE_EARNED_LABEL : StoryText.BADGE_MISSED_LABEL, CENTER_X, 428);
+        TextDraw.centered(g, badgeEarned ? StoryText.BADGE_EARNED_LABEL : StoryText.BADGE_MISSED_LABEL, CENTER_X, 446);
         g.setFont(Fonts.SUBHEADING);
         g.setColor(badgeEarned ? UiPalette.TEXT : UiPalette.DIM_TEXT);
-        TextDraw.centered(g, badge.getDisplayName(), CENTER_X, 449);
+        TextDraw.centered(g, badge.getDisplayName(), CENTER_X, 472);
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, badgeEarned ? badge.getEarnedText() : badge.getLockedText(), CENTER_X, 467);
+        TextDraw.centered(g, badgeEarned ? badge.getEarnedText() : badge.getLockedText(), CENTER_X, 492);
     }
 
     /**
@@ -180,13 +183,13 @@ public final class LevelClearScreen implements Screen {
         }
         g.setFont(Fonts.SUBHEADING);
         g.setColor(UiPalette.TEXT);
-        TextDraw.centered(g, String.format(StoryText.CLEAR_PROGRESS, result.getLevel(), levels), CENTER_X, 392);
+        TextDraw.centered(g, String.format(StoryText.CLEAR_PROGRESS, result.getLevel(), levels), CENTER_X, 414);
 
-        badgePainter.paint(g, badge, CENTER_X - 150, 440, PIP_BADGE_RADIUS, false);
+        badgePainter.paint(g, badge, CENTER_X - 150, 464, PIP_BADGE_RADIUS, false);
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
-        g.drawString(badge.getDisplayName() + ": " + badge.getLockedText(), CENTER_X - 126, 437);
-        g.drawString(StoryText.CLEAR_BADGE_AHEAD, CENTER_X - 126, 453);
+        g.drawString(badge.getDisplayName() + ": " + badge.getLockedText(), CENTER_X - 126, 460);
+        g.drawString(StoryText.CLEAR_BADGE_AHEAD, CENTER_X - 126, 476);
     }
 
     /** Small crosses of light that fly out from the medal and fade. */
@@ -216,5 +219,25 @@ public final class LevelClearScreen implements Screen {
         g.drawString(label, LABEL_X, y);
         g.setColor(UiPalette.TEXT);
         TextDraw.rightAligned(g, value, VALUE_X, y);
+    }
+
+    @Override
+    public String getAccessibleName() {
+        return StoryText.CLEAR_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        if (result == null) {
+            return "";
+        }
+        String text = StoryText.levelTitle(result.getChapter(), result.getLevel())
+                + ", Level score " + ScoreCalculator.levelScore(result)
+                + ", Time left " + (int) result.getTimeLeft() + " s"
+                + ", Health " + result.getHealthLeft() + " of " + result.getMaxHealth();
+        if (badgeDecided && badge != null) {
+            text += ", " + (badgeEarned ? "Earned badge: " : "Missed badge: ") + badge.getDisplayName();
+        }
+        return text;
     }
 }

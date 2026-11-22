@@ -127,4 +127,26 @@ public final class HighScoreScreen implements Screen {
                     entry.getBadges().contains(badges[i]));
         }
     }
+
+    @Override
+    public String getAccessibleName() {
+        return StoryText.SCORES_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        List<ScoreEntry> entries = screens.getHighScores().getEntries();
+        if (entries.isEmpty()) {
+            return StoryText.SCORES_EMPTY;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < entries.size(); i++) {
+            if (i > 0) {
+                sb.append("; ");
+            }
+            ScoreEntry entry = entries.get(i);
+            sb.append(i + 1).append(". ").append(entry.getName()).append(' ').append(entry.getScore());
+        }
+        return sb.toString();
+    }
 }

@@ -135,4 +135,15 @@ public final class NameEntryScreen implements Screen {
             g.fillRect(caretX, FIELD_Y + 9, 2, FIELD_HEIGHT - 18);
         }
     }
+
+    @Override
+    public String getAccessibleName() {
+        return StoryText.NAME_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        String shown = name.length() == 0 ? StoryText.PLAYER_NAME : name.toString();
+        return StoryText.NAME_LABEL + ": " + shown;
+    }
 }

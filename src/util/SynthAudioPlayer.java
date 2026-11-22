@@ -31,6 +31,12 @@ public final class SynthAudioPlayer implements AudioPlayer {
     private static final long REPEAT_GAP_MS = 40;      // the same effect is not restarted faster than this
     private static final int[] SAMPLE_RATES = {ToneSynth.SAMPLE_RATE, ToneSynth.SAMPLE_RATE * 2};
 
+    /** Opens and configures an audio line for the given format and buffer size. */
+    @FunctionalInterface
+    public interface LineOpener {
+        SourceDataLine open(AudioFormat format, int bufferBytes) throws LineUnavailableException;
+    }
+
     // Requests travel from the game's thread to the audio thread through this queue.
     private final BlockingQueue<short[]> requests = new ArrayBlockingQueue<>(QUEUE_SIZE);
     private final Map<SoundEffect, Long> lastPlayedAt = new EnumMap<>(SoundEffect.class);
@@ -134,21 +140,39 @@ public final class SynthAudioPlayer implements AudioPlayer {
      * (sampleRepeat remembers which).
      */
     private SourceDataLine openLine() throws LineUnavailableException {
-        LineUnavailableException lastProblem = null;
+        return openLine((format, bufferBytes) -> {
+            SourceDataLine line = AudioSystem.getSourceDataLine(format);
+            line.open(format, bufferBytes);
+            line.start();
+            return line;
+        });
+    }
+
+    /** Tries each supported sample rate until an audio line accepts it. */
+    public SourceDataLine openLine(LineOpener opener) throws LineUnavailableException {
+        LineUnavailableException unavailableError = null;
+        IllegalArgumentException formatError = null;
         for (int i = 0; i < SAMPLE_RATES.length; i++) {
             // 16-bit, one channel (mono), signed, low byte first
             AudioFormat format = new AudioFormat(SAMPLE_RATES[i], 16, 1, true, false);
             try {
-                SourceDataLine line = AudioSystem.getSourceDataLine(format);
-                line.open(format, LINE_BUFFER_BYTES * (i + 1));
-                line.start();
+                SourceDataLine line = opener.open(format, LINE_BUFFER_BYTES * (i + 1));
                 sampleRepeat = i + 1;
                 return line;
             } catch (LineUnavailableException problem) {
-                lastProblem = problem;
+                unavailableError = problem;
+            } catch (IllegalArgumentException problem) {
+                formatError = problem;
             }
         }
-        throw lastProblem;
+        if (unavailableError != null) {
+            throw unavailableError;
+        }
+        throw formatError;
+    }
+
+    public int getSampleRepeat() {
+        return sampleRepeat;
     }
 
     /** The mixing loop: runs for as long as the game does. */

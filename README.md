@@ -58,11 +58,12 @@ java -cp out Main
 | `P` or `Esc` | Pause (resume, sound on or off, restart the level, or quit to the menu) |
 | `M` | Sound on or off, on any screen (except while typing a name) |
 | `F11` | Full screen on or off |
+| `D` / `Left` / `Right` on the menu | Cycle difficulty (`Easy`, `Medium`, `Hard`) |
 | Letters, `Backspace`, `Enter` | Type and save your name when a run makes the high-score list |
-| `Enter` | Confirm, next story page |
+| `Enter` or `Space` | Confirm menu or level choice; finish or turn a story page |
 | `Esc` on a story page | Skip the story |
 | `Up` / `Down` | Move in menus |
-| Arrow keys, `Enter`, `Esc` | In the level select: choose a level, play it, go back |
+| Arrow keys, `C` / `Tab`, `Enter`, `Esc` | In the level select: choose a level, change chapter, play it, go back |
 
 ## How to play
 
@@ -124,10 +125,27 @@ What each tool does:
 - The sea moves. Nothing appears in the middle of the screen: after the start of a
   level, trash and fish come in from the left or right edge and leave at the other.
   A **current** carries everything along, strongest near the surface and almost gone
-  at the sea floor; it turns round every 23 seconds or so, and the arrows under the
-  clock show which way it flows and how hard. A **swell** rocks the boat, which
-  leans the swing of the hook to one side, so the moment it points straight down
-  keeps shifting. Both get stronger toward the end of a chapter; level 1-1 has neither.
+  at the sea floor; it turns round every 23 seconds or so, and the **Current** pill
+  along the bottom HUD shows which way it flows and how hard. A **swell** rocks the
+  boat, which leans the swing of the hook to one side, so the moment it points straight
+  down keeps shifting. Both get stronger toward the end of a chapter; level 1-1 has
+  neither **on Easy**.
+- Choose **Easy** (`1.0x`), **Medium** (`1.25x`) or **Hard** (`1.5x`) from the menu
+  before starting a run (`D`, `Left` / `Right`), or press `C` / `Tab` in **Select
+  Level**. Higher difficulties increase swell, current, fish count and fish speed,
+  tighten spare trash, and enable ocean events from level `1-1`.
+- **Catch combos & Flow:** consecutive trash catches without missing, slipping or
+  hitting a fish build a streak (`+25` up to `+100` bonus run-score points per catch).
+  Pulling the hook back empty without touching anything keeps your current streak.
+  Reaching a `3+` streak enters **Flow**, speeding up the hook by 15%.
+- **Dynamic ocean events:** periodic events roll across the sea and announce in a
+  banner above the tool bar — **Squall** (stronger swell and current), **Trash Tide**
+  (extra bonus trash while keeping every chapter 2–3 single kind strictly below
+  quota), **Feeding Frenzy** (more fish) and **Slack Tide** (calm water and extra
+  time).
+- Live HUD badges for **Difficulty**, **Combo/Flow**, **Current** and **Sound** sit
+  alongside the tool bar at the bottom of the screen so the top bar stays clear above
+  the boat.
 - Fish have a mind of their own: now and then one slows, turns around, or changes
   depth. Leave more room than you think you need.
 - The Magnet pulls cans that are close to it on its way down, so a near miss can
@@ -157,24 +175,37 @@ What each tool does:
 
 ### Score and high scores
 
-When a run ends (the story is finished, or you are fired and press `Esc`), it gets a
-run score:
+In a level, catching trash earns **quota points** toward the level target (bottle
+`10`, can `20`, net `50`). Separate from that quota counter, a **run score** is
+computed when a run ends (when the story is finished, or when you pause or are fired
+and return to the menu):
 
-| What | Worth |
+| What (per cleared level) | Worth (before difficulty multiplier) |
 |---|---|
-| Each point of trash in a cleared level | 10 |
-| Each whole second left on the clock of a cleared level | 20 |
-| Each health left at the end of a cleared level | 100 |
-| Badges | Eco Rookie 300, Sorter 500, Champion 1000 |
-| Failed attempts | minus 500 for the first, 1000 more for the second, 1500 more for the third, ... |
+| Each quota point collected in the cleared level | 10 |
+| Each whole second left on the clock of the cleared level (`floor(timeLeft)`) | 20 |
+| Each health point left at the end of the cleared level | 100 |
+| Catch combo bonus | +25 (`2x`), +50 (`3x`), +75 (`4x`), +100 (`5x+`) per consecutive catch |
 
-The score never goes below zero. The level report shows what the level was worth.
+Each cleared level's base subtotal `(10 * pts + 20 * floor(timeLeft) + 100 * healthLeft + comboBonus)`
+is rounded after multiplying by the difficulty multiplier (`Easy 1.0x`, `Medium 1.25x`,
+`Hard 1.5x`). Across the run, earned **Badges** add flat bonuses (**Eco Rookie** `300`,
+**Sorter** `500`, **Champion** `1000`), and **retries** (whether after being fired or via
+Pause -> Restart level) subtract an escalating penalty: `500` for the 1st retry,
+`1000` more (`1500` total) for the 2nd, `1500` more (`3000` total) for the 3rd, and so on
+(`250 * retries * (retries + 1)`), floored at `0`.
 
-The ten best runs are kept on the High Scores page of the menu. A run that makes the
-list asks for a name (up to 12 letters; leave it empty for "NICO"). The list is saved
-in `.fish2trash/highscores.txt` in your home folder; delete that file to start a new
-list. If the file cannot be written the game still works, and the list then lasts
-until the game closes.
+For example, clearing `2-1` on **Medium** (`1.25x`) with `100` quota points, `40.8 s`
+left, `4` health left and a `3x` streak (`+25` on catch 2 + `+50` on catch 3 = `75`):
+`Math.round((1000 + 800 + 400 + 75) * 1.25) = Math.round(2275 * 1.25) = 2844`.
+
+The ten best runs are kept on the High Scores page of the menu, sorted by higher score,
+then fewer retries, then earlier date. A run qualifies when its score is positive and
+either fewer than 10 entries exist or it strictly beats the 10th entry under that sort
+order. A qualifying run asks for a name (up to 12 letters; leave it empty for "NICO").
+The list is saved in `.fish2trash/highscores.txt` in your home folder; delete that file
+to start a new list. If the file cannot be written the game still works, and the list
+then lasts until the game closes.
 
 ## Folder structure
 
@@ -189,6 +220,8 @@ FISH2TRASH/
 │   │   ├── Fish             abstract: costs health, wanders, and suffers what the tool does
 │   │   │   └── SmallFish, BigFish, Pufferfish, Barracuda, Stingray
 │   │   ├── Condition        enum: a fish is normal, dazed or lifeless
+│   │   ├── Difficulty       enum: Easy (1.0x), Medium (1.25x), Hard (1.5x)
+│   │   ├── OceanEventType   enum: Squall, Trash Tide, Feeding Frenzy, Slack Tide
 │   │   ├── Sea              the swell that rocks the boat and the current
 │   │   ├── ObjectKind       enum: builds each object, lookup key for painters
 │   │   ├── ObjectView, HookSensor   small read-only interfaces
@@ -223,7 +256,7 @@ FISH2TRASH/
 │   │   │   HighScoreScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
 │   │                        water, one painter per object kind and per tool, BadgePainter,
-│   │                        PixelImages (pictures drawn once and reused)
+│   │                        PixelImages (pictures drawn once and reused), stingray.png
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
@@ -233,6 +266,8 @@ FISH2TRASH/
 │       ├── ToneSynth        turns a recipe of tones into sound samples
 │       ├── SoundEffect      enum: one recipe per sound in the game
 │       └── AudioPlayer      interface: SynthAudioPlayer (real), SilentAudioPlayer (no sound)
+├── art/
+│   └── models/              Stingray.blend, Stingray.png, export_stingray.py (sprite generator)
 ├── test/                    tests, run by scripts/test
 ├── docs/                    class diagram, screenshots, playtest sheet, proposal notes
 ├── scripts/                 build, run and test (.sh and .bat)
@@ -308,6 +343,7 @@ no test library is needed. The script exits with an error if any check fails.
 | Test | What it checks |
 |---|---|
 | `ArchitectureTest` | The design rules above, by reading the source files |
+| `DiagramTest` | Every class and enum in `src/` stays in sync with `docs/class-diagram.md` |
 | `PlayerTest`, `OceanObjectTest`, `BoatHookTest` | Health and score rules, movement, leaving the screen, collision, the hook's swing, launch and recall |
 | `SeaTest` | The swell and the current; trash drifting more than fish and less near the sea floor; the rocking boat leaning the swing; arrivals coming in from the sides and leavers being replaced; fish turning and changing depth; what the Hook, the Magnet and the Net Cutter each do to a fish; the Magnet pulling cans |
 | `ModelCatchTest`, `DangerousFishTest` | What each kind of object does when hooked; pufferfish, barracuda and stingray behaviour; the Net Cutter costing double |
@@ -318,6 +354,7 @@ no test library is needed. The script exits with an error if any check fails.
 | `GameEventTest`, `LevelFlowTest` | The events the game announces; winning, the frozen clock, and both ways to lose |
 | `LevelSpawnTest` | The fifteen spawn tables: quotas rising to 100, 200 and 350; enough trash in every level, but never enough of one kind from chapter 2 on; fish only getting more inside a chapter; timing, limited supply, distance from the hook |
 | `SessionTest` | Walking through all fifteen levels in order; retrying after a fail |
+| `DifficultyAndEventsTest` | `Easy`/`Medium`/`Hard` scaling and winnability across all 15 levels, catch combos and Flow, dynamic ocean events (including single-kind `< quota` caps during `Trash Tide`), HUD boat clearance, and score/UI integration |
 | `ScoreFlowTest` | What a level, a badge and a failed attempt do to the run score, checked against the numbers in `GameConstants` |
 | `HighScoreStoreTest` | Tidy names; the line format of the score file; the order and length of the list; a restart, a damaged file and a failed save. Uses temporary folders, never your real list |
 | `HighScoreScreenTest` | When a name is asked for, what can be typed, and that the run lands on the list and in the file |
@@ -365,9 +402,16 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
       refill the water at once.
 - [ ] A fish touched by the Hook costs 1 health, gives no points, rides the line up
       thrashing, and is let go at the boat with a splash. It swims back down.
-- [ ] Level 1-1 has no waves and shows "NO CURRENT". From level 1-2 the arrows next
-      to the speaker show the current, and bottles drift that way, faster near the
+- [ ] Level 1-1 on **Easy** has no waves and shows `CALM` in the Current pill; on **Medium**
+      or **Hard**, swell, current and ocean events are active on 1-1 too. From level 1-2
+      the Current pill shows direction and strength, and bottles drift faster near the
       surface than near the sea floor.
+- [ ] On the main menu, `D`, `Left` / `Right` cycle difficulty (`Easy 1.0x`, `Medium 1.25x`,
+      `Hard 1.5x`); in Select Level, `C` / `Tab` cycle difficulty.
+- [ ] Consecutive catches build a streak (`+25`..`+100`) shown in the Streak/Flow HUD
+      pill; `3+` Flow noticeably speeds up the hook, while early empty recall keeps it.
+- [ ] Ocean event banners appear cleanly above the tool bar without covering the boat mast
+      or top bar, and during `Trash Tide` in chapters 2–3 no single trash kind reaches quota.
 - [ ] From level 1-3 the boat rocks and the swing of the hook leans with it. In
       level 1-5 the waves are tall and the boat rocks hard.
 - [ ] After the first seconds of a level, nothing appears in the middle of the
@@ -410,7 +454,9 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
 - [ ] Health reaching 0 shows the pink slip with a "fish" message.
 - [ ] Enter retries the same level; Esc ends the run (menu, or the name entry if the
       run scored enough for the list).
-- [ ] `P` or `Esc` pauses. Resume, Restart level and Quit to menu all work.
+- [ ] `P` or `Esc` pauses. Resume, Restart level (counts as a retry penalty for run
+      score) and Quit to menu (prompts for high-score name entry if your cleared-level
+      score qualifies) all work.
 - [ ] Clicking another window pauses the game.
 
 **Hints**
@@ -462,9 +508,10 @@ LangoyLaban, BSIT 2.
 ## Credits
 
 Java2D draws the game. The stingray uses a 12-frame sprite sheet rendered from the
-[editable Blender model](art/models/Stingray.blend). The build includes the sprites,
-so players only need Java. Sound is synthesized with `javax.sound.sampled`, and
-the team wrote the in-game text.
+[editable Blender model](art/models/Stingray.blend) with
+[art/models/export_stingray.py](art/models/export_stingray.py). The build includes
+the sprites, so players only need Java. Sound is synthesized with
+`javax.sound.sampled`, and the team wrote the in-game text.
 
 ## Contributing
 

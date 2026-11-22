@@ -4,6 +4,7 @@ import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import ui.render.Fonts;
 import ui.render.TextDraw;
@@ -33,9 +34,9 @@ public final class PauseOverlay implements Screen {
         menu = new MenuList(audio);
         menu.add(StoryText.PAUSE_RESUME, screens::resume);
         menu.add(() -> soundLabels.get(audio.getState()), () -> audio.setMuted(!audio.isMuted()));
-        // Entering the playing screen again starts a fresh attempt at the level.
-        menu.add(StoryText.PAUSE_RESTART, () -> screens.go(GameState.PLAYING));
-        menu.add(StoryText.PAUSE_QUIT, () -> screens.go(GameState.MENU));
+        // Restarting mid-level counts as a retry; quitting offers name entry when the banked score qualifies.
+        menu.add(StoryText.PAUSE_RESTART, screens::restartLevel);
+        menu.add(StoryText.PAUSE_QUIT, () -> screens.go(screens.afterRun(GameState.MENU)));
     }
 
     @Override
@@ -62,5 +63,30 @@ public final class PauseOverlay implements Screen {
         TextDraw.centered(g, StoryText.PAUSE_TITLE, CENTER_X, 220);
 
         menu.paint(g, CENTER_X, 290, 46);
+    }
+
+    @Override
+    public String getAccessibleName() {
+        return "Paused";
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        return "Selected: " + menu.getSelectedLabel();
+    }
+
+    @Override
+    public List<String> getAccessibleChoices() {
+        return menu.getLabels();
+    }
+
+    @Override
+    public int getAccessibleSelectedIndex() {
+        return menu.getSelectedIndex();
+    }
+
+    @Override
+    public void activateAccessibleChoice(int index) {
+        menu.selectAndActivate(index);
     }
 }

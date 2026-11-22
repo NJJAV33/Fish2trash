@@ -408,6 +408,11 @@ public final class GameManager implements GameView, CatchResolver {
     }
 
     @Override
+    public boolean isTimeFrozen() {
+        return timeLimit.isFrozen();
+    }
+
+    @Override
     public LevelStatus getStatus() {
         return status;
     }

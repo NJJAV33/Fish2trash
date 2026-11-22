@@ -39,6 +39,8 @@ public class Level {
     private final List<OceanObject> eventObjects = new ArrayList<>();
     private final List<RuleState> ruleStates = new ArrayList<>();
     private final List<TutorialPrompt> waitingPrompts;
+    private final int[] baseTrashPoints = new int[ObjectKind.values().length];
+    private final int[] eventTrashPoints = new int[ObjectKind.values().length];
     private final Sea sea;
     private double elapsed;
 
@@ -70,6 +72,10 @@ public class Level {
         this.waitingPrompts = new ArrayList<>(data.getPrompts());
         for (SpawnRule rule : buildRules(data, difficulty)) {
             ruleStates.add(new RuleState(rule));
+            ObjectKind kind = rule.getKind();
+            if (kind.isTrash()) {
+                baseTrashPoints[kind.ordinal()] += rule.getSupply() * kind.create(0, 0, 0).getPoints();
+            }
         }
         this.nextEventDelay = this.eventsEnabled
                 ? betweenEvent(difficulty.getEventDelayMin(), difficulty.getEventDelayMax())
@@ -287,11 +293,19 @@ public class Level {
         double yMin;
         double yMax;
         if (activeEvent == OceanEventType.TRASH_TIDE) {
-            // In Chapters 2 and 3, bonus debris uses bottles/cans so single-tool limits still hold.
+            // In Chapters 2 and 3, bonus debris uses bottles/cans while keeping every single kind strictly below quota.
             if (data.getChapter() == 3 && eventRandom.nextBoolean()) {
                 kind = ObjectKind.CAN;
             } else {
                 kind = ObjectKind.PLASTIC_BOTTLE;
+            }
+            if (data.getChapter() >= 2 && !canSpawnEventTrash(kind)) {
+                ObjectKind alternate = (kind == ObjectKind.CAN) ? ObjectKind.PLASTIC_BOTTLE : ObjectKind.CAN;
+                if (!canSpawnEventTrash(alternate)) {
+                    eventSpawnsLeft = 0;
+                    return;
+                }
+                kind = alternate;
             }
             speedMin = 40;
             speedMax = 75;
@@ -320,6 +334,18 @@ public class Level {
         object.grantImmunity(GameConstants.SPAWN_FADE_IN_S);
         objects.add(object);
         eventObjects.add(object);
+        if (activeEvent == OceanEventType.TRASH_TIDE && kind.isTrash()) {
+            eventTrashPoints[kind.ordinal()] += object.getPoints();
+        }
+    }
+
+    private boolean canSpawnEventTrash(ObjectKind kind) {
+        if (data.getChapter() < 2) {
+            return true;
+        }
+        int itemPoints = kind.create(0, 0, 0).getPoints();
+        int totalAfterSpawn = baseTrashPoints[kind.ordinal()] + eventTrashPoints[kind.ordinal()] + itemPoints;
+        return totalAfterSpawn < data.getQuota();
     }
 
     private void runRule(RuleState state, double dt, HookSensor hook) {

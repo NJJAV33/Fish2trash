@@ -91,16 +91,17 @@ now; nothing on this page is still planned.
 - [ ] **3.1 Encapsulation example:** the real methods are `Player.addPoints()` and
       `Player.loseHealth()`, and `Hook.launch()`, `Hook.recall()` and `Hook.update()`.
       Replace `collectTrash()`, `takeDamage()`, `swing()` and `extend()`.
-- [ ] **3.1 Inheritance:** add `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda` under
+- [ ] **3.1 Inheritance:** add `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`, `Stingray` under
       `Fish`, and `PlainHook`, `Magnet`, `NetCutter` under `Equipment`.
 - [ ] **3.1 Polymorphism example:** name the real call, `object.onCaught(player, hook)`,
       and add `move()` and `sense()` (a pufferfish weaves and swells, a barracuda charges).
       Two more examples: `rule.isTriggered(...)` (five `HintRule` classes) and
       `badge.isEarnedBy(result)` (each `Badge` has its own rule).
-- [ ] **3.1 Abstraction:** add the interfaces `GameView`, `ObjectView`, `Screen`,
-      `GameListener`, `HintRule`, `ObjectPainter` and `AudioPlayer`.
+- [ ] **3.1 Abstraction:** add the interfaces `GameView`, `ObjectView`, `HookSensor`,
+      `CatchResolver`, `Screen`, `GameListener`, `HintRule`, `ObjectPainter`, `ToolPainter`
+      and `AudioPlayer`.
 - [ ] **3.1 Other Java concepts:** remove "//double check". Replace `enum (BinType)` with
-      `enum (ObjectKind, EquipmentType, EventType, LevelStatus, GameState, CatchOutcome, Badge)`.
+      `enum (ObjectKind, EquipmentType, Condition, Difficulty, OceanEventType, EventType, LevelStatus, FailCause, GameState, CatchOutcome, Badge, SoundEffect, SoundState)`.
       Replace `BinFullException` with `EquipmentLockedException` (thrown when the player
       asks for a tool the crew does not have yet) and `HighScoreException` (thrown when
       the high-score file cannot be read or written, or a line of it is damaged).
@@ -127,18 +128,21 @@ now; nothing on this page is still planned.
       `MarketLevel`, `TyphoonLevel`).
 - [ ] **3.3 Package Layout:**
   - `model`: add `ObjectKind`, `SmallFish`, `BigFish`, `Pufferfish`, `Barracuda`,
-    `LevelData`, `SpawnRule`, `Equipment`, `PlainHook`, `Magnet`, `NetCutter`,
-    `EquipmentType`, `Loadout`, `CatchOutcome`, `EquipmentLockedException`. Change
-    "No JavaFX imports" to "No Swing or AWT imports".
+    `Stingray`, `Condition`, `Sea`, `Difficulty`, `OceanEventType`, `ObjectView`,
+    `HookSensor`, `CatchResolver`, `LevelData`, `SpawnRule`, `TutorialPrompt`,
+    `Equipment`, `PlainHook`, `Magnet`, `NetCutter`, `EquipmentType`, `Loadout`,
+    `CatchOutcome`, `EquipmentLockedException`. Change "No JavaFX imports" to
+    "No Swing or AWT imports".
   - `game`: remove `GameController`. Add `GameSession`, `GameEvent`, `GameListener`,
-    `HintEngine` (with its `HintRule`s), `Badge`, `ScoreCalculator`, `ScoreEntry` and
-    `HighScoreTable`.
-  - `ui`: the screens are `MainMenu`, `StoryScreen`, `GameScreen`, `LevelClearScreen`,
-    `GameOverScreen`, `VictoryScreen`, `NameEntryScreen`, `HighScoreScreen`,
-    `HowToScreen`, `PauseOverlay`. Change "JavaFX screens" to "Swing screens".
+    `HintEngine` (with its `HintRule`s), `Badge`, `LevelProgress`, `ScoreCalculator`,
+    `ScoreEntry` and `HighScoreTable`.
+  - `ui`: the screens are `MainMenu`, `LevelSelectScreen`, `StoryScreen`, `GameScreen`,
+    `LevelClearScreen`, `GameOverScreen`, `VictoryScreen`, `NameEntryScreen`,
+    `HighScoreScreen`, `HowToScreen`, `PauseOverlay`. Change "JavaFX screens" to
+    "Swing screens".
   - `util`: `GameConstants`, `StoryText` (all in-game text), `Mathx`, the sound classes
-    (`SoundEffect`, `ToneSynth`, `AudioPlayer`), `HighScoreStore` and
-    `HighScoreException`.
+    (`SoundEffect`, `ToneSynth`, `AudioPlayer`, `SoundState`), `HighScoreStore`,
+    `HighScoreException` and `ProgressStore`.
 - [ ] **3.4 Illustrative Code:** remove "// to update" and replace the sample
       (`WasteItem`, `BinType`, `GameController`) with real code, for example:
 
@@ -187,10 +191,11 @@ now; nothing on this page is still planned.
 ## 6. Tools and Assets
 
 - [ ] "game assets will be made by the team using simple shapes and sprites or obtained
-      from free-license sources with proper credits" becomes "everything on screen is
-      drawn in code with Java2D and every sound is built in code with
-      `javax.sound.sampled`; the game uses no external images, fonts, sound files or
-      libraries".
+      from free-license sources with proper credits" becomes "everything except the
+      bundled 12-frame `stingray.png` sprite sheet (`art/models/Stingray.blend` and
+      `art/models/export_stingray.py`) is drawn in code with Java2D and every sound
+      is built in code with `javax.sound.sampled`; the game uses no external fonts,
+      sound files or third-party libraries".
 - [ ] The line already says Java Swing. Keep it.
 
 ## 7. Risks and Mitigation

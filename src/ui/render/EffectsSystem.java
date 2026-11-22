@@ -139,7 +139,7 @@ public final class EffectsSystem implements GameListener {
         boolean flow = event.getValue() >= GameConstants.HOT_STREAK_MIN;
         String label = "x" + event.getValue() + (flow ? " FLOW! " : " ") + event.getText();
         Color badgeColor = flow ? UiPalette.ACCENT : UiPalette.GOLD;
-        addPopup(label, event.getX(), event.getY() - 36, badgeColor);
+        addPopup(label, event.getX(), Math.max(96, event.getY() - 56), badgeColor);
         if (event.getValue() == GameConstants.HOT_STREAK_MIN) {
             burst(event.getX(), event.getY(), 6, UiPalette.ACCENT);
         }
@@ -365,5 +365,16 @@ public final class EffectsSystem implements GameListener {
             }
         }
         return count;
+    }
+
+    /** Baseline Y coordinates of currently active floating text popups. */
+    public java.util.List<Double> getPopupYs() {
+        java.util.List<Double> ys = new java.util.ArrayList<>();
+        for (int i = 0; i < MAX_EFFECTS; i++) {
+            if (alive[i] && kind[i] == Kind.POPUP) {
+                ys.add(y[i]);
+            }
+        }
+        return ys;
     }
 }

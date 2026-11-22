@@ -112,4 +112,18 @@ public final class GameOverScreen implements Screen {
         TextDraw.centered(stamp, StoryText.FAIL_STAMP, 0, 17);
         stamp.dispose();
     }
+
+    @Override
+    public String getAccessibleName() {
+        return StoryText.FAIL_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        if (result == null) {
+            return "";
+        }
+        return StoryText.failText(result.getChapter(), result.getFailCause() == FailCause.TIME)
+                .replace('\n', ' ') + " " + StoryText.FAIL_PROMPT;
+    }
 }
