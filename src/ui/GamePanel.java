@@ -64,6 +64,7 @@ public final class GamePanel extends JPanel {
         setBackground(Color.BLACK);   // the bars beside the picture when the window has another shape
         setOpaque(true);              // every pixel is painted here, so nothing behind needs painting
         setFocusable(true);   // a panel only receives keys if it can have the focus
+        setFocusTraversalKeysEnabled(false);
         addKeyListener(new KeyHandler());
         addFocusListener(new FocusAdapter() {
             @Override
