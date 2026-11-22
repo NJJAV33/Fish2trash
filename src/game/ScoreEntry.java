@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
+import model.LevelData;
 import util.GameConstants;
 import util.HighScoreException;
 import util.StoryText;
@@ -93,8 +94,8 @@ public final class ScoreEntry implements Comparable<ScoreEntry> {
             int badgeBits = Integer.parseInt(fields[3]);
             int retries = Integer.parseInt(fields[4]);
             LocalDate date = LocalDate.parse(fields[5]);
-            if (score < 0 || levelsCleared < 0 || retries < 0
-                    || badgeBits < 0 || badgeBits >= 1 << Badge.values().length) {
+            if (score < 0 || levelsCleared < 0 || levelsCleared > LevelData.LEVEL_COUNT
+                    || retries < 0 || badgeBits < 0 || badgeBits >= 1 << Badge.values().length) {
                 throw new HighScoreException("A number is out of range in: " + line);
             }
             Set<Badge> badges = EnumSet.noneOf(Badge.class);

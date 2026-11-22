@@ -1,18 +1,23 @@
 import game.GameManager;
 import game.GameState;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import model.EquipmentType;
 import model.LevelData;
 import model.Loadout;
 import model.ObjectKind;
 import model.OceanObject;
 import model.Sea;
 import ui.GamePanel;
+import ui.GameWindow;
 import ui.render.BackgroundPainter;
 import ui.render.ChapterPalette;
 import ui.render.PainterRegistry;
@@ -37,12 +42,95 @@ public final class ScalingTest {
     public static void run() {
         theGameFillsABiggerWindow();
         aWindowOfAnotherShapeGetsBarsAtTheSides();
+        windowStartingSizeFitsInsideWorkArea();
+        windowBoundsClampToWorkArea();
         theSeaHasElevenLooksFromDirtyToClean();
         theSeaClearsAsTheQuotaFills();
+        overQuotaScoreDoesNotOverClearSea();
         deepObjectsAreHazier();
         aNetLooksTheSameEveryTimeAndGrowsWithTheWindow();
         onlyAFewBackgroundsAreKept();
         aCaughtObjectCanBeDrawnStretched();
+    }
+
+    private static void windowStartingSizeFitsInsideWorkArea() {
+        Dimension smallLaptop = GameWindow.startingSizeFor(new Dimension(1024, 560), new Insets(30, 8, 8, 8));
+        Check.assertTrue("small laptop window width fits usable work area", smallLaptop.width <= 1008);
+        Check.assertTrue("small laptop window height fits usable work area", smallLaptop.height <= 522);
+        Check.assertTrue("small laptop window preserves 4:3 aspect",
+                Math.abs(smallLaptop.width * 3 - smallLaptop.height * 4) <= 4);
+
+        Dimension fhd = GameWindow.startingSizeFor(new Dimension(1920, 1040), new Insets(0, 0, 0, 0));
+        Check.assertEquals("1920x1040 starts at 800x600", new Dimension(800, 600), fhd);
+
+        Dimension uhd = GameWindow.startingSizeFor(new Dimension(3840, 2100), new Insets(0, 0, 0, 0));
+        Check.assertEquals("3840x2100 starts at 1600x1200", new Dimension(1600, 1200), uhd);
+    }
+
+    private static void windowBoundsClampToWorkArea() {
+        Rectangle work = new Rectangle(0, 0, 1920, 1040);
+        Rectangle inside = new Rectangle(120, 80, 900, 675);
+        Check.assertEquals("in-bounds rectangle stays unchanged",
+                inside, GameWindow.clampToWorkArea(inside, work));
+
+        Rectangle offscreen = GameWindow.clampToWorkArea(new Rectangle(2500, 1500, 2200, 1400), work);
+        Check.assertTrue("clamped width fits work area", offscreen.width <= work.width);
+        Check.assertTrue("clamped height fits work area", offscreen.height <= work.height);
+        Check.assertTrue("clamped right edge fits work area", offscreen.x >= work.x && offscreen.x + offscreen.width <= work.x + work.width);
+        Check.assertTrue("clamped bottom edge fits work area", offscreen.y >= work.y && offscreen.y + offscreen.height <= work.y + work.height);
+
+        Rectangle negative = GameWindow.clampToWorkArea(new Rectangle(-200, -100, 800, 600), work);
+        Check.assertEquals("negative origin clamps onto screen", new Rectangle(0, 0, 800, 600), negative);
+    }
+
+    private static void overQuotaScoreDoesNotOverClearSea() {
+        SceneRenderer renderer = new SceneRenderer();
+        GameManager exact = new GameManager(LevelData.of(2, 1), Loadout.forChapter(2), new Random(5));
+        for (int i = 0; i < 4; i++) {
+            catchNext(exact, ObjectKind.CAN);
+        }
+        swapTool(exact, EquipmentType.HOOK);
+        for (int i = 0; i < 2; i++) {
+            catchNext(exact, ObjectKind.PLASTIC_BOTTLE);
+        }
+        Check.assertEquals("exact quota reached on 2-1", exact.getQuota(), exact.getScore());
+        GameScript.clearTheWater(exact);
+
+        GameManager over = new GameManager(LevelData.of(2, 1), Loadout.forChapter(2), new Random(5));
+        for (int i = 0; i < 3; i++) {
+            catchNext(over, ObjectKind.CAN);
+        }
+        swapTool(over, EquipmentType.HOOK);
+        for (int i = 0; i < 3; i++) {
+            catchNext(over, ObjectKind.PLASTIC_BOTTLE);
+        }
+        swapTool(over, EquipmentType.MAGNET);
+        catchNext(over, ObjectKind.CAN);
+        Check.assertTrue("score exceeds quota on 2-1", over.getScore() > over.getQuota());
+        GameScript.clearTheWater(over);
+
+        Check.assertEquals("over-quota score produces the same sea color as exact quota",
+                seaColor(renderer, exact), seaColor(renderer, over));
+    }
+
+    private static void swapTool(GameManager game, EquipmentType tool) {
+        for (double t = 0; t < GameConstants.TOOL_SWAP_COOLDOWN_S + 0.1; t += GameScript.STEP) {
+            game.update(GameScript.STEP);
+        }
+        game.selectTool(tool);
+    }
+
+    private static void catchNext(GameManager game, ObjectKind kind) {
+        for (int i = 0; i < 2000; i++) {
+            try {
+                OceanObject found = GameScript.firstCatchable(game, kind);
+                GameScript.hookOnto(game, found);
+                return;
+            } catch (IllegalStateException noneYet) {
+                game.update(GameScript.STEP);
+            }
+        }
+        Check.fail("timed out waiting for " + kind + " to spawn");
     }
 
     // ---- The window ----

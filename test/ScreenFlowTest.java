@@ -5,9 +5,14 @@ import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.util.List;
-import ui.GamePanel;
+import javax.accessibility.AccessibleContext;
+import javax.accessibility.AccessibleRole;
 import model.LevelData;
+import ui.GamePanel;
+import ui.GameScreen;
+import ui.ScreenManager;
 import util.GameConstants;
 import util.SoundEffect;
 import util.SoundState;
@@ -34,6 +39,7 @@ public final class ScreenFlowTest {
         menuOpensHowToAndComesBack();
         storyPagesLeadIntoTheGame();
         pauseMenuWorks();
+        pauseMenuRestartCountsAsRetry();
         losingTheWindowFocusPauses();
         losingFocusDuringFadePausesWhenEnteringPlay();
         runningOutOfTimeGetsYouFiredAndYouCanRetry();
@@ -41,6 +47,83 @@ public final class ScreenFlowTest {
         menusClickAndTheMKeyMutes();
         toolKeysReachTheGame();
         theHKeyBringsTheLastTipBack();
+        swapDeniedToastDoesNotOverwriteRecalledTip();
+        accessibilityExposesScreenNamesChoicesAndHudStatus();
+    }
+
+    private static void pauseMenuRestartCountsAsRetry() {
+        startChapterOne();
+        ScreenManager screens = fieldValue(panel, "screens", ScreenManager.class);
+        Check.assertEquals("starts run with 0 retries", 0, screens.getSession().getRetries());
+
+        press(KeyEvent.VK_P);
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_DOWN);
+        press(KeyEvent.VK_ENTER);   // "Restart level"
+        play(SCREEN_CHANGE);
+        expect("Restart level returns to playing", GameState.PLAYING);
+        Check.assertEquals("pause-menu Restart level increments retry count", 1,
+                screens.getSession().getRetries());
+    }
+
+    private static void swapDeniedToastDoesNotOverwriteRecalledTip() {
+        startChapterOne();
+        play(2.0);   // triggers first tutorial tip
+        int hintsAfterTip = count(SoundEffect.HINT);
+        GameScreen gameScreen = fieldValue(panel, "gameScreen", GameScreen.class);
+        String originalTip = fieldValue(gameScreen, "lastTip", String.class);
+        Check.assertTrue("tutorial tip was saved in lastTip", originalTip != null && !originalTip.isBlank());
+
+        press(KeyEvent.VK_2);   // Magnet locked in chapter 1 -> SWAP_DENIED toast
+        Check.assertEquals("locked tool denies swap out loud",
+                SoundEffect.WRONG_TOOL, audio.getPlayed().get(audio.getPlayed().size() - 1));
+        play(5.0);
+
+        press(KeyEvent.VK_H);
+        Check.assertEquals("H recalls last tip with chime", hintsAfterTip + 1, count(SoundEffect.HINT));
+        String recalled = fieldValue(gameScreen, "toast", String.class);
+        Check.assertEquals("H shows original tutorial tip instead of SWAP_DENIED text", originalTip, recalled);
+    }
+
+    private static void accessibilityExposesScreenNamesChoicesAndHudStatus() {
+        startGame();
+        AccessibleContext ac = panel.getAccessibleContext();
+        Check.assertTrue("main menu has non-empty accessible name",
+                ac.getAccessibleName() != null && !ac.getAccessibleName().isBlank());
+        Check.assertEquals("main menu exposes 6 menu items", 6, ac.getAccessibleChildrenCount());
+        Check.assertEquals("first menu child has MENU_ITEM role",
+                AccessibleRole.MENU_ITEM, ac.getAccessibleChild(0).getAccessibleContext().getAccessibleRole());
+        Check.assertTrue("first menu item starts selected",
+                ac.getAccessibleSelection().isAccessibleChildSelected(0));
+
+        press(KeyEvent.VK_DOWN);
+        Check.assertTrue("VK_DOWN updates accessible selection to child 1",
+                ac.getAccessibleSelection().isAccessibleChildSelected(1));
+        Check.assertTrue("accessible action opens Select Level",
+                ac.getAccessibleChild(1).getAccessibleContext().getAccessibleAction().doAccessibleAction(0));
+        play(SCREEN_CHANGE);
+        expect("accessible action navigated to Select Level", GameState.LEVEL_SELECT);
+        Check.assertEquals("Select Level exposes 15 level choices",
+                LevelData.LEVEL_COUNT, ac.getAccessibleChildrenCount());
+
+        startChapterOne();
+        AccessibleContext playContext = panel.getAccessibleContext();
+        String hudDesc = playContext.getAccessibleDescription();
+        Check.assertTrue("playing screen exposes live HUD description",
+                hudDesc != null && hudDesc.contains("40"));
+
+        press(KeyEvent.VK_P);
+        Check.assertEquals("pause overlay exposes 4 menu items", 4, playContext.getAccessibleChildrenCount());
+    }
+
+    private static <T> T fieldValue(Object target, String fieldName, Class<T> type) {
+        try {
+            Field field = target.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return type.cast(field.get(target));
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void menusClickAndTheMKeyMutes() {

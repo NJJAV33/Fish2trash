@@ -8,11 +8,13 @@ import game.GameState;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import model.EquipmentType;
+import model.OceanEventType;
 import ui.render.EffectsSystem;
 import ui.render.HudPainter;
 import ui.render.SceneRenderer;
 import util.GameConstants;
 import util.SoundEffect;
+import util.StoryText;
 
 /**
  * The screen where a level is played. Each time it is entered it starts a
@@ -32,8 +34,9 @@ public final class GameScreen implements Screen {
     private final AudioEventListener sounds;
     private final PauseOverlay pauseOverlay;
     private GameManager game;
-    private String tip;          // the last tip or hint, or null before the first one
-    private double tipAge;       // seconds since it appeared
+    private String toast;        // message currently shown in the toast
+    private double toastAge;     // seconds since it appeared
+    private String lastTip;      // the last recallable tip or hint, never overwritten by swap-denied notices
     private double time;         // seconds on this screen, drives HUD animation
     private double shownScore;   // the score the quota bar shows; it slides toward the real one
     private double secondsSinceEnd;
@@ -55,7 +58,9 @@ public final class GameScreen implements Screen {
         effects.reset(game);
         game.addListener(effects);             // the effects listen for catches and hits
         game.addListener(sounds);              // and so do the sounds
-        tip = null;
+        toast = null;
+        toastAge = 0;
+        lastTip = null;
         time = 0;
         shownScore = 0;
         secondsSinceEnd = 0;
@@ -64,20 +69,28 @@ public final class GameScreen implements Screen {
 
     /** OBSERVER: the game announces events; this screen reacts to the ones it shows. */
     private void onGameEvent(GameEvent event) {
-        // A tip, a hint, or the reason a tool could not be picked. All appear in the same toast.
-        boolean carriesMessage = event.getType() == EventType.TUTORIAL_PROMPT
-                || event.getType() == EventType.HINT_SHOWN
-                || event.getType() == EventType.SWAP_DENIED;
-        if (carriesMessage && !event.getText().isEmpty()) {
-            tip = event.getText();
-            tipAge = 0;
+        boolean isTipOrHint = event.getType() == EventType.TUTORIAL_PROMPT
+                || event.getType() == EventType.HINT_SHOWN;
+        if ((isTipOrHint || event.getType() == EventType.SWAP_DENIED) && !event.getText().isEmpty()) {
+            toast = event.getText();
+            toastAge = 0;
+            if (isTipOrHint) {
+                lastTip = toast;
+            }
+            screens.notifyAccessibility();
+        } else if (event.getType() == EventType.OBJECT_CAUGHT
+                || event.getType() == EventType.HEALTH_LOST
+                || event.getType() == EventType.OCEAN_EVENT_STARTED
+                || event.getType() == EventType.TOOL_SWITCHED
+                || event.getType() == EventType.QUOTA_REACHED) {
+            screens.notifyAccessibility();
         }
     }
 
     @Override
     public void update(double dt) {
         time += dt;
-        tipAge += dt;
+        toastAge += dt;
         game.setBoatDirection(input.getDirection());
         game.update(dt);   // ignored by the manager once the level is over
         effects.update(dt);
@@ -117,8 +130,9 @@ public final class GameScreen implements Screen {
 
     /** H brings the last tip or hint back, for a player who missed it. */
     private void showLastTipAgain() {
-        if (tip != null) {
-            tipAge = 0;
+        if (lastTip != null) {
+            toast = lastTip;
+            toastAge = 0;
             screens.getAudio().play(SoundEffect.HINT);
         }
     }
@@ -154,6 +168,36 @@ public final class GameScreen implements Screen {
         effects.paintFlash(g);
 
         hud.paint(g, game, time, screens.getAudio().getState(), shownScore);
-        hud.paintToast(g, tip, tipAge);
+        hud.paintToast(g, toast, toastAge);
+    }
+
+    @Override
+    public String getAccessibleName() {
+        return game == null ? "Playing" : game.getLevelData().getTitle();
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        if (game == null) {
+            return "";
+        }
+        int secondsLeft = Math.max(0, (int) Math.floor(game.getTimeLeft()));
+        StringBuilder status = new StringBuilder();
+        status.append(StoryText.levelLabel(game.getLevelData().getChapter(), game.getLevelData().getLevel()))
+                .append(", Difficulty ").append(game.getDifficulty().getDisplayName())
+                .append(", Score ").append(game.getScore()).append(" of ").append(game.getQuota())
+                .append(", Health ").append(game.getHealth()).append(" of ").append(game.getMaxHealth())
+                .append(", Time ").append(String.format("%d:%02d", secondsLeft / 60, secondsLeft % 60))
+                .append(", Tool ").append(game.getSelectedTool().getDisplayName());
+        if (game.getCombo() >= 2) {
+            status.append(", Streak x").append(game.getCombo());
+        }
+        if (game.getActiveEvent() != OceanEventType.NONE && game.getActiveEventFraction() > 0) {
+            status.append(", Event ").append(game.getActiveEvent().getAnnouncement());
+        }
+        if (toast != null && toastAge < HudPainter.TOAST_SECONDS) {
+            status.append(". Tip: ").append(toast);
+        }
+        return status.toString();
     }
 }

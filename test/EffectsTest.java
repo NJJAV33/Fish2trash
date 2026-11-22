@@ -37,6 +37,10 @@ public final class EffectsTest {
         play(effects, 1.0);
         Check.assertEquals("the popup is gone after a second", 0, effects.getActiveCount());
 
+        aFreshCatchWobblesAndSettles();
+        stunAndCutThrowToolSparks();
+        comboAndCatchPopupsStayVerticallySeparated();
+
         // Hooking a fish: popup plus a shake that dies away.
         effects.onGameEvent(GameEvent.about(EventType.HEALTH_LOST, something, 1));
         effects.update(STEP);
@@ -160,6 +164,21 @@ public final class EffectsTest {
         effects.reset(game);
         effects.onGameEvent(GameEvent.about(EventType.HAZARD_ALERT, cut, 0));
         Check.assertEquals("a hazard alert throws six warning sparks", 6, effects.getActiveCount());
+    }
+
+    private static void comboAndCatchPopupsStayVerticallySeparated() {
+        GameManager game = new GameManager(LevelData.of(1, 1), Loadout.forChapter(1), new Random(6));
+        EffectsSystem effects = new EffectsSystem();
+        effects.reset(game);
+
+        OceanObject bottle = game.getObjects().get(0);
+        bottle.moveTo(400, 300);
+        effects.onGameEvent(GameEvent.about(EventType.OBJECT_CAUGHT, bottle, 10));
+        effects.onGameEvent(GameEvent.about(EventType.COMBO_GAINED, bottle, 3, "+50"));
+
+        Check.assertEquals("both catch and combo popups exist", 2, effects.getPopupYs().size());
+        double sep = Math.abs(effects.getPopupYs().get(0) - effects.getPopupYs().get(1));
+        Check.assertTrue("catch and combo popups stay separated (>= 36 px), got " + sep, sep >= 36.0);
     }
 
     private static void play(EffectsSystem effects, double seconds) {

@@ -5,13 +5,16 @@ import game.HighScoreTable;
 import game.ScoreEntry;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Collections;
+import ui.GamePanel;
 import ui.HighScoreScreen;
 import ui.MainMenu;
 import ui.NameEntryScreen;
@@ -43,9 +46,125 @@ public final class HighScoreScreenTest {
     public static void run() {
         aRunWithoutAScoreSkipsTheNameEntry();
         aRunWithAScoreAsksForAName();
+        tiedLowerRetryRunQualifiesOverHigherRetryEntry();
+        quittingFromPauseWithQualifyingScoreAsksForName();
+        gamePanelRepeatsBackspaceWhileTypingName();
         theTypedNameGoesOnTheList();
         anEmptyNameBecomesTheDefault();
         theListCanBeDrawnEmptyFullAndUnsaved();
+    }
+
+    private static void tiedLowerRetryRunQualifiesOverHigherRetryEntry() {
+        start();
+        clearChapterOne();
+        int score = screens.getSession().getRunScore();
+        LocalDate today = LocalDate.now();
+        for (int i = 0; i < GameConstants.HIGHSCORE_MAX_ENTRIES; i++) {
+            table.add(new ScoreEntry("OLD" + i, score, 1, Collections.emptyList(), 2, today));
+        }
+        Check.assertEquals("0-retry run tying 10th place on score qualifies over 2-retry entries",
+                GameState.NAME_ENTRY, screens.afterRun(GameState.MENU));
+
+        start();
+        clearChapterOne();
+        int exactScore = screens.getSession().getRunScore();
+        for (int i = 0; i < GameConstants.HIGHSCORE_MAX_ENTRIES; i++) {
+            table.add(new ScoreEntry("FAST" + i, exactScore, 1, Collections.emptyList(), 0, today));
+        }
+        Check.assertEquals("exact tie with 10th place (same retries and date) goes straight to menu",
+                GameState.MENU, screens.afterRun(GameState.MENU));
+    }
+
+    private static void quittingFromPauseWithQualifyingScoreAsksForName() {
+        RecordingAudioPlayer panelAudio = new RecordingAudioPlayer();
+        Path panelFile = TempScores.newFile();
+        HighScoreTable panelTable = new HighScoreTable(new HighScoreStore(panelFile));
+        GamePanel panel = new GamePanel(panelAudio, panelTable, TempScores.newProgress());
+        panel.setSize(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
+        ScreenManager panelScreens = screenManagerOf(panel);
+
+        panelScreens.startNewRun();
+        GameManager levelOne = panelScreens.getSession().startLevel();
+        GameScript.clearLevel(levelOne);
+        panelScreens.getSession().onLevelEnded(levelOne);
+        panelScreens.go(GameState.PLAYING);
+        for (double t = 0; t < SCREEN_CHANGE; t += STEP) {
+            panel.advance(STEP);
+        }
+
+        // Pause in level 1-2 and choose "Quit to menu" -> routes qualifying run to NAME_ENTRY.
+        int[] keys = {KeyEvent.VK_P, KeyEvent.VK_UP, KeyEvent.VK_ENTER};
+        long clock = 1000;
+        for (int key : keys) {
+            for (KeyListener listener : panel.getKeyListeners()) {
+                clock += 60;
+                listener.keyPressed(new KeyEvent(panel, KeyEvent.KEY_PRESSED, clock, 0,
+                        key, KeyEvent.CHAR_UNDEFINED));
+                clock += 40;
+                listener.keyReleased(new KeyEvent(panel, KeyEvent.KEY_RELEASED, clock, 0,
+                        key, KeyEvent.CHAR_UNDEFINED));
+            }
+        }
+        for (double t = 0; t < SCREEN_CHANGE; t += STEP) {
+            panel.advance(STEP);
+        }
+        Check.assertEquals("quitting from pause with a qualifying score opens NAME_ENTRY",
+                GameState.NAME_ENTRY, panel.getState());
+    }
+
+    private static void gamePanelRepeatsBackspaceWhileTypingName() {
+        RecordingAudioPlayer panelAudio = new RecordingAudioPlayer();
+        Path panelFile = TempScores.newFile();
+        HighScoreTable panelTable = new HighScoreTable(new HighScoreStore(panelFile));
+        GamePanel panel = new GamePanel(panelAudio, panelTable, TempScores.newProgress());
+        panel.setSize(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT);
+
+        ScreenManager panelScreens = screenManagerOf(panel);
+        panelScreens.startNewRun();
+        GameManager levelOne = panelScreens.getSession().startLevel();
+        GameScript.clearLevel(levelOne);
+        panelScreens.getSession().onLevelEnded(levelOne);
+        panelScreens.go(panelScreens.afterRun(GameState.MENU));
+        for (double t = 0; t < SCREEN_CHANGE; t += STEP) {
+            panel.advance(STEP);
+        }
+        Check.assertEquals("GamePanel reached NAME_ENTRY", GameState.NAME_ENTRY, panel.getState());
+
+        long clock = 2000;
+        for (KeyListener listener : panel.getKeyListeners()) {
+            for (char c : "abcde".toCharArray()) {
+                clock += 20;
+                listener.keyTyped(new KeyEvent(panel, KeyEvent.KEY_TYPED, clock, 0,
+                        KeyEvent.VK_UNDEFINED, c));
+            }
+            // Initial press + two held KEY_PRESSED repeats delete three characters ("ABCDE" -> "AB").
+            for (int i = 0; i < 3; i++) {
+                clock += 30;
+                listener.keyPressed(new KeyEvent(panel, KeyEvent.KEY_PRESSED, clock, 0,
+                        KeyEvent.VK_BACK_SPACE, KeyEvent.CHAR_UNDEFINED));
+            }
+            clock += 30;
+            listener.keyReleased(new KeyEvent(panel, KeyEvent.KEY_RELEASED, clock, 0,
+                    KeyEvent.VK_BACK_SPACE, KeyEvent.CHAR_UNDEFINED));
+            clock += 30;
+            listener.keyPressed(new KeyEvent(panel, KeyEvent.KEY_PRESSED, clock, 0,
+                    KeyEvent.VK_ENTER, KeyEvent.CHAR_UNDEFINED));
+        }
+        for (double t = 0; t < SCREEN_CHANGE; t += STEP) {
+            panel.advance(STEP);
+        }
+        Check.assertEquals("saved typed name after repeated Backspace", "AB",
+                panelTable.getEntries().get(0).getName());
+    }
+
+    private static ScreenManager screenManagerOf(GamePanel panel) {
+        try {
+            Field field = GamePanel.class.getDeclaredField("screens");
+            field.setAccessible(true);
+            return (ScreenManager) field.get(panel);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void aRunWithoutAScoreSkipsTheNameEntry() {

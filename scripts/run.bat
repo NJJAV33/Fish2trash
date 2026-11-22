@@ -1,7 +1,7 @@
 @echo off
 rem Builds the game, then starts it.
 setlocal
-cd /d "%~dp0.."
+cd /d "%~dp0.." || exit /b 1
 call scripts\jdk.bat || exit /b 1
 
 call scripts\build.bat || exit /b 1

@@ -24,17 +24,19 @@ import util.StoryText;
 public final class HudPainter {
 
     private static final int BAR_X = 230;
-    private static final int BAR_Y = 18;
+    private static final int BAR_Y = 15;
     private static final int BAR_WIDTH = 220;
     private static final int BAR_HEIGHT = 14;
     private static final int HEARTS_X = 470;
     private static final int HEART_SPACING = 26;
 
-    // The tool bar is kept low and flat, so it hides as little of the deep water as possible.
+    // The tool bar and companion pills sit at the bottom so the upper water and boat stay clear.
     private static final int TOOL_Y = 553;
-    private static final int TOOL_WIDTH = 124;
+    private static final int TOOL_WIDTH = 120;
     private static final int TOOL_HEIGHT = 30;
-    private static final int TOOL_GAP = 8;
+    private static final int TOOL_GAP = 6;
+    private static final int SECONDARY_Y = 555;
+    private static final int PILL_HEIGHT = 26;
     private static final double TOOL_ICON_SCALE = 0.55;
     private static final BasicStroke THIN = new BasicStroke(1);
     private static final BasicStroke SELECTED_EDGE = new BasicStroke(2);
@@ -57,15 +59,15 @@ public final class HudPainter {
      */
     public void paint(Graphics2D g, GameView game, double time, SoundState sound, double shownScore) {
         g.setColor(UiPalette.PANEL);
-        g.fillRoundRect(8, 8, 784, 52, 14, 14);
+        g.fillRoundRect(8, 6, 784, 48, 14, 14);
 
         g.setFont(Fonts.LABEL);
         g.setColor(UiPalette.ACCENT);
         LevelData level = game.getLevelData();
-        g.drawString(StoryText.levelLabel(level.getChapter(), level.getLevel()), 20, 30);
+        g.drawString(StoryText.levelLabel(level.getChapter(), level.getLevel()), 20, 25);
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
-        g.drawString(StoryText.HUD_OBJECTIVE, 20, 48);
+        g.drawString(StoryText.HUD_OBJECTIVE, 20, 43);
 
         drawQuotaBar(g, game, shownScore);
         drawHearts(g, game);
@@ -73,10 +75,10 @@ public final class HudPainter {
 
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
-        TextDraw.centered(g, StoryText.HUD_SCORE, 747, 26);
+        TextDraw.centered(g, StoryText.HUD_SCORE, 747, 23);
         g.setFont(Fonts.SUBHEADING);
         g.setColor(UiPalette.TEXT);
-        TextDraw.centered(g, String.valueOf(game.getScore()), 747, 48);
+        TextDraw.centered(g, String.valueOf(game.getScore()), 747, 44);
 
         drawDifficultyBadge(g, game.getDifficulty());
         drawComboBadge(g, game.getCombo(), time);
@@ -97,33 +99,33 @@ public final class HudPainter {
     }
 
     private void drawDifficultyBadge(Graphics2D g, Difficulty difficulty) {
-        int x = 10;
-        int y = 64;
-        int width = 104;
+        int x = 6;
+        int y = SECONDARY_Y;
+        int width = 96;
         Color badgeColor = difficulty == Difficulty.HARD ? UiPalette.DANGER
                 : difficulty == Difficulty.MEDIUM ? UiPalette.GOLD : UiPalette.ACCENT;
         g.setColor(UiPalette.PANEL);
-        g.fillRoundRect(x, y, width, 26, 10, 10);
+        g.fillRoundRect(x, y, width, PILL_HEIGHT, 10, 10);
         g.setColor(badgeColor);
-        g.drawRoundRect(x, y, width, 26, 10, 10);
-        g.setFont(Fonts.LABEL);
+        g.drawRoundRect(x, y, width, PILL_HEIGHT, 10, 10);
+        g.setFont(Fonts.SMALL);
         String label = difficulty.getDisplayName().toUpperCase();
         if (difficulty.getScoreMultiplier() > 1.0) {
             label = label + " " + difficulty.getMultiplierLabel();
         }
-        TextDraw.centered(g, label, x + width / 2, y + 18);
+        TextDraw.centered(g, label, x + width / 2, y + 17);
     }
 
     private void drawComboBadge(Graphics2D g, int combo, double time) {
         if (combo < 2) {
             return;
         }
-        int x = 122;
-        int y = 64;
-        int width = 132;
+        int x = 106;
+        int y = SECONDARY_Y;
+        int width = 102;
         boolean flow = combo >= GameConstants.HOT_STREAK_MIN;
         g.setColor(UiPalette.PANEL);
-        g.fillRoundRect(x, y, width, 26, 10, 10);
+        g.fillRoundRect(x, y, width, PILL_HEIGHT, 10, 10);
         Color accent = flow ? UiPalette.ACCENT : UiPalette.GOLD;
         if (flow) {
             float pulse = (float) (0.65 + 0.35 * Math.sin(time * 7));
@@ -131,20 +133,20 @@ public final class HudPainter {
         } else {
             g.setColor(accent);
         }
-        g.drawRoundRect(x, y, width, 26, 10, 10);
-        g.setFont(Fonts.LABEL);
+        g.drawRoundRect(x, y, width, PILL_HEIGHT, 10, 10);
+        g.setFont(Fonts.SMALL);
         String label = flow
                 ? String.format(StoryText.HUD_FLOW, combo)
                 : String.format(StoryText.HUD_COMBO, combo);
-        TextDraw.centered(g, label, x + width / 2, y + 18);
+        TextDraw.centered(g, label, x + width / 2, y + 17);
     }
 
     private void drawOceanEventBanner(Graphics2D g, OceanEventType event, double fraction, double time) {
         if (event == OceanEventType.NONE || fraction <= 0) {
             return;
         }
-        int x = 264;
-        int y = 64;
+        int x = 222;
+        int y = 514;
         int width = 356;
         int height = 28;
         Color accent = (event == OceanEventType.SQUALL || event == OceanEventType.FISH_FRENZY)
@@ -168,14 +170,14 @@ public final class HudPainter {
         g.fillRoundRect(barX, barY, (int) Math.round(barWidth * fraction), 3, 2, 2);
     }
 
-    /** A small speaker under the HUD bar: with sound waves when on, crossed out when not. */
+    /** A small speaker beside the bottom bar: with sound waves when on, crossed out when not. */
     private void drawSpeaker(Graphics2D g, SoundState sound) {
         boolean on = (sound == SoundState.ON);
-        int x = 762;
-        int y = 68;
+        int x = 764;
+        int y = SECONDARY_Y + 4;
 
         g.setColor(UiPalette.PANEL);
-        g.fillRoundRect(x - 6, y - 4, 34, 26, 10, 10);
+        g.fillRoundRect(x - 6, y - 4, 34, PILL_HEIGHT, 10, 10);
         g.setColor(on ? UiPalette.TEXT : UiPalette.DIM_TEXT);
         g.fillRect(x, y + 6, 5, 7);
         g.fillPolygon(new int[] {x + 5, x + 12, x + 12, x + 5}, new int[] {y + 6, y + 1, y + 18, y + 13}, 4);
@@ -189,17 +191,17 @@ public final class HudPainter {
     }
 
     /**
-     * Which way the current flows and how hard, next to the speaker: up to
+     * Which way the current flows and how hard, beside the speaker: up to
      * three arrowheads pointing with the flow. Trash and fish drift that way.
      *
      * @param current  the current right now, in pixels per second; positive flows right
      * @param strength the fastest it gets in this level
      */
     private void drawCurrent(Graphics2D g, double current, double strength) {
-        int x = 632;
-        int y = 64;
+        int x = 634;
+        int y = SECONDARY_Y;
         g.setColor(UiPalette.PANEL);
-        g.fillRoundRect(x, y, 118, 26, 10, 10);
+        g.fillRoundRect(x, y, 118, PILL_HEIGHT, 10, 10);
         g.setFont(Fonts.SMALL);
         if (strength <= 0) {
             g.setColor(UiPalette.DIM_TEXT);
@@ -251,7 +253,7 @@ public final class HudPainter {
         g.setStroke(THIN);
 
         Graphics2D icon = (Graphics2D) g.create();
-        icon.translate(x + 30, TOOL_Y + TOOL_HEIGHT / 2 + 1);
+        icon.translate(x + 27, TOOL_Y + TOOL_HEIGHT / 2 + 1);
         icon.scale(TOOL_ICON_SCALE, TOOL_ICON_SCALE);
         if (!unlocked) {
             icon.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
@@ -261,12 +263,12 @@ public final class HudPainter {
 
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.DIM_TEXT);
-        g.drawString(String.valueOf(keyNumber), x + 8, TOOL_Y + 19);
+        g.drawString(String.valueOf(keyNumber), x + 7, TOOL_Y + 19);
         g.setFont(selected ? Fonts.LABEL : Fonts.SMALL);
         g.setColor(selected ? UiPalette.TEXT : UiPalette.DIM_TEXT);
         String label = unlocked ? tool.getDisplayName()
                 : String.format(StoryText.TOOL_LOCKED_SHORT, tool.getUnlockChapter());
-        g.drawString(label, x + 46, TOOL_Y + 20);
+        g.drawString(label, x + 42, TOOL_Y + 20);
     }
 
     private void drawQuotaBar(Graphics2D g, GameView game, double shownScore) {
@@ -286,13 +288,13 @@ public final class HudPainter {
 
         g.setFont(Fonts.SMALL);
         g.setColor(UiPalette.TEXT);
-        TextDraw.centered(g, game.getScore() + " / " + game.getQuota(), BAR_X + BAR_WIDTH / 2, 50);
+        TextDraw.centered(g, game.getScore() + " / " + game.getQuota(), BAR_X + BAR_WIDTH / 2, 46);
     }
 
     private void drawHearts(Graphics2D g, GameView game) {
         for (int i = 0; i < game.getMaxHealth(); i++) {
             g.setColor(i < game.getHealth() ? UiPalette.HEART : UiPalette.HEART_EMPTY);
-            drawHeart(g, HEARTS_X + i * HEART_SPACING, 24);
+            drawHeart(g, HEARTS_X + i * HEART_SPACING, 19);
         }
     }
 
@@ -304,21 +306,21 @@ public final class HudPainter {
     }
 
     private void drawTimer(Graphics2D g, GameView game, double time) {
-        int secondsLeft = (int) Math.ceil(game.getTimeLeft());
+        int secondsLeft = Math.max(0, (int) Math.floor(game.getTimeLeft()));
         String text = String.format("%d:%02d", secondsLeft / 60, secondsLeft % 60);
 
         g.setFont(Fonts.TIMER);
-        if (secondsLeft <= GameConstants.LOW_TIME_S && game.getStatus() == LevelStatus.RUNNING) {
+        if (!game.isTimeFrozen() && secondsLeft <= GameConstants.LOW_TIME_S && game.getStatus() == LevelStatus.RUNNING) {
             // Running low: red, and pulsing between dim and bright.
             float pulse = (float) (0.65 + 0.35 * Math.sin(time * 8));
             Graphics2D pulsing = (Graphics2D) g.create();
             pulsing.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, pulse));
             pulsing.setColor(UiPalette.TIMER_WARNING);
-            TextDraw.centered(pulsing, text, 655, 43);
+            TextDraw.centered(pulsing, text, 655, 39);
             pulsing.dispose();
         } else {
             g.setColor(UiPalette.TEXT);
-            TextDraw.centered(g, text, 655, 43);
+            TextDraw.centered(g, text, 655, 39);
         }
     }
 

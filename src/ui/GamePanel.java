@@ -13,6 +13,16 @@ import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import javax.accessibility.Accessible;
+import javax.accessibility.AccessibleAction;
+import javax.accessibility.AccessibleContext;
+import javax.accessibility.AccessibleRole;
+import javax.accessibility.AccessibleSelection;
+import javax.accessibility.AccessibleState;
+import javax.accessibility.AccessibleStateSet;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import ui.render.SceneRenderer;
@@ -51,6 +61,7 @@ public final class GamePanel extends JPanel {
     // screen in one go. Drawing many smooth-edged shapes straight onto the
     // screen is several times slower.
     private BufferedImage frame;
+    private AccessibleGamePanel accessiblePanel;
 
     /**
      * @param audio      how the game makes sound; tests pass a silent player
@@ -60,6 +71,7 @@ public final class GamePanel extends JPanel {
     public GamePanel(AudioPlayer audio, HighScoreTable highScores, LevelProgress progress) {
         this.audio = audio;
         this.screens = new ScreenManager(audio, highScores, progress);
+        this.screens.setAccessibilityListener(this::notifyAccessibility);
         setPreferredSize(new Dimension(GameConstants.WORLD_WIDTH, GameConstants.WORLD_HEIGHT));
         setBackground(Color.BLACK);   // the bars beside the picture when the window has another shape
         setOpaque(true);              // every pixel is painted here, so nothing behind needs painting
@@ -203,7 +215,8 @@ public final class GamePanel extends JPanel {
         @Override
         public void keyPressed(KeyEvent e) {
             boolean fresh = input.press(e.getKeyCode(), e.getWhen());
-            if (!fresh) {
+            boolean textBackspaceRepeat = e.getKeyCode() == KeyEvent.VK_BACK_SPACE && screens.isTakingText();
+            if (!fresh && !textBackspaceRepeat) {
                 return;   // repeats of a held key are not passed on
             }
             screens.keyPressed(e.getKeyCode());
@@ -217,6 +230,254 @@ public final class GamePanel extends JPanel {
         @Override
         public void keyTyped(KeyEvent e) {
             screens.keyTyped(e.getKeyChar());
+        }
+    }
+
+    @Override
+    public AccessibleContext getAccessibleContext() {
+        if (accessiblePanel == null) {
+            accessiblePanel = new AccessibleGamePanel();
+            accessibleContext = accessiblePanel;
+        }
+        return accessiblePanel;
+    }
+
+    private void notifyAccessibility() {
+        if (accessiblePanel != null) {
+            accessiblePanel.notifyChange();
+        }
+    }
+
+    /** Exposes menus, selections, and live HUD status to assistive technologies. */
+    @SuppressWarnings("serial")
+    private final class AccessibleGamePanel extends AccessibleJPanel
+            implements AccessibleSelection, AccessibleAction {
+
+        private String lastName;
+        private String lastDescription;
+        private int lastSelected = -1;
+
+        private AccessibleGamePanel() {
+            lastName = getAccessibleName();
+            lastDescription = getAccessibleDescription();
+            lastSelected = screens.getAccessibleSelectedIndex();
+        }
+
+        private void notifyChange() {
+            String name = getAccessibleName();
+            if (!Objects.equals(name, lastName)) {
+                firePropertyChange(ACCESSIBLE_NAME_PROPERTY, lastName, name);
+                lastName = name;
+            }
+            String description = getAccessibleDescription();
+            if (!Objects.equals(description, lastDescription)) {
+                firePropertyChange(ACCESSIBLE_DESCRIPTION_PROPERTY, lastDescription, description);
+                lastDescription = description;
+            }
+            int selected = screens.getAccessibleSelectedIndex();
+            if (selected != lastSelected) {
+                lastSelected = selected;
+                firePropertyChange(ACCESSIBLE_SELECTION_PROPERTY, null, getAccessibleSelection(0));
+            }
+        }
+
+        @Override
+        public String getAccessibleName() {
+            String screenName = screens.getAccessibleName();
+            return screenName.isEmpty() ? "Fish2Trash" : "Fish2Trash: " + screenName;
+        }
+
+        @Override
+        public String getAccessibleDescription() {
+            return screens.getAccessibleDescription();
+        }
+
+        @Override
+        public AccessibleRole getAccessibleRole() {
+            return AccessibleRole.PANEL;
+        }
+
+        @Override
+        public int getAccessibleChildrenCount() {
+            return screens.getAccessibleChoices().size();
+        }
+
+        @Override
+        public Accessible getAccessibleChild(int i) {
+            List<String> choices = screens.getAccessibleChoices();
+            if (i < 0 || i >= choices.size()) {
+                return null;
+            }
+            return new AccessibleChoice(i);
+        }
+
+        @Override
+        public AccessibleSelection getAccessibleSelection() {
+            return this;
+        }
+
+        @Override
+        public int getAccessibleSelectionCount() {
+            int selected = screens.getAccessibleSelectedIndex();
+            return selected >= 0 && selected < getAccessibleChildrenCount() ? 1 : 0;
+        }
+
+        @Override
+        public Accessible getAccessibleSelection(int i) {
+            int selected = screens.getAccessibleSelectedIndex();
+            if (i == 0 && selected >= 0 && selected < getAccessibleChildrenCount()) {
+                return new AccessibleChoice(selected);
+            }
+            return null;
+        }
+
+        @Override
+        public boolean isAccessibleChildSelected(int i) {
+            return i >= 0 && i == screens.getAccessibleSelectedIndex();
+        }
+
+        @Override
+        public void addAccessibleSelection(int i) {
+            screens.activateAccessibleChoice(i);
+        }
+
+        @Override
+        public void removeAccessibleSelection(int i) {
+        }
+
+        @Override
+        public void clearAccessibleSelection() {
+        }
+
+        @Override
+        public void selectAllAccessibleSelection() {
+        }
+
+        @Override
+        public AccessibleAction getAccessibleAction() {
+            return this;
+        }
+
+        @Override
+        public int getAccessibleActionCount() {
+            return screens.getAccessibleChoices().isEmpty() ? 1 : 2;
+        }
+
+        @Override
+        public String getAccessibleActionDescription(int i) {
+            if (i == 0) {
+                return "Read status";
+            }
+            if (i == 1 && !screens.getAccessibleChoices().isEmpty()) {
+                return "Activate selected";
+            }
+            return null;
+        }
+
+        @Override
+        public boolean doAccessibleAction(int i) {
+            if (i == 0) {
+                firePropertyChange(ACCESSIBLE_DESCRIPTION_PROPERTY, null, getAccessibleDescription());
+                return true;
+            }
+            if (i == 1) {
+                int selected = screens.getAccessibleSelectedIndex();
+                if (selected >= 0) {
+                    screens.activateAccessibleChoice(selected);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /** One selectable menu entry or level tile exposed to assistive technology. */
+    private final class AccessibleChoice extends AccessibleContext implements Accessible, AccessibleAction {
+
+        private final int index;
+
+        private AccessibleChoice(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public AccessibleContext getAccessibleContext() {
+            return this;
+        }
+
+        @Override
+        public String getAccessibleName() {
+            List<String> choices = screens.getAccessibleChoices();
+            return index >= 0 && index < choices.size() ? choices.get(index) : "";
+        }
+
+        @Override
+        public AccessibleRole getAccessibleRole() {
+            return AccessibleRole.MENU_ITEM;
+        }
+
+        @Override
+        public Accessible getAccessibleParent() {
+            return GamePanel.this;
+        }
+
+        @Override
+        public int getAccessibleIndexInParent() {
+            return index;
+        }
+
+        @Override
+        public int getAccessibleChildrenCount() {
+            return 0;
+        }
+
+        @Override
+        public Accessible getAccessibleChild(int i) {
+            return null;
+        }
+
+        @Override
+        public Locale getLocale() {
+            return GamePanel.this.getLocale();
+        }
+
+        @Override
+        public AccessibleStateSet getAccessibleStateSet() {
+            AccessibleStateSet states = new AccessibleStateSet();
+            states.add(AccessibleState.ENABLED);
+            states.add(AccessibleState.FOCUSABLE);
+            states.add(AccessibleState.VISIBLE);
+            states.add(AccessibleState.SHOWING);
+            states.add(AccessibleState.SELECTABLE);
+            if (index == screens.getAccessibleSelectedIndex()) {
+                states.add(AccessibleState.SELECTED);
+                states.add(AccessibleState.FOCUSED);
+            }
+            return states;
+        }
+
+        @Override
+        public AccessibleAction getAccessibleAction() {
+            return this;
+        }
+
+        @Override
+        public int getAccessibleActionCount() {
+            return 1;
+        }
+
+        @Override
+        public String getAccessibleActionDescription(int i) {
+            return i == 0 ? "Activate " + getAccessibleName() : null;
+        }
+
+        @Override
+        public boolean doAccessibleAction(int i) {
+            if (i != 0) {
+                return false;
+            }
+            screens.activateAccessibleChoice(index);
+            return true;
         }
     }
 }

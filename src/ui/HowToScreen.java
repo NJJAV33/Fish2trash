@@ -53,4 +53,14 @@ public final class HowToScreen implements Screen {
         g.setColor(UiPalette.ACCENT);
         TextDraw.centered(g, StoryText.BACK_PROMPT, CENTER_X, 500);
     }
+
+    @Override
+    public String getAccessibleName() {
+        return StoryText.HOW_TO_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        return StoryText.HOW_TO_TEXT.replace('\n', ' ');
+    }
 }

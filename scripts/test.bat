@@ -2,7 +2,7 @@
 rem Builds the game, compiles the tests in test\, and runs them.
 rem Exits with 1 if any test fails.
 setlocal
-cd /d "%~dp0.."
+cd /d "%~dp0.." || exit /b 1
 call scripts\jdk.bat || exit /b 1
 
 call scripts\build.bat || exit /b 1

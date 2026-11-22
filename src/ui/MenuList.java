@@ -51,6 +51,31 @@ final class MenuList {
         selected = 0;
     }
 
+    List<String> getLabels() {
+        List<String> current = new ArrayList<>(labels.size());
+        for (Supplier<String> label : labels) {
+            current.add(label.get());
+        }
+        return current;
+    }
+
+    int getSelectedIndex() {
+        return selected;
+    }
+
+    String getSelectedLabel() {
+        return labels.isEmpty() ? "" : labels.get(selected).get();
+    }
+
+    void selectAndActivate(int index) {
+        if (index < 0 || index >= labels.size()) {
+            return;
+        }
+        selected = index;
+        audio.play(SoundEffect.MENU_SELECT);
+        actions.get(selected).run();
+    }
+
     void keyPressed(int keyCode) {
         int count = labels.size();
         if (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_W) {

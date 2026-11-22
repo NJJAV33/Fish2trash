@@ -158,4 +158,21 @@ public final class VictoryScreen implements Screen {
         g.setColor(UiPalette.TEXT);
         TextDraw.rightAligned(g, value, VALUE_X, y);
     }
+
+    @Override
+    public String getAccessibleName() {
+        return showingReport ? StoryText.RECAP_TITLE : StoryText.END_TITLE;
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        if (!showingReport) {
+            return pager.getFullText().replace('\n', ' ');
+        }
+        GameSession session = screens.getSession();
+        return session == null ? ""
+                : "Difficulty " + session.getDifficulty().getDisplayName()
+                + ", Levels cleared " + session.getLevelsCleared()
+                + ", Run score " + session.getRunScore();
+    }
 }

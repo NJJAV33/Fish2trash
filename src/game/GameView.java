@@ -42,6 +42,9 @@ public interface GameView {
 
     double getTimeTotal();
 
+    /** True once the quota is met and the level clock has been stopped. */
+    boolean isTimeFrozen();
+
     LevelStatus getStatus();
 
     /** Current consecutive trash catch streak. */

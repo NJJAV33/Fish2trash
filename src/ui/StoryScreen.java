@@ -161,4 +161,15 @@ public final class StoryScreen implements Screen {
         backdrop.getPainters().paintTool(tool, gearTool, time, true);
         tool.dispose();
     }
+
+    @Override
+    public String getAccessibleName() {
+        int index = pager.getPageIndex();
+        return index >= 0 && index < pageTitles.size() ? pageTitles.get(index) : "Story";
+    }
+
+    @Override
+    public String getAccessibleDescription() {
+        return pager.getFullText().replace('\n', ' ');
+    }
 }

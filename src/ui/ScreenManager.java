@@ -6,15 +6,20 @@ import game.GameState;
 import game.HighScoreTable;
 import game.LevelProgress;
 import game.LevelResult;
+import game.ScoreEntry;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import model.Difficulty;
 import util.AudioPlayer;
 import util.GameConstants;
+import util.StoryText;
 
 /**
  * Knows which screen is showing and moves between screens with a short fade.
@@ -38,6 +43,7 @@ public final class ScreenManager {
     private final AudioPlayer audio;
     private final HighScoreTable highScores;
     private final LevelProgress progress;
+    private Runnable accessibilityListener;
 
     public ScreenManager(AudioPlayer audio, HighScoreTable highScores, LevelProgress progress) {
         this.audio = audio;
@@ -60,6 +66,7 @@ public final class ScreenManager {
 
     public void cycleDifficulty(int direction) {
         difficulty = direction < 0 ? difficulty.previous() : difficulty.next();
+        notifyAccessibility();
     }
 
     public void register(GameState state, Screen screen) {
@@ -70,6 +77,7 @@ public final class ScreenManager {
     public void start(GameState first) {
         current = first;
         screens.get(current).onEnter();
+        notifyAccessibility();
     }
 
     /** Fades out, switches to the target screen, and fades back in. */
@@ -79,6 +87,14 @@ public final class ScreenManager {
             overlay = null;
             pendingPause = null;
         }
+    }
+
+    /** Counts an abandoned level attempt as a retry and restarts the current level. */
+    public void restartLevel() {
+        if (session != null) {
+            session.recordRetry();
+        }
+        go(GameState.PLAYING);
     }
 
     public void update(double dt) {
@@ -96,6 +112,7 @@ public final class ScreenManager {
                     overlay.onEnter();
                     pendingPause = null;
                 }
+                notifyAccessibility();
             }
             return;
         }
@@ -106,6 +123,7 @@ public final class ScreenManager {
             overlay = pendingPause;
             overlay.onEnter();
             pendingPause = null;
+            notifyAccessibility();
         }
         if (overlay != null) {
             overlay.update(dt);   // paused: only the overlay runs
@@ -128,6 +146,7 @@ public final class ScreenManager {
     public void keyPressed(int keyCode) {
         if (keyCode == KeyEvent.VK_M && !isTakingText()) {
             audio.setMuted(!audio.isMuted());   // M switches the sound on any screen
+            notifyAccessibility();
         }
         if (isFading()) {
             return;   // no input in the middle of a screen change
@@ -137,16 +156,18 @@ public final class ScreenManager {
         } else {
             screens.get(current).keyPressed(keyCode);
         }
+        notifyAccessibility();
     }
 
     public void keyTyped(char character) {
         if (!isFading() && overlay == null) {
             screens.get(current).keyTyped(character);
+            notifyAccessibility();
         }
     }
 
     /** True while the screen in front is a text field, where M is just a letter. */
-    private boolean isTakingText() {
+    boolean isTakingText() {
         return overlay == null && screens.get(current).isTakingText();
     }
 
@@ -164,6 +185,7 @@ public final class ScreenManager {
             } else {
                 overlay = pauseOverlay;
                 overlay.onEnter();
+                notifyAccessibility();
             }
         }
     }
@@ -171,6 +193,7 @@ public final class ScreenManager {
     public void resume() {
         overlay = null;
         pendingPause = null;
+        notifyAccessibility();
     }
 
     public boolean isPaused() {
@@ -229,6 +252,52 @@ public final class ScreenManager {
      * makes the high-score list, otherwise to the screen given here.
      */
     public GameState afterRun(GameState otherwise) {
-        return highScores.qualifies(session.getRunScore()) ? GameState.NAME_ENTRY : otherwise;
+        ScoreEntry candidate = ScoreEntry.forRun(StoryText.PLAYER_NAME, session, LocalDate.now());
+        return highScores.qualifies(candidate) ? GameState.NAME_ENTRY : otherwise;
+    }
+
+    void setAccessibilityListener(Runnable listener) {
+        accessibilityListener = listener;
+    }
+
+    void notifyAccessibility() {
+        if (accessibilityListener != null) {
+            accessibilityListener.run();
+        }
+    }
+
+    private Screen activeScreen() {
+        if (overlay != null) {
+            return overlay;
+        }
+        return current == null ? null : screens.get(current);
+    }
+
+    public String getAccessibleName() {
+        Screen active = activeScreen();
+        return active == null ? "" : active.getAccessibleName();
+    }
+
+    public String getAccessibleDescription() {
+        Screen active = activeScreen();
+        return active == null ? "" : active.getAccessibleDescription();
+    }
+
+    public List<String> getAccessibleChoices() {
+        Screen active = activeScreen();
+        return active == null ? Collections.emptyList() : active.getAccessibleChoices();
+    }
+
+    public int getAccessibleSelectedIndex() {
+        Screen active = activeScreen();
+        return active == null ? -1 : active.getAccessibleSelectedIndex();
+    }
+
+    public void activateAccessibleChoice(int index) {
+        Screen active = activeScreen();
+        if (active != null && !isFading()) {
+            active.activateAccessibleChoice(index);
+            notifyAccessibility();
+        }
     }
 }

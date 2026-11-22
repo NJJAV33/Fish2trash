@@ -7,6 +7,7 @@ import model.LevelData;
 import model.ObjectView;
 import model.Sea;
 import util.GameConstants;
+import util.Mathx;
 
 /**
  * Draws the game world: the background of the chapter, the boat, the ocean
@@ -59,7 +60,8 @@ public final class SceneRenderer {
     public void paint(Graphics2D g, GameView game, double catchSquash) {
         // The sea clears up over the five levels of a chapter, a little with every catch.
         LevelData level = game.getLevelData();
-        double levelsDone = level.getLevel() - 1 + (double) game.getScore() / game.getQuota();
+        double progress = Mathx.clamp((double) game.getScore() / game.getQuota(), 0, 1);
+        double levelsDone = level.getLevel() - 1 + progress;
         ChapterPalette palette = ChapterPalette.forChapter(level.getChapter())
                 .cleanedBy(levelsDone / LevelData.LEVELS_PER_CHAPTER);
         Sea sea = game.getSea();
