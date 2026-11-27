@@ -21,13 +21,22 @@ public final class StoryTextTest {
     private static final int LABEL_LENGTH = 24;       // the level name in the bar at the top
     private static final int BADGE_NAME_LENGTH = 16;
     private static final int BADGE_TEXT_LENGTH = 45; // one small line under the medal
+    private static final int PERMIT_LINES = 4;         // the permit card in the opening
+    private static final int PERMIT_LINE_LENGTH = 34;
+    private static final int SIGN_LENGTH = 14;         // the board on the sign buoy
 
     private StoryTextTest() {
         // only static methods
     }
 
     public static void run() {
-        checkPage("opening", StoryText.CRAWL, STORY_LINES, STORY_LINE_LENGTH);
+        // The opening animation: one line under each scene, and the words drawn inside its pictures.
+        for (int i = 0; i < StoryText.introLineCount(); i++) {
+            checkPage("opening line " + (i + 1), StoryText.introLine(i), 1, STORY_LINE_LENGTH);
+        }
+        checkPage("permit card", StoryText.INTRO_PERMIT_BODY, PERMIT_LINES, PERMIT_LINE_LENGTH);
+        Check.assertTrue("the sign fits its board", StoryText.INTRO_SIGN.length() <= SIGN_LENGTH);
+        Check.assertTrue("the opening's prompt is a tip-sized line", StoryText.INTRO_PROMPT.length() <= TIP_LENGTH);
 
         for (int chapter = 1; chapter <= LevelData.CHAPTER_COUNT; chapter++) {
             String name = "chapter " + chapter;

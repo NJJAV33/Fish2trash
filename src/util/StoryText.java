@@ -70,13 +70,28 @@ public final class StoryText {
             + "Press 1 Hook, 2 Magnet, 3 Net Cutter.\n"
             + "Tools change only while the line swings.";
 
-    // ---- Opening ----
-    public static final String CRAWL =
-            "Bantay Reef has been a no-take sanctuary since 1986.\n"
-            + "No one fishes here. Not one fish, not one shell.\n"
-            + "But storms and lost nets bring trash it can't shake off.\n"
-            + "The town grants one cleanup permit: M/B Tala, 15 shifts.\n"
-            + "Hurt a protected fish, and the permit is gone.";
+    // ---- The opening animation: one line under each of its first five scenes ----
+    private static final String[] INTRO_LINES = {
+        "Bantay Reef has been a no-take sanctuary since 1986.",
+        "No one fishes here. Not one fish, not one shell.",
+        "But storms and lost nets bring trash it can't shake off.",
+        "The town grants one cleanup permit: M/B Tala, 15 shifts.",
+        "Hurt a protected fish, and the permit is gone."
+    };
+    public static final String INTRO_NAME = "Opening";
+    public static final String INTRO_PLACE = "BANTAY REEF";
+    public static final String INTRO_PLACE_SUB = "Visayan Sea, off Cebu";
+    public static final String INTRO_SIGN = "NO-TAKE ZONE";
+    public static final String INTRO_PERMIT_TITLE = "CLEANUP PERMIT";
+    public static final String INTRO_PERMIT_BODY =
+            "Bantay Reef Marine Sanctuary\n"
+            + "Vessel: M/B Tala\n"
+            + "Valid for 15 shifts\n"
+            + "No fishing. No harm to wildlife.";
+    public static final String INTRO_PERMIT_STAMP = "APPROVED";
+    public static final String INTRO_PERMIT_SHORT = "PERMIT";
+    public static final String INTRO_PROMPT = "ENTER: next     ESC: skip story";
+    public static final String INTRO_BEGIN = "ENTER: begin";
 
     // ---- The three chapters: a title and the page that opens each one ----
     private static final String[] CHAPTER_TITLES = {
@@ -285,6 +300,16 @@ public final class StoryText {
             + "The reef: \"still here. salamat.\""
         }
     };
+    /** How many lines the opening animation has. */
+    public static int introLineCount() {
+        return INTRO_LINES.length;
+    }
+
+    /** One line of the opening animation, from 0 to introLineCount() - 1. */
+    public static String introLine(int index) {
+        return INTRO_LINES[index];
+    }
+
     /** Filled in with the chapter, the level inside it, and the level's name. */
     public static final String LEVEL_TITLE = "LEVEL %d-%d: %s";
     /** The short form for the bar at the top of the playing screen. */

@@ -141,6 +141,25 @@ public enum SoundEffect {
             Tone.of(Wave.SINE, 523).lasting(270).gain(0.22).shape(10, 90, 0.4, 140),
             Tone.of(Wave.SINE, 659).from(40).lasting(240).gain(0.22).shape(10, 80, 0.4, 130)),
 
+    /** The opening's storm: a crack of thunder over a long, low rumble. */
+    THUNDER(1400, false,
+            Tone.noise().lasting(160).gain(0.40).shape(1, 60, 0.3, 90),
+            Tone.of(Wave.TRIANGLE, 70, 42).glideByRatio().from(40).lasting(1300).gain(0.42).shape(30, 300, 0.45, 700),
+            Tone.noise().from(80).lasting(1250).gain(0.20).shape(60, 300, 0.4, 700)),
+
+    /** The cleanup permit is stamped: a dull thud and a slap of paper. */
+    PERMIT_STAMP(220, false,
+            Tone.of(Wave.TRIANGLE, 150, 70).glideByRatio().gain(0.40).shape(1, 50, 0.25, 110),
+            Tone.noise().lasting(70).gain(0.25).shape(1, 25, 0.1, 30)),
+
+    /** The title of the opening: two quick notes that open into a bright chord. */
+    TITLE_STING(1100, false,
+            Tone.of(Wave.TRIANGLE, 392).lasting(160).gain(0.24).shape(4, 50, 0.5, 60),
+            Tone.of(Wave.TRIANGLE, 523).from(120).lasting(160).gain(0.24).shape(4, 50, 0.5, 60),
+            Tone.of(Wave.SINE, 523).from(240).gain(0.20).shape(10, 120, 0.6, 500),
+            Tone.of(Wave.SINE, 659).from(240).gain(0.20).shape(10, 120, 0.6, 500),
+            Tone.of(Wave.SINE, 784).from(240).gain(0.20).shape(10, 120, 0.6, 500).overtone(2, 0.15)),
+
     /** Moving through a menu: a tiny click. */
     MENU_MOVE(25, true,
             Tone.of(Wave.TRIANGLE, 660).gain(0.18).shape(1, 8, 0.5, 12)),

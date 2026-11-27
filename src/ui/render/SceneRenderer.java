@@ -2,6 +2,7 @@ package ui.render;
 
 import game.GameView;
 import java.awt.Graphics2D;
+import java.util.function.Consumer;
 import model.Boat;
 import model.LevelData;
 import model.ObjectView;
@@ -102,6 +103,24 @@ public final class SceneRenderer {
         paintBehind(g, palette, 0);
         boatPainter.paint(g, boatX, GameConstants.WATER_Y, 1, time);
         paintInFront(g, palette, 0);
+    }
+
+    /**
+     * The scene with the caller's own drawing in the middle: behind it the
+     * sky, the sea and far-off life; in front of it the plants on the sea
+     * floor, the near waves, sunbeams and bubbles. The opening animation
+     * draws its boats, fish and trash this way.
+     *
+     * @param swell   how rough the sea is, in radians of boat tilt; 0 on a quiet sea
+     * @param current how fast the water flows sideways, in pixels per second
+     * @param middle  draws what lies between the far and the near layers
+     */
+    public void paintScene(Graphics2D g, ChapterPalette palette, double swell, double current,
+                           Consumer<Graphics2D> middle) {
+        this.current = current;
+        paintBehind(g, palette, swell);
+        middle.accept(g);
+        paintInFront(g, palette, swell);
     }
 
     /** The scene without boat or objects, on a quiet sea. Menus and story screens use it as a backdrop. */

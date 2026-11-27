@@ -648,6 +648,7 @@ classDiagram
         MENU
         LEVEL_SELECT
         HOW_TO
+        INTRO
         STORY
         PLAYING
         LEVEL_CLEAR
@@ -768,6 +769,41 @@ classDiagram
     class MainMenu
     class LevelSelectScreen
     class HowToScreen
+
+    class IntroScreen {
+        -sceneIndex int
+        -sceneTime double
+        +update(dt)
+        +keyPressed(keyCode)
+        +getScene() IntroScene
+    }
+
+    class IntroScene {
+        <<enumeration>>
+        SANCTUARY
+        NO_TAKE
+        STORM
+        PERMIT
+        PROTECTED
+        TITLE
+        -seconds double
+        +getSeconds() double
+        +getCaption() String
+        +totalSeconds()$ double
+        #paint(painter, g, t)*
+        #playSounds(audio, before, after)
+    }
+
+    class IntroPainter {
+        +paintSanctuary(g, t)
+        +paintNoTake(g, t)
+        +paintStorm(g, t)
+        +paintPermit(g, t)
+        +paintProtected(g, t)
+        +paintTitle(g, t)
+        +paintFrame(g, caption, scene, scenes, t, seconds, last)
+    }
+
     class StoryScreen
     class GameScreen
     class LevelClearScreen
@@ -783,6 +819,7 @@ classDiagram
         +paint(g, game, catchSquash)
         +paintBackdrop(g, palette)
         +paintBackdropWithBoat(g, palette, boatX)
+        +paintScene(g, palette, swell, current, middle)
     }
 
     class PainterRegistry {
@@ -909,6 +946,7 @@ classDiagram
     Screen <|.. MainMenu
     Screen <|.. LevelSelectScreen
     Screen <|.. HowToScreen
+    Screen <|.. IntroScreen
     Screen <|.. StoryScreen
     Screen <|.. GameScreen
     Screen <|.. LevelClearScreen
@@ -919,6 +957,11 @@ classDiagram
     Screen <|.. PauseOverlay
     MainMenu *-- MenuList
     PauseOverlay *-- MenuList
+    IntroScreen --> IntroScene : plays in order
+    IntroScreen *-- IntroPainter
+    IntroScene ..> IntroPainter : draws itself with
+    IntroPainter --> SceneRenderer : the sea, sky and life
+    IntroPainter --> PainterRegistry : fish, trash and the hook
     StoryScreen *-- TextPager
     VictoryScreen *-- TextPager
     StoryScreen *-- StoryBoxPainter
@@ -974,6 +1017,17 @@ designs as an enum whose constants draw themselves, and
 `ObjectPainter.designOf()` picks one from the object's phase, so an object
 keeps its look and the game rules never need to know about it.
 
+The opening animation is `IntroScreen`. It plays the `IntroScene` constants in
+order: the healthy sanctuary, a fishing canoe turning back at its sign, a storm
+that ends in a lightning cut to the trash-filled sea floor, M/B Tala and its
+stamped permit, a protected fish near the hook, and the title. Each constant
+knows its length and its line of text, and draws itself and plays its sounds in
+its own way (constant-specific methods). `IntroPainter` places the scenes'
+fish and trash as small `ObjectView` props, so the game's own painters draw
+them, and uses `SceneRenderer.paintScene` to put them between the far and near
+layers of the sea. ENTER skips a scene; ESC skips the whole story, as on the
+story pages.
+
 `AmbientLifePainter` draws life that is only decoration: gulls, far-off schools of
 tiny fish, jellyfish, a turtle on the recovered reef, a crab, and plants that lean
 with the current. All of it is dim and small on purpose, so it is never mistaken
@@ -1017,6 +1071,9 @@ classDiagram
         EVENT_BONUS
         EVENT_FRENZY
         EVENT_CALM
+        THUNDER
+        PERMIT_STAMP
+        TITLE_STING
         MENU_MOVE
         MENU_SELECT
         HIGH_SCORE

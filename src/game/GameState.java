@@ -6,6 +6,8 @@ public enum GameState {
     /** Picking a level that is already open, to start a run from there. */
     LEVEL_SELECT,
     HOW_TO,
+    /** The opening animation, shown once when a new run starts from the menu. */
+    INTRO,
     /** Story pages before a chapter. */
     STORY,
     PLAYING,
