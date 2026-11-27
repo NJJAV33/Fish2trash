@@ -20,7 +20,8 @@ import util.SoundEffect;
 import util.StoryText;
 
 /**
- * The story pages shown before a level is played: how the last level ended
+ * The story pages shown before a level is played (after the opening
+ * animation, when the run starts from the beginning): how the last level ended
  * (if there was one), the page that opens a new chapter with the new tool
  * the crew gets for it, and what this level is about.
  */
@@ -62,11 +63,8 @@ public final class StoryScreen implements Screen {
         pageBackdrops.clear();
         gearPageIndex = NO_GEAR_PAGE;
 
-        // A retry goes straight to the level's own page. The opening crawl
-        // belongs to a run from the very start, not one picked from the level select.
-        if (!retrying && last == null && next.getNumber() == 1) {
-            addPage(pages, StoryText.GAME_TITLE, StoryText.CRAWL, look);
-        }
+        // A retry goes straight to the level's own page. A run from the very
+        // start has already seen the opening animation (IntroScreen).
         if (!retrying && last != null) {
             // The page about the cleared level shows that place as clean as it has become.
             addPage(pages, StoryText.levelTitle(last.getChapter(), last.getLevel()),

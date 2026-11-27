@@ -6,16 +6,19 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.List;
 import javax.accessibility.AccessibleContext;
 import javax.accessibility.AccessibleRole;
 import model.LevelData;
 import ui.GamePanel;
 import ui.GameScreen;
+import ui.IntroScene;
 import ui.ScreenManager;
 import util.GameConstants;
 import util.SoundEffect;
 import util.SoundState;
+import util.StoryText;
 
 /**
  * Walks through the screens the way a player would, by sending key presses
@@ -37,6 +40,9 @@ public final class ScreenFlowTest {
 
     public static void run() {
         menuOpensHowToAndComesBack();
+        theOpeningPlaysByItselfIntoTheStory();
+        enterStepsThroughTheOpening();
+        theLevelSelectSkipsTheOpening();
         storyPagesLeadIntoTheGame();
         pauseMenuWorks();
         pauseMenuRestartCountsAsRetry();
@@ -230,11 +236,89 @@ public final class ScreenFlowTest {
         expect("ESC returns to the menu", GameState.MENU);
     }
 
+    /**
+     * Start opens the animation. Left alone, it plays every scene, with each
+     * of its sounds once, and then the story pages follow. It is drawn every
+     * half second on the way, so every scene's drawing code runs.
+     */
+    private static void theOpeningPlaysByItselfIntoTheStory() {
+        startGame();
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        expect("Start opens the opening animation", GameState.INTRO);
+
+        double total = IntroScene.totalSeconds();
+        Check.assertTrue("the opening is short enough to sit through: " + total + " s", total >= 20 && total <= 40);
+        int steps = 0;   // single steps, so the time shown adds up exactly
+        while (panel.getState() == GameState.INTRO && steps * STEP < total + 5) {
+            play(STEP);
+            steps++;
+            if (steps % 10 == 0) {
+                draw();
+            }
+        }
+        // It was already running for part of the fade in, so it ends a little before "total" here.
+        Check.assertTrue("the opening plays to its end on its own (shown for " + steps * STEP + " s)",
+                steps * STEP >= total - SCREEN_CHANGE && steps * STEP <= total + SCREEN_CHANGE);
+        play(SCREEN_CHANGE);
+        expect("after the last scene the story pages follow", GameState.STORY);
+
+        List<SoundEffect> played = audio.getPlayed();
+        for (SoundEffect cue : List.of(SoundEffect.THUNDER, SoundEffect.PERMIT_STAMP, SoundEffect.TITLE_STING)) {
+            Check.assertEquals(cue + " is heard exactly once", 1, Collections.frequency(played, cue));
+        }
+
+        int captioned = 0;
+        for (IntroScene scene : IntroScene.values()) {
+            Check.assertTrue(scene + " lasts a few seconds", scene.getSeconds() >= 3 && scene.getSeconds() <= 8);
+            if (!scene.getCaption().isEmpty()) {
+                captioned++;
+            }
+        }
+        Check.assertEquals("every line of the opening has its own scene", StoryText.introLineCount(), captioned);
+    }
+
+    /** ENTER jumps to the next scene; a held ENTER counts once. After the last scene come the story pages. */
+    private static void enterStepsThroughTheOpening() {
+        startGame();
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        int scenes = IntroScene.values().length;
+
+        holdWithRepeats(KeyEvent.VK_ENTER);
+        play(0.1);
+        for (int i = 0; i < scenes - 2; i++) {
+            press(KeyEvent.VK_ENTER);
+            play(0.1);
+        }
+        expect("on the last scene the opening is still showing", GameState.INTRO);
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        expect("one ENTER per scene leads to the story pages", GameState.STORY);
+    }
+
+    /** A run picked from the level select has already seen the opening: it goes straight to the story pages. */
+    private static void theLevelSelectSkipsTheOpening() {
+        startGame();
+        press(KeyEvent.VK_DOWN);    // "Select Level"
+        press(KeyEvent.VK_ENTER);
+        play(SCREEN_CHANGE);
+        expect("the level select is open", GameState.LEVEL_SELECT);
+        press(KeyEvent.VK_ENTER);   // level 1-1, the only open level
+        play(SCREEN_CHANGE);
+        expect("level 1-1 from the level select starts with its story page", GameState.STORY);
+    }
+
     private static void storyPagesLeadIntoTheGame() {
         startGame();
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
-        expect("Start opens the story", GameState.STORY);
+        for (int i = 0; i < IntroScene.values().length; i++) {
+            press(KeyEvent.VK_ENTER);   // through the opening animation
+            play(0.1);
+        }
+        play(SCREEN_CHANGE);
+        expect("after the opening come the story pages", GameState.STORY);
 
         // The first ENTER only finishes the page that is still being typed out.
         // Holding the key down must count as that one press, however many
@@ -251,8 +335,8 @@ public final class ScreenFlowTest {
         }
         play(SCREEN_CHANGE);
         expect("after the last page the chapter starts", GameState.PLAYING);
-        // The opening, the page that opens chapter 1, and the page of level 1-1.
-        Check.assertEquals("three pages take two ENTERs each", 6, presses);
+        // The page that opens chapter 1, and the page of level 1-1.
+        Check.assertEquals("two pages take two ENTERs each", 4, presses);
     }
 
     private static void pauseMenuWorks() {
@@ -296,7 +380,7 @@ public final class ScreenFlowTest {
         startGame();
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
-        expect("story is open", GameState.STORY);
+        expect("the opening is showing", GameState.INTRO);
 
         press(KeyEvent.VK_ESCAPE);   // skip the story: begins transition to PLAYING
         play(0.26);                  // fade-out complete: level has appeared, fading in
@@ -335,7 +419,7 @@ public final class ScreenFlowTest {
         // A new run starts cleanly from the first story page.
         press(KeyEvent.VK_ENTER);
         play(SCREEN_CHANGE);
-        expect("Start works again after a run ended", GameState.STORY);
+        expect("Start works again after a run ended", GameState.INTRO);
     }
 
     // ---- helpers ----
@@ -348,7 +432,7 @@ public final class ScreenFlowTest {
         play(0.1);
     }
 
-    /** Menu -> Start -> skip the story -> playing chapter 1. */
+    /** Menu -> Start -> ESC skips the opening and the story -> playing chapter 1. */
     private static void startChapterOne() {
         startGame();
         press(KeyEvent.VK_ENTER);

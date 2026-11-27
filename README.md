@@ -1,12 +1,11 @@
 # FISH2TRASH
 
-Hook the trash. Spare the fish. Save the reef.
+Lift the trash. Spare the fish. Keep the permit.
 
 A 2D story game in Java Swing. You play Nico Abella, the newest member of Captain
-Dolor's clean-up crew at Bantay Reef. The story has three chapters of five levels.
-Each level has a quota of trash to collect before time or health runs out, each kind
-of trash needs its own tool, and every tool is a danger to the fish. Clear all
-fifteen levels and the reef comes back to life.
+Dolor's clean-up crew on a strict no-fishing cleanup permit at Bantay Reef marine
+sanctuary. Every fish is legally protected: clear the trash quota before time runs
+out, spare the fish or lose your permit, and bring the reef back across fifteen shifts.
 
 | | |
 |---|---|
@@ -15,7 +14,7 @@ fifteen levels and the reef comes back to life.
 | ![Chapter 3](docs/screenshots/chapter3.png) | ![The ending](docs/screenshots/ending.png) |
 | ![A cleared level and its badge](docs/screenshots/cleared.png) | ![The shift report](docs/screenshots/report.png) |
 | ![Typing a name for the list](docs/screenshots/name.png) | ![The high-score list](docs/screenshots/highscores.png) |
-| ![The level select](docs/screenshots/levels.png) | |
+| ![The level select](docs/screenshots/levels.png) | ![The opening animation: the cleanup permit is stamped](docs/screenshots/intro.png) |
 
 Team project for CIS 2103 (Object Oriented Programming), University of San Carlos.
 
@@ -60,8 +59,8 @@ java -cp out Main
 | `F11` | Full screen on or off |
 | `D` / `Left` / `Right` on the menu | Cycle difficulty (`Easy`, `Medium`, `Hard`) |
 | Letters, `Backspace`, `Enter` | Type and save your name when a run makes the high-score list |
-| `Enter` or `Space` | Confirm menu or level choice; finish or turn a story page |
-| `Esc` on a story page | Skip the story |
+| `Enter` or `Space` | Confirm menu or level choice; finish or turn a story page; next scene of the opening |
+| `Esc` on a story page or in the opening | Skip the story |
 | `Up` / `Down` | Move in menus |
 | Arrow keys, `C` / `Tab`, `Enter`, `Esc` | In the level select: choose a level, change chapter, play it, go back |
 
@@ -70,6 +69,12 @@ java -cp out Main
 The story is three chapters of five levels. Every level is one shift: a short
 story page, then a quota to fill. Inside a chapter each level is harder than the
 one before, and the last one asks for the chapter's full quota.
+
+**Start** opens with a short animation (about half a minute) before chapter 1: the
+healthy sanctuary, a fisher turning back at its sign, the storm that fills it with
+trash, M/B Tala arriving with its cleanup permit, a protected fish swimming past the
+hook, and the title. `Enter` jumps to the next scene; `Esc` skips straight to the
+first shift. A run picked from **Select Level** skips the animation.
 
 **Select Level** in the menu shows all fifteen levels. Every level you have cleared,
 and the one after the furthest, can be picked; the run then starts there and goes on
@@ -85,7 +90,7 @@ next time you play; delete that file to lock the levels again.
 
 | Level | Name | What is new | Time |
 |---|---|---|---|
-| 1-1 | First Shift | slow bottles, two slow fish | 50 s |
+| 1-1 | Permit Day | slow bottles, two slow fish | 50 s |
 | 1-2 | Faster Tide | faster bottles, four fish | 60 s |
 | 1-3 | Big Shadows | the first big, fast fish | 70 s |
 | 1-4 | Under the School | bottles lie deep under a school of fish | 80 s |
@@ -94,7 +99,7 @@ next time you play; delete that file to lock the levels again.
 | 2-2 | Two Tools | cans and bottles in the same water | 70 s |
 | 2-3 | The Ray Wakes | the first stingray | 85 s |
 | 2-4 | Two Rays | two rays, very fast big fish | 95 s |
-| 2-5 | All at Once | nine cans in three waves, nine fish | 115 s |
+| 2-5 | Under the Mast | nine cans in three waves, nine fish | 115 s |
 | 3-1 | Ghost Nets | the Net Cutter; the first pufferfish | 75 s |
 | 3-2 | Silver Teeth | the first barracuda | 100 s |
 | 3-3 | Three Tools | nets, cans and bottles are all needed | 110 s |
@@ -251,12 +256,14 @@ FISH2TRASH/
 │   │   ├── ScreenManager    which screen is showing, fades between them
 │   │   ├── Screen           interface every screen implements
 │   │   ├── AudioEventListener   picks the sound for each game event
+│   │   ├── IntroScreen, IntroScene   the opening animation and its scenes
 │   │   ├── MainMenu, LevelSelectScreen, HowToScreen, StoryScreen, GameScreen, PauseOverlay,
 │   │   │   LevelClearScreen, GameOverScreen, VictoryScreen, NameEntryScreen,
 │   │   │   HighScoreScreen
 │   │   └── render/          SceneRenderer, HudPainter, EffectsSystem, backgrounds and
 │   │                        water, one painter per object kind and per tool, BadgePainter,
-│   │                        PixelImages (pictures drawn once and reused), stingray.png
+│   │                        PixelImages (pictures drawn once and reused), IntroPainter
+│   │                        (the opening's scenes), stingray.png
 │   └── util/
 │       ├── GameConstants    every tuning number in one place
 │       ├── StoryText        every line of text the player reads
@@ -360,7 +367,7 @@ no test library is needed. The script exits with an error if any check fails.
 | `HighScoreScreenTest` | When a name is asked for, what can be typed, and that the run lands on the list and in the file |
 | `BalanceBotTest` | Four computer players play every level 50 times. A careful one (right tool, waits for a gap between the fish, switches away from the Magnet when a ray comes) must win at least 3 of 5 runs. A slow, sloppy one must get a fair clock. A blind one that ignores the fish must lose the last level of every chapter more often than it wins, and get stung where there are rays. One that never changes tools must never win from chapter 2 on |
 | `StoryTextTest` | Every story page, fail message and tip fits its box; every level has its own name and pages, and its page names the real quota |
-| `ScreenFlowTest` | Key presses lead to the right screens: menu, level select, how to play, high scores, story, pause, fired screen, retry |
+| `ScreenFlowTest` | Key presses lead to the right screens: menu, opening animation, level select, how to play, high scores, story, pause, fired screen, retry. The opening plays every scene to the end with each of its sounds once, `Enter` steps through it, and the level select skips it |
 | `LevelSelectTest` | Which levels the saved progress opens; that it survives a restart, a damaged file and a failed save; that a run can start at any open level and never at a locked one |
 | `SynthTest` | Each sound has the right length and pitch, starts and ends quietly, and comes out the same every time; the player stays silent without a sound device |
 | `AudioEventTest` | The right sound for each game event; ten clock ticks in the last ten seconds |
@@ -385,8 +392,14 @@ and [docs/playtest.md](docs/playtest.md) when you tune the numbers.
       locked level only plays a short "no" sound.
 - [ ] After clearing a level, close the game and open it again: that level and the
       next one are open in Select Level, and picking one starts the run there.
-- [ ] Start shows the opening and chapter 1 story. Enter finishes a page, then turns it.
-- [ ] Esc skips the story.
+- [ ] Start plays the opening animation: the reef and its buoys (the camera tilts down
+      to the corals), a canoe turning back at the NO-TAKE ZONE sign, a storm with rain
+      and thunder that cuts to a murky sea floor full of trash, M/B Tala sailing in and
+      the permit being stamped, a clownfish passing the hook with a red warning, then the
+      title. One line of text under each scene. It runs about 33 seconds.
+- [ ] Enter in the opening jumps to the next scene; after the title come the chapter 1
+      story pages. Enter finishes a page, then turns it.
+- [ ] Esc skips the story, in the opening or on a story page.
 
 **Boat and hook**
 - [ ] `A`/`D` and the arrow keys move the boat; it stops near both screen edges.

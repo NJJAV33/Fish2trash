@@ -100,6 +100,7 @@ public final class GamePanel extends JPanel {
         screens.register(GameState.MENU, new MainMenu(screens, renderer));
         screens.register(GameState.LEVEL_SELECT, new LevelSelectScreen(screens, renderer));
         screens.register(GameState.HOW_TO, new HowToScreen(screens, renderer));
+        screens.register(GameState.INTRO, new IntroScreen(screens, renderer));
         screens.register(GameState.STORY, new StoryScreen(screens, renderer));
         screens.register(GameState.PLAYING, gameScreen);
         screens.register(GameState.LEVEL_CLEAR, new LevelClearScreen(screens, renderer));

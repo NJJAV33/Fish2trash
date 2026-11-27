@@ -43,9 +43,10 @@ public final class MainMenu implements Screen {
         menu.add(StoryText.MENU_QUIT, () -> System.exit(0));
     }
 
+    /** A new run from the very start opens with the animation, then the story pages. */
     private void startStory() {
         screens.startNewRun();
-        screens.go(GameState.STORY);
+        screens.go(GameState.INTRO);
     }
 
     @Override
