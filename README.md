@@ -1,12 +1,11 @@
 # FISH2TRASH
 
-Hook the trash. Spare the fish. Save the reef.
+Lift the trash. Spare the fish. Keep the permit.
 
 A 2D story game in Java Swing. You play Nico Abella, the newest member of Captain
-Dolor's clean-up crew at Bantay Reef. The story has three chapters of five levels.
-Each level has a quota of trash to collect before time or health runs out, each kind
-of trash needs its own tool, and every tool is a danger to the fish. Clear all
-fifteen levels and the reef comes back to life.
+Dolor's clean-up crew on a strict no-fishing cleanup permit at Bantay Reef marine
+sanctuary. Every fish is legally protected: clear the trash quota before time runs
+out, spare the fish or lose your permit, and bring the reef back across fifteen shifts.
 
 | | |
 |---|---|
@@ -85,7 +84,7 @@ next time you play; delete that file to lock the levels again.
 
 | Level | Name | What is new | Time |
 |---|---|---|---|
-| 1-1 | First Shift | slow bottles, two slow fish | 50 s |
+| 1-1 | Permit Day | slow bottles, two slow fish | 50 s |
 | 1-2 | Faster Tide | faster bottles, four fish | 60 s |
 | 1-3 | Big Shadows | the first big, fast fish | 70 s |
 | 1-4 | Under the School | bottles lie deep under a school of fish | 80 s |
@@ -94,7 +93,7 @@ next time you play; delete that file to lock the levels again.
 | 2-2 | Two Tools | cans and bottles in the same water | 70 s |
 | 2-3 | The Ray Wakes | the first stingray | 85 s |
 | 2-4 | Two Rays | two rays, very fast big fish | 95 s |
-| 2-5 | All at Once | nine cans in three waves, nine fish | 115 s |
+| 2-5 | Under the Mast | nine cans in three waves, nine fish | 115 s |
 | 3-1 | Ghost Nets | the Net Cutter; the first pufferfish | 75 s |
 | 3-2 | Silver Teeth | the first barracuda | 100 s |
 | 3-3 | Three Tools | nets, cans and bottles are all needed | 110 s |

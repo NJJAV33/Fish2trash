@@ -14,7 +14,7 @@ public final class StoryText {
 
     // ---- Title and menu ----
     public static final String GAME_TITLE = "FISH2TRASH";
-    public static final String TAGLINE = "Hook the trash. Spare the fish. Save the reef.";
+    public static final String TAGLINE = "Lift the trash. Spare the fish. Keep the permit.";
     public static final String CREDITS = "Made by team LangoyLaban for CIS 2103, University of San Carlos.";
     public static final String MENU_START = "Start";
     public static final String MENU_LEVELS = "Select Level";
@@ -58,25 +58,25 @@ public final class StoryText {
     public static final String TOOL_LOCKED_SHORT = "Chapter %d";
     public static final String GEAR_TITLE = "NEW GEAR";
     public static final String GEAR_MAGNET =
-            "Santos hands Nico a heavy red salvage magnet.\n"
-            + "Cans stick to it. Bottles and nets do not.\n"
+            "Santos: \"Borrowed from the port. Sign for it, Nico.\"\n"
+            + "A heavy red salvage Magnet. Cans stick. Bottles slip.\n"
             + "It still knocks fish, and rays can feel it.\n"
             + "Press 1 for the Hook, 2 for the Magnet.\n"
             + "Tools change only while the line swings.";
     public static final String GEAR_CUTTER =
-            "Dolor unlocks the last box on deck: the Net Cutter.\n"
-            + "It cuts ghost nets free. Cans and bottles slip off.\n"
-            + "Careful: any fish its blades touch costs 2 health.\n"
+            "The last locked box on deck holds the Net Cutter.\n"
+            + "Dolor: \"Bought it years ago. Never had the nerve.\"\n"
+            + "Nets only. Its blades on a fish cost 2 health.\n"
             + "Press 1 Hook, 2 Magnet, 3 Net Cutter.\n"
             + "Tools change only while the line swings.";
 
     // ---- Opening ----
     public static final String CRAWL =
-            "The sea around Bantay Reef is choking on our trash.\n"
-            + "Bottles, cans and nets drift where fish once played.\n"
-            + "Captain Dolor's crew is the reef's last hope.\n"
-            + "Nico Abella just joined. The first shift starts at dawn.\n"
-            + "Fill the quota. Spare the fish. Bring the reef back.";
+            "Bantay Reef has been a no-take sanctuary since 1986.\n"
+            + "No one fishes here. Not one fish, not one shell.\n"
+            + "But storms and lost nets bring trash it can't shake off.\n"
+            + "The town grants one cleanup permit: M/B Tala, 15 shifts.\n"
+            + "Hurt a protected fish, and the permit is gone.";
 
     // ---- The three chapters: a title and the page that opens each one ----
     private static final String[] CHAPTER_TITLES = {
@@ -85,116 +85,121 @@ public final class StoryText {
         "CHAPTER 3: GHOST NET DEEP"
     };
     private static final String[] CHAPTER_OPENINGS = {
-        "Bottles bob in the warm shallows off Bantay Reef.\n"
-        + "The Hook lifts bottles. Leave the fish alone.\n"
-        + "Dolor: \"Tide waits for no one. Neither do I.\"\n"
+        "The permit is taped inside the wheelhouse glass.\n"
+        + "Rule one: trash comes up. Fish stay down.\n"
+        + "Dolor: \"I know this reef. Better than I'd like.\"\n"
         + "Nico: \"Okay, okay. I got this.\"",
 
-        "Past the shallows lie an old pier and a sunken boat.\n"
+        "Past the shallows sleep an old pier and a sunken boat.\n"
         + "Rusty cans lie in heaps, too heavy for the Hook.\n"
-        + "Dr. Santos unpacks a new tool from her lab.\n"
-        + "Santos: \"Cans are metal. Metal is easy.\"",
+        + "Santos: \"The council reviews us after the wreck.\"\n"
+        + "Santos: \"I vouched for this crew. Don't make me wrong.\"\n"
+        + "Migo: \"No pressure, boss. Only her whole career.\"",
 
         "The seabed drops into cold, dark water.\n"
-        + "Lost fishing nets drift here, still trapping fish.\n"
-        + "Nico: \"Lola fished near here. She never said this.\"\n"
-        + "Dolor: \"She would not have. Let's go.\""
+        + "Lost nets drift here, still killing what they catch.\n"
+        + "Nico: \"Lola guarded this reef. Never the deep, though.\"\n"
+        + "Dolor goes quiet, then steers for the drop-off anyway."
     };
 
     // ---- The fifteen levels. Each is one shift: a name, a page before it and a page after it. ----
     // The first index is the chapter, the second the level inside it.
     private static final String[][] LEVEL_NAMES = {
-        {"First Shift", "Faster Tide", "Big Shadows", "Under the School", "Storm Drain"},
-        {"Cans at the Wreck", "Two Tools", "The Ray Wakes", "Two Rays", "All at Once"},
+        {"Permit Day", "Faster Tide", "Big Shadows", "Under the School", "Storm Drain"},
+        {"Cans at the Wreck", "Two Tools", "The Ray Wakes", "Two Rays", "Under the Mast"},
         {"Ghost Nets", "Silver Teeth", "Three Tools", "The Long Dark", "The Last Net"}
     };
 
     private static final String[][] LEVEL_INTROS = {
         {
-            "Dawn on M/B Tala. The water is flat and grey.\n"
-            + "Migo: \"Ay, boss! Your first drop. Don't be shy.\"\n"
-            + "Nico: \"Aim. Breathe. Drop. Easy.\"\n"
+            "Dawn. M/B Tala idles at the sanctuary buoys.\n"
+            + "Santos: \"No-take zone. Every fish here is protected.\"\n"
+            + "Migo: \"Ay, boss! First drop. Bottles only, ha?\"\n"
             + "Quota: 40 points. Lift bottles with the Hook.\n"
-            + "Careful. A few small fish live here too.",
+            + "Two slow fish live here. Let them pass.",
 
             "Rain fell in the night. The bottles drift faster now.\n"
-            + "Dolor: \"More fish today, rookie. Watch your line.\"\n"
-            + "Quota: 60 points. Fast bottles, more small fish.\n"
-            + "Time your drop. A hit on a fish costs health.",
+            + "Dolor: \"Current's up. Drop ahead of the bottle.\"\n"
+            + "Migo: \"Payday Saturday. My Ising turns one!\"\n"
+            + "Quota: 60 points. Fast bottles, four small fish.\n"
+            + "A hit on a fish costs health.",
 
-            "Something large slides under the boat.\n"
-            + "Santos: \"Giant trevally! Fast, and very curious.\"\n"
+            "The boat starts to rock. Something big slides beneath.\n"
+            + "Santos: \"Giant trevally! Fast, curious, protected.\"\n"
             + "Nico: \"Fast and curious. Like Migo.\"\n"
-            + "Quota: 70 points. Big, fast fish arrive. Aim with care.",
+            + "Quota: 70 points. Waves shift the swing.\n"
+            + "Wait for a gap, then drop.",
 
-            "The bottles have sunk deeper. Fish gather near the top.\n"
-            + "Dolor: \"Steer the boat right over the bottle, rookie.\"\n"
-            + "Nico: \"Right over it. Got it.\"\n"
-            + "Quota: 80 points. Fish school near the surface.\n"
-            + "Steer first, then drop.",
+            "The bottles have sunk deep. Fish school above them.\n"
+            + "Dolor: \"Steer right over it first. Then drop.\"\n"
+            + "Nico: \"How do you know this reef so well, Cap?\"\n"
+            + "Dolor: \"...Steer, rookie.\"\n"
+            + "Quota: 80 points. Steer first, then drop.",
 
-            "After the storm, the drain pours plastic into the bay.\n"
+            "After the storm, the town drain pours plastic in.\n"
             + "Nico: \"So much. Where does it all come from?\"\n"
-            + "Dolor: \"The streets, rookie. Rain carries it here.\"\n"
-            + "Quota: 100 points. Fast bottles and many fish.\n"
-            + "Last shift in the shallows."
+            + "Dolor: \"Our streets. Rain carries it all down here.\"\n"
+            + "Quota: 100 points. Rough sea, nine fish.\n"
+            + "Last shift in the shallows. The council is watching."
         },
         {
-            "Cans lie in heaps around the wreck. Use the Magnet.\n"
+            "Cans lie in heaps around the sunken pier and boat.\n"
             + "Migo: \"Cans stick to it like me to free food, boss!\"\n"
-            + "Dolor: \"Mind the fish, Nico. The Magnet hits them too.\"\n"
+            + "Dolor: \"The Magnet hits fish too. Mind the lane.\"\n"
             + "Quota: 100 points. Each can is worth 20.\n"
-            + "There are not enough cans. Hook some bottles too.",
+            + "Not enough cans down there. Hook bottles too.",
 
-            "Bottles and cans float over the same spot today.\n"
+            "Bottles and cans float over the same patch today.\n"
             + "Dolor: \"Cans need the Magnet. Bottles need the Hook.\"\n"
             + "Nico: \"Switch tools. Switch tools. Okay, okay.\"\n"
-            + "Quota: 120 points. The wrong tool lets trash slip off.\n"
+            + "Quota: 120 points. The wrong tool lets trash slip.\n"
             + "Change tools while the line swings.",
 
             "A stingray rests on the sand beside the wreck.\n"
-            + "Santos: \"Rays feel magnets. The Magnet will wake it.\"\n"
+            + "Santos: \"Rays sense magnets. Hurt one, we lose it all.\"\n"
             + "Nico: \"So the Magnet is a doorbell. Great.\"\n"
             + "Quota: 150 points. A ray hit costs 2 health.\n"
             + "With the Hook on the line, the ray stays calm.",
 
             "Two rays now, and big fish patrol the wreck.\n"
-            + "Loose cans drift on the current.\n"
+            + "Migo: \"Ising said 'boat' today! First word, boss!\"\n"
             + "Dolor: \"Hook when a ray is close. Magnet when clear.\"\n"
-            + "Nico: \"Hook near rays. Magnet when clear. Okay.\"\n"
             + "Quota: 170 points. Stay calm and switch fast.",
 
             "The last heap lies under the wreck's old mast.\n"
-            + "Dolor: \"Cans, bottles, rays, fish. All of it today.\"\n"
+            + "Santos: \"The council inspects today. From that boat.\"\n"
+            + "Dolor: \"Cans, bottles, rays, fish. All of it.\"\n"
             + "Nico: \"Okay, okay. I got this. I think.\"\n"
             + "Quota: 200 points. Think before every drop."
         },
         {
             "Pale nets hang in the dark like old curtains.\n"
-            + "Dolor: \"Ghost nets. They keep catching fish for years.\"\n"
+            + "Dolor: \"Ghost nets. Lost, but they never stop fishing.\"\n"
             + "Quota: 200 points. Use the Net Cutter on nets.\n"
-            + "Watch for the pufferfish. It swells near the line.\n"
+            + "The pufferfish swells near the line. Steer clear.\n"
             + "A pufferfish costs 2 health.",
 
             "Silver flashes in the dark. Barracuda.\n"
-            + "Santos: \"It flashes, then charges. Barracuda are fast.\"\n"
+            + "Santos: \"It flashes, then charges. Protected, too.\"\n"
             + "Dolor: \"When it flashes, pull the line back.\"\n"
             + "Quota: 240 points. A charge costs 2 health.",
 
             "Nets, cans and bottles. All in one cold shift.\n"
             + "Dolor: \"Hook: bottles. Magnet: cans. Cutter: nets.\"\n"
             + "Nico: \"One, two, three. One, two, three.\"\n"
-            + "Quota: 280 points. The Net Cutter costs 2 per fish.\n"
+            + "Quota: 280 points. The Cutter costs 2 per fish.\n"
             + "Cut only when the lane is clear.",
 
-            "Everyone is tired. The deck lamps flicker.\n"
-            + "Dolor: \"Two barracuda. A ray too. No mistakes.\"\n"
-            + "Migo: \"Boss, my hands hurt. But we keep going.\"\n"
+            "Midnight. New nets washed in. The deck lamps flicker.\n"
+            + "Migo: \"Missed Ising's bedtime again. Hands hurt, boss.\"\n"
+            + "Nico: \"What's the point? The nets keep coming.\"\n"
+            + "Dolor: \"Two barracuda. A ray. No mistakes tonight.\"\n"
             + "Quota: 320 points. The deep is dark and crowded.",
 
-            "The last ghost nets are huge. They cover the deep reef.\n"
-            + "Dolor: \"This is it, Nico. Tide waits for no one.\"\n"
-            + "Nico: \"Okay, okay. I got this.\"\n"
+            "The biggest ghost net blankets the sanctuary's heart.\n"
+            + "Its old float still reads DOLOR, in faded paint.\n"
+            + "Dolor: \"Thirty years it's been killing. Cut it, Nico.\"\n"
+            + "Nico: \"Okay, okay. We got this.\"\n"
             + "Quota: 350 points. All three tools. Everything."
         }
     };
@@ -202,26 +207,30 @@ public final class StoryText {
     private static final String[][] LEVEL_OUTROS = {
         {
             "Forty points. Nico lets out a long breath.\n"
-            + "Migo: \"Salamat, boss! You did it!\"\n"
-            + "Dolor: \"Not bad, rookie. Same time tomorrow.\"",
+            + "Migo: \"Salamat, boss! Not one fish touched!\"\n"
+            + "Dolor: \"Not bad, rookie. Same time tomorrow.\"\n"
+            + "Santos signs the logbook. Shift 1 of 15.",
 
-            "A cloud of tiny fish flickers over the sand.\n"
+            "A cloud of tiny fish flickers back over the sand.\n"
             + "Nico: \"They came back. Did you see that?\"\n"
-            + "Dolor: \"I saw. Eat something. Tomorrow is bigger.\"",
+            + "Migo: \"Two more shifts and I can buy Ising's cake.\"\n"
+            + "Dolor: \"Eat something. Tomorrow, bigger fish.\"",
 
-            "The trevally circle once, then drift away unhurt.\n"
-            + "Santos: \"Fish remember boats. They trust you more now.\"\n"
-            + "Migo: \"Boss, tomorrow the bottles hide deeper.\"",
+            "The trevally circle once, then drift off unhurt.\n"
+            + "Santos: \"Fish remember boats. They trust you now.\"\n"
+            + "Nico finds an old bantay dagat patch in the wheelhouse.\n"
+            + "Dolor takes it back without a word.",
 
             "Seagrass sways where the bottles were piled.\n"
             + "Migo: \"Look, boss! Green! Real green!\"\n"
-            + "Dark clouds gather in the east. A storm is coming.",
+            + "Santos: \"Storm warning tonight. The drain will spill.\"\n"
+            + "Dark clouds stack up over the town.",
 
             "Quota met! Sunlight reaches the seagrass again.\n"
             + "Small fish dart back in. Something hums below.\n"
             + "The reef: \"still here.\"\n"
-            + "Nico: \"Lola's reef used to look like this...\"\n"
-            + "Dolor: \"Good shift. Now, the wreck.\""
+            + "Nico: \"Lola guarded these shallows. It looked like this.\"\n"
+            + "Dolor: \"Good shift. Tomorrow, the wreck.\""
         },
         {
             "The first rusty heap is gone. Clean sand shows.\n"
@@ -234,44 +243,45 @@ public final class StoryText {
             + "Dolor: \"Something lives there. Go slow tomorrow.\"",
 
             "The ray glides off and settles in a far corner.\n"
-            + "Santos: \"It was only curious. Nobody got hurt.\"\n"
+            + "Santos: \"Curious, not angry. And nobody got hurt.\"\n"
             + "Migo: \"Ay, boss. Tomorrow there are two.\"",
 
             "The big fish circle back, calm and unhurt.\n"
-            + "Santos: \"The rays are settling. This place feels safe.\"\n"
-            + "Dolor: \"Everything at once tomorrow. Sleep, Nico.\"",
+            + "Santos: \"The rays are settling. They feel safe here.\"\n"
+            + "Dolor: \"Council boat comes tomorrow. Sleep, Nico.\"",
 
             "Quota met! The wreck is clean at last.\n"
             + "Coral peeks out where the cans once sat.\n"
-            + "Santos: \"Nico, look at the colors!\"\n"
-            + "The reef: \"still here.\"\n"
+            + "Santos: \"The council renewed us. Five more shifts!\"\n"
+            + "The reef: \"still here. you came back.\"\n"
             + "Dolor: \"Ghost nets next. The worst of it.\""
         },
         {
             "The cut net sinks away. A trapped fish swims free.\n"
             + "Nico: \"Did you see that? It just took off!\"\n"
-            + "Santos: \"Pufferfish swell to look big. It is a bluff.\"\n"
+            + "Santos: \"Pufferfish swell to look big. It's a bluff.\"\n"
             + "Migo: \"Boss, tomorrow something with teeth.\"",
 
             "The barracuda lose interest and drift off.\n"
             + "Nico's hands shake. Nico grins anyway.\n"
             + "Nico: \"I did not enjoy that. But I did it.\"\n"
-            + "Dolor: \"Tomorrow: nets, cans, bottles. All three tools.\"",
+            + "Dolor: \"Tomorrow: nets, cans, bottles. All three.\"",
 
             "A sea fan opens on the rock where nets once hung.\n"
-            + "Santos: \"Sea fans grow very slowly. This one is old.\"\n"
+            + "Santos: \"Sea fans grow slowly. This one is old.\"\n"
             + "Migo: \"The reef is waking up, boss!\"\n"
-            + "Dolor: \"Tomorrow is harder. Rest.\"",
+            + "On the radar, a new tangle drifts in from open sea.",
 
-            "New nets drift in from the open sea tonight.\n"
-            + "Nico: \"It keeps coming back. What if it never ends?\"\n"
-            + "Dolor: \"Then we keep going. One net at a time.\"\n"
-            + "The biggest nets wait in the deepest hole.",
+            "Dolor finally holds up the old bantay dagat patch.\n"
+            + "Dolor: \"'89. Your Lola caught me netting in here.\"\n"
+            + "Dolor: \"She didn't report me. She handed me a sack.\"\n"
+            + "Dolor: \"My lost net is still down in that hole.\"\n"
+            + "Dolor: \"Tomorrow, we cut it free. Together.\"",
 
             "The last ghost net falls away into the dark.\n"
             + "Warm light fills the deep. A turtle glides past.\n"
+            + "Dolor: \"Your Lola would've liked you, rookie.\"\n"
             + "Nico: \"Lola, you should see this.\"\n"
-            + "Dolor: \"Good shift, Nico. The best one yet.\"\n"
             + "The reef: \"still here. salamat.\""
         }
     };
@@ -282,8 +292,8 @@ public final class StoryText {
 
     // ---- Tips shown while playing ----
     public static final String TUT_AIM = "Time the swing, then press SPACE to drop the hook.";
-    public static final String TUT_FISH = "Fish are not trash! Each one you hook costs 1 health.";
-    public static final String TUT_QUOTA = "Fill the quota before time or health runs out.";
+    public static final String TUT_FISH = "Protected fish! Each one you hook costs 1 health.";
+    public static final String TUT_QUOTA = "Fill the permit quota before time or health runs out.";
     public static final String TUT_RECALL = "SPACE again pulls the line back early.";
     public static final String TUT_CURRENT = "The arrows show the current. Trash drifts that way.";
     public static final String TUT_SWELL = "Waves rock the boat and shift the swing. Watch the hook.";
@@ -330,13 +340,13 @@ public final class StoryText {
 
     // ---- Badges: a name, the line shown when earned, and how to earn it ----
     public static final String BADGE_1_NAME = "Eco Rookie";
-    public static final String BADGE_1_EARNED = "Cleared the shallows. Welcome aboard!";
+    public static final String BADGE_1_EARNED = "Shallows cleared. Welcome to the crew!";
     public static final String BADGE_1_LOCKED = "Clear level 1-5.";
     public static final String BADGE_2_NAME = "Sorter";
     public static final String BADGE_2_EARNED = "Right gear for every piece of trash.";
     public static final String BADGE_2_LOCKED = "Clear level 2-5 with few mistakes.";
     public static final String BADGE_3_NAME = "Champion";
-    public static final String BADGE_3_EARNED = "Freed the deep from its ghost nets.";
+    public static final String BADGE_3_EARNED = "Freed the sanctuary's heart from ghost nets.";
     public static final String BADGE_3_LOCKED = "Clear level 3-5 fast, with health to spare.";
     public static final String BADGE_EARNED_LABEL = "BADGE EARNED";
     public static final String BADGE_MISSED_LABEL = "BADGE MISSED";
@@ -346,49 +356,51 @@ public final class StoryText {
     public static final String FAIL_SUB = "...for now.";
     public static final String FAIL_STAMP = "FIRED";
     public static final String CH1_FAIL_TIME =
-            "The tide went out before the quota was met.\n"
-            + "Dolor: \"You're off the crew, Nico. But the\n"
-            + "shallows are still waiting.\"";
+            "Tide's out. Quota unmet. Permit suspended.\n"
+            + "Dolor: \"Contract's off, Nico. The shallows\n"
+            + "still need you. So do I.\"";
     public static final String CH1_FAIL_HEALTH =
-            "Too many fish hooked. Nico is worn out.\n"
-            + "Dolor: \"You're fired. Rest, then try again.\n"
-            + "The reef is patient.\"";
+            "Too many protected fish hurt. Permit revoked.\n"
+            + "Dolor: \"Sanctuary rules. You're fired. Rest,\n"
+            + "then come back. The reef is patient.\"";
     public static final String CH2_FAIL_TIME =
-            "The sun set on the wreck, quota unfinished.\n"
-            + "Dolor: \"You're fired, Nico. The cans will\n"
-            + "still be here. So will I.\"";
+            "Sunset at the wreck. Quota unfinished.\n"
+            + "Santos: \"The council pulled our permit.\"\n"
+            + "Dolor: \"The cans will wait. So will I.\"";
     public static final String CH2_FAIL_HEALTH =
-            "The big fish wore Nico down.\n"
+            "Protected wildlife got hurt. Permit revoked.\n"
             + "Dolor: \"You're fired. Learn their rhythm,\n"
-            + "then come back stronger.\"";
+            + "then come back steadier.\"";
     public static final String CH3_FAIL_TIME =
-            "The deep took your time, and the nets won.\n"
-            + "Dolor: \"You're fired, Nico. But the ghost nets\n"
+            "The deep took your time. The nets stay.\n"
+            + "Dolor: \"Contract's void, Nico. But the nets\n"
             + "haven't won. Not yet.\"";
     public static final String CH3_FAIL_HEALTH =
-            "The dark water wore Nico out.\n"
+            "Too many fish hurt in the dark. Permit revoked.\n"
             + "Dolor: \"You're fired. Rest your hands.\n"
-            + "The ocean will wait for you.\"";
-    public static final String FAIL_RETRY = "Santos: \"One more shift, Nico? The reef waits.\"";
+            + "The deep will wait for us.\"";
+    public static final String FAIL_RETRY = "Santos: \"I'll vouch again. One more shift?\"";
     public static final String FAIL_PROMPT = "ENTER: retry level     ESC: end run";
 
     // ---- Ending ----
-    public static final String END_TITLE = "THE REEF RETURNS";
+    public static final String END_TITLE = "THE REEF IS STILL HERE";
     public static final String END_P1 =
-            "Dawn again at Bantay Reef. Nico leans on the rail.\n"
-            + "The water is clear, almost glass. Below the boat\n"
-            + "coral glows, fish school in the light, and a sea\n"
-            + "turtle glides past without a bag to chase.";
+            "Shift 15 of 15. Dawn again at Bantay Reef.\n"
+            + "Nico leans on the rail. The water is clear as glass.\n"
+            + "Coral glows below. Fish school in the light,\n"
+            + "and a sea turtle glides by with no bag to chase.";
     public static final String END_P2 =
-            "Santos counts new coral and laughs out loud.\n"
-            + "Migo: \"We did this? We actually did this!\"\n"
-            + "Dolor: \"We did. But one crew is not enough.\n"
-            + "Bin your trash. Tell your friends.\"";
+            "Santos: \"Census is in. Fish are up across the reef.\"\n"
+            + "Santos: \"And the council made the sanctuary bigger.\"\n"
+            + "Migo lifts little Ising up to see the water.\n"
+            + "Migo: \"Look, anak. Papa helped clean that.\"\n"
+            + "Ising's second word: \"fish.\"";
     public static final String END_P3 =
-            "Nico thinks of Lola, who fished here long ago.\n"
-            + "\"One bottle at a time,\" Nico says.\n"
+            "Dolor pins the old patch to Nico's shirt.\n"
+            + "Dolor: \"Bantay dagat. Like your Lola.\"\n"
+            + "Nico: \"One bottle at a time, Cap.\"\n"
             + "The reef: \"salamat, nico. still here.\"\n"
-            + "The crew heads home. Tomorrow, another shift.";
+            + "Tomorrow there will be more trash. And a crew.";
     public static final String RECAP_TITLE = "SHIFT REPORT";
     public static final String RECAP_TRASH = "Trash collected";
     public static final String RECAP_FISH = "Fish hooked";
@@ -426,7 +438,7 @@ public final class StoryText {
     public static final String NEXT_PROMPT = "ENTER";
     public static final String SKIP_PROMPT = "ESC: skip";
     public static final String PLAY_HINT = "A / D: move    SPACE: drop or recall    1 2 3: tool    H: last tip    P: pause    M: sound";
-    public static final String HUD_OBJECTIVE = "Hook trash, spare the fish";
+    public static final String HUD_OBJECTIVE = "Lift trash, spare the fish";
     public static final String HUD_SCORE = "SCORE";
     public static final String HUD_CURRENT = "CURRENT";
     public static final String HUD_CALM = "NO CURRENT";
